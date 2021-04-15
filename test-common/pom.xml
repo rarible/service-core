@@ -101,6 +101,10 @@
             <artifactId>transaction-mono_${scala.major.version}</artifactId>
             <version>${scalether.version}</version>
         </dependency>
+        <dependency>
+            <groupId>javax.json</groupId>
+            <artifactId>javax.json-api</artifactId>
+        </dependency>
     </dependencies>
 
 </project>

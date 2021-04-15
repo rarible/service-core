@@ -80,6 +80,7 @@
         <module>test-common</module>
         <module>coroutine</module>
         <module>logging-filter</module>
+        <module>mongo</module>
     </modules>
 
 
