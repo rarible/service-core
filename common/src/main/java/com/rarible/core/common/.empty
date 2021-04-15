@@ -1,0 +1,2 @@
+fun <T> Mono<T>.retryOptimisticLock(retries: Long = 5): Mono<T> = this
+    .retryWhen(Retry.max(retries).filter { it is OptimisticLockingFailureException || it is DuplicateKeyException })

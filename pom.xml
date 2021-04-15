@@ -34,6 +34,23 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <!-- external -->
+            <dependency>
+                <groupId>net.logstash.logback</groupId>
+                <artifactId>logstash-logback-encoder</artifactId>
+                <version>${logstash-encoder.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>30.1.1-jre</version>
+            </dependency>
+            <!--internal-->
+            <dependency>
+                <groupId>com.rarible.core</groupId>
+                <artifactId>rarible-core-common</artifactId>
+                <version>1.2-SNAPSHOT</version>
+            </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-feign</artifactId>
@@ -56,21 +73,16 @@
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
+                <artifactId>rarible-core-lock</artifactId>
+                <version>1.2-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-test-common</artifactId>
                 <version>1.2-SNAPSHOT</version>
                 <scope>test</scope>
             </dependency>
-            <!-- external -->
-            <dependency>
-                <groupId>net.logstash.logback</groupId>
-                <artifactId>logstash-logback-encoder</artifactId>
-                <version>${logstash-encoder.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.guava</groupId>
-                <artifactId>guava</artifactId>
-                <version>30.1.1-jre</version>
-            </dependency>
+
         </dependencies>
     </dependencyManagement>
 
@@ -81,6 +93,8 @@
         <module>coroutine</module>
         <module>logging-filter</module>
         <module>mongo</module>
+        <module>lock</module>
+        <module>common</module>
     </modules>
 
 
