@@ -1,4 +1,4 @@
-package com.rarible.core.mongo
+package com.rarible.core.test.base
 
 import com.rarible.core.test.containers.MongodbTestContainer
 

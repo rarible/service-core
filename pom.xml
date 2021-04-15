@@ -82,7 +82,11 @@
                 <version>1.2-SNAPSHOT</version>
                 <scope>test</scope>
             </dependency>
-
+            <dependency>
+                <groupId>com.rarible.core</groupId>
+                <artifactId>rarible-core-mongo</artifactId>
+                <version>1.2-SNAPSHOT</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -96,6 +100,7 @@
         <module>lock</module>
         <module>common</module>
         <module>lock-redis</module>
+        <module>cache</module>
     </modules>
 
 

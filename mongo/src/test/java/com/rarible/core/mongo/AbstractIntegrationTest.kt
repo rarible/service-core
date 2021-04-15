@@ -1,5 +1,6 @@
 package com.rarible.core.mongo
 
+import com.rarible.core.test.base.BaseMongoTest
 import com.rarible.core.test.mongo.MongoCleanup
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
