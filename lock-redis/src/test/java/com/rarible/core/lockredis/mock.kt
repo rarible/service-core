@@ -1,6 +1,4 @@
-package ru.roborox.reactive.lock.redis
-
-import com.rarible.core.lockredis.EnableRaribleRedisLock
+package com.rarible.core.lockredis
 
 @EnableRaribleRedisLock
 class MockConfiguration
