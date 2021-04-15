@@ -11,7 +11,7 @@ import java.util.Collections;
 import java.util.function.Function;
 
 public class LoggingUtils {
-    private static final String CONTEXT_NAME = MDCContext.class.getSimpleName();
+    public static final String CONTEXT_NAME = MDCContext.class.getSimpleName();
     private static final Marker EMPTY_MARKER = Markers.appendEntries(Collections.emptyMap());
 
     public static <T> Mono<T> withMarker(Function<Marker, Mono<T>> action) {
