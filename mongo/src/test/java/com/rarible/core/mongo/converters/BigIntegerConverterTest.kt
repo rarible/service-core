@@ -8,10 +8,8 @@ import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.findById
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.core.query.Update
-import org.testcontainers.junit.jupiter.Testcontainers
 import java.math.BigInteger
 
-@Testcontainers
 class BigIntegerConverterTest : AbstractIntegrationTest() {
     @Test
     fun saveLoad() {

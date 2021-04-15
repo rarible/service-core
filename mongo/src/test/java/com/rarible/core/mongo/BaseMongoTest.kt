@@ -8,7 +8,7 @@ abstract class BaseMongoTest {
             "spring.data.mongodb.uri", mongoTest.connectionString()
         )
         System.setProperty(
-            "spring.data.mongodb.database", "protocol"
+            "spring.data.mongodb.database", "rarible-core"
         )
     }
     companion object {
