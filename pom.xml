@@ -20,6 +20,10 @@
         <version>1.1-SNAPSHOT</version>
     </parent>
 
+    <properties>
+        <logstash-encoder.version>6.6</logstash-encoder.version>
+    </properties>
+
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -27,11 +31,36 @@
                 <artifactId>rarible-core-feign</artifactId>
                 <version>1.2-SNAPSHOT</version>
             </dependency>
+            <dependency>
+                <groupId>com.rarible.core</groupId>
+                <artifactId>rarible-core-logging</artifactId>
+                <version>1.2-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.rarible.core</groupId>
+                <artifactId>rarible-core-coroutine</artifactId>
+                <version>1.2-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.rarible.core</groupId>
+                <artifactId>rarible-core-test-common</artifactId>
+                <version>1.2-SNAPSHOT</version>
+                <scope>test</scope>
+            </dependency>
+            <!-- external -->
+            <dependency>
+                <groupId>net.logstash.logback</groupId>
+                <artifactId>logstash-logback-encoder</artifactId>
+                <version>${logstash-encoder.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
     <modules>
         <module>feign</module>
+        <module>logging</module>
+        <module>test-common</module>
+        <module>coroutine</module>
     </modules>
 
 
