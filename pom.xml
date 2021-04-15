@@ -95,6 +95,7 @@
         <module>mongo</module>
         <module>lock</module>
         <module>common</module>
+        <module>lock-redis</module>
     </modules>
 
 
