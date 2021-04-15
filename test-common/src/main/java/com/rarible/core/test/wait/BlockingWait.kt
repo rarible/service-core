@@ -1,10 +1,9 @@
-package com.rarible.core.test.wait.blocking
+package com.rarible.core.test.wait
 
 import org.junit.jupiter.api.Assertions
 import org.opentest4j.AssertionFailedError
-import java.lang.NullPointerException
 
-object Wait {
+object BlockingWait {
 
     fun <V> waitFor(timeout: Long = 5000, callable: () -> V): V? {
         val start = System.currentTimeMillis()

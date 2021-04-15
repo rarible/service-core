@@ -12,12 +12,12 @@
 
     <dependencies>
         <dependency>
-            <groupId>io.projectreactor</groupId>
-            <artifactId>reactor-core</artifactId>
+            <groupId>com.rarible.core</groupId>
+            <artifactId>rarible-core-common</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.rarible.core</groupId>
-            <artifactId>rarible-core-coroutine</artifactId>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-core</artifactId>
         </dependency>
         <dependency>
             <groupId>net.logstash.logback</groupId>

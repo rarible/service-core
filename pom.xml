@@ -68,11 +68,6 @@
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
-                <artifactId>rarible-core-coroutine</artifactId>
-                <version>1.2-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-lock</artifactId>
                 <version>1.2-SNAPSHOT</version>
             </dependency>
@@ -94,13 +89,13 @@
         <module>feign</module>
         <module>logging</module>
         <module>test-common</module>
-        <module>coroutine</module>
         <module>logging-filter</module>
         <module>mongo</module>
         <module>lock</module>
         <module>common</module>
         <module>lock-redis</module>
         <module>cache</module>
+        <module>task</module>
     </modules>
 
 

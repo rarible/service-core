@@ -1,6 +1,6 @@
 package com.rarible.core.logging
 
-import com.rarible.core.coroutine.awaitFirstWithContext
+import com.rarible.core.common.awaitFirstWithContext
 import com.rarible.core.logging.LoggingUtils.CONTEXT_NAME
 import kotlinx.coroutines.slf4j.MDCContext
 import reactor.core.publisher.Mono

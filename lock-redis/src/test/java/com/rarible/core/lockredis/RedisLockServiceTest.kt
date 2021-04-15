@@ -1,6 +1,6 @@
 package com.rarible.core.lockredis
 
-import com.rarible.core.test.wait.blocking.Wait.waitAssert
+import com.rarible.core.test.wait.BlockingWait.waitAssert
 import org.apache.commons.lang3.RandomStringUtils
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test

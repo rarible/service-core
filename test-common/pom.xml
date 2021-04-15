@@ -105,6 +105,11 @@
             <groupId>javax.json</groupId>
             <artifactId>javax.json-api</artifactId>
         </dependency>
+        <dependency>
+            <groupId>io.mockk</groupId>
+            <artifactId>mockk</artifactId>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
 </project>

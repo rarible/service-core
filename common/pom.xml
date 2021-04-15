@@ -24,5 +24,21 @@
             <artifactId>spring-tx</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlinx</groupId>
+            <artifactId>kotlinx-coroutines-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlinx</groupId>
+            <artifactId>kotlinx-coroutines-reactor</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlinx</groupId>
+            <artifactId>kotlinx-coroutines-reactive</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.rarible.core</groupId>
+            <artifactId>rarible-core-test-common</artifactId>
+        </dependency>
     </dependencies>
 </project>

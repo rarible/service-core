@@ -1,4 +1,4 @@
-package com.rarible.core.coroutine
+package com.rarible.core.common
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.reactive.awaitFirst

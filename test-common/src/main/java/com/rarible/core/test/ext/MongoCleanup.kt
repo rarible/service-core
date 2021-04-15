@@ -1,5 +1,6 @@
-package com.rarible.core.test.mongo
+package com.rarible.core.test.ext
 
+import com.rarible.core.test.mongo.AsyncMongoHelper
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.extension.ExtensionContext
