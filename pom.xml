@@ -96,6 +96,7 @@
         <module>lock-redis</module>
         <module>cache</module>
         <module>task</module>
+        <module>kafka</module>
     </modules>
 
 
