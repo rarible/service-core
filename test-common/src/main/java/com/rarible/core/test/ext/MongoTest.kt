@@ -19,7 +19,7 @@ class MongoTestExtension : BeforeAllCallback {
             "spring.data.mongodb.uri", mongoTest.connectionString()
         )
         System.setProperty(
-            "spring.data.mongodb.database", "rarible-core"
+            "spring.data.mongodb.database", "test"
         )
     }
 
