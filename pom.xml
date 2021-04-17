@@ -71,6 +71,11 @@
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
+                <artifactId>rarible-core-application</artifactId>
+                <version>1.2-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-logging-filter</artifactId>
                 <version>1.2-SNAPSHOT</version>
             </dependency>
@@ -120,6 +125,7 @@
         <module>cache</module>
         <module>task</module>
         <module>kafka</module>
+        <module>application</module>
     </modules>
 
 
