@@ -77,6 +77,16 @@
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
+                <artifactId>rarible-core-telemetry</artifactId>
+                <version>1.2-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.rarible.core</groupId>
+                <artifactId>rarible-core-metrics</artifactId>
+                <version>1.2-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-feign</artifactId>
                 <version>1.2-SNAPSHOT</version>
             </dependency>
@@ -143,6 +153,7 @@
         <module>kafka</module>
         <module>application</module>
         <module>telemetry</module>
+        <module>metrics</module>
     </modules>
 
 
