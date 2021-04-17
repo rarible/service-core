@@ -31,6 +31,7 @@
     <properties>
         <logstash-encoder.version>6.6</logstash-encoder.version>
         <testcontainers.version>1.15.2</testcontainers.version>
+        <springfox.version>3.0.0</springfox.version>
     </properties>
 
     <dependencyManagement>
@@ -52,6 +53,21 @@
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
                 <version>30.1.1-jre</version>
+            </dependency>
+            <dependency>
+                <groupId>io.springfox</groupId>
+                <artifactId>springfox-core</artifactId>
+                <version>${springfox.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.springfox</groupId>
+                <artifactId>springfox-spring-web</artifactId>
+                <version>${springfox.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.springfox</groupId>
+                <artifactId>springfox-boot-starter</artifactId>
+                <version>${springfox.version}</version>
             </dependency>
             <!--internal-->
             <dependency>
@@ -126,6 +142,7 @@
         <module>task</module>
         <module>kafka</module>
         <module>application</module>
+        <module>telemetry</module>
     </modules>
 
 
