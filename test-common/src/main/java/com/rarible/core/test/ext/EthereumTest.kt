@@ -22,6 +22,9 @@ class EthereumTestExtension : BeforeAllCallback {
         //configuration io.daonomic.ethereum.listener.common.EthereumConfiguration has different ethereum prefix
         setProperty("parityUrls", ethereumContainer.ethereumUrl().toString())
         setProperty("parityWebSocketUrls", ethereumContainer.ethereumWebSocketUrl().toString())
+
+        setProperty("rarible.ethereum.httpUrl", ethereumContainer.ethereumUrl().toString())
+        setProperty("rarible.ethereum.websocketUrl", ethereumContainer.ethereumWebSocketUrl().toString())
     }
 
     companion object {
