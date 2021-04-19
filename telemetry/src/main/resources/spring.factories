@@ -1,0 +1,9 @@
+org.springframework.boot.env.EnvironmentPostProcessor=\
+com.rarible.core.telemetry.bootstrap.DefaultBootstrapEnvironmentPostProcessor
+
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.rarible.core.telemetry.environment.EnvironmentAutoConfiguration, \
+com.rarible.core.telemetry.actuator.ActuatorEndpointsAutoConfiguration, \
+com.rarible.core.telemetry.metrics.MetricsAutoConfiguration,\
+com.rarible.core.telemetry.consul.ConsulRegistrationCustomizerAutoConfiguration, \
+com.rarible.core.telemetry.logging.LoggingPropertiesAutoConfiguration
