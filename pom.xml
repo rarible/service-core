@@ -10,7 +10,7 @@
     <repositories>
         <repository>
             <id>nexus-maven-public</id>
-            <url>http://10.7.3.6:8083/repository/maven-public/</url>
+            <url>http://nexus.rarible.int/repository/maven-public/</url>
         </repository>
     </repositories>
 
