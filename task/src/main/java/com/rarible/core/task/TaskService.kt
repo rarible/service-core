@@ -37,7 +37,7 @@ class TaskService(
         }
     }
 
-    @Scheduled(initialDelayString = "\${rarible.task.initialDelay:60000}", fixedDelay = Long.MAX_VALUE)
+    @Scheduled(initialDelayString = "\${rarible.task.initialDelay:30000}", fixedDelay = Long.MAX_VALUE)
     fun autorun() {
         handlersMap.values.forEach { handler ->
             handler.getAutorunParams().forEach { (param, sample) ->
@@ -46,7 +46,7 @@ class TaskService(
         }
     }
 
-    @Scheduled(initialDelayString = "\${rarible.task.initialDelay:60000}", fixedDelayString = "\${rarible.task.delay:60000}")
+    @Scheduled(initialDelayString = "\${rarible.task.initialDelay:30000}", fixedDelayString = "\${rarible.task.delay:60000}")
     fun readAndRun() {
         GlobalScope.launch {
             logger.info("readAndRun()")
