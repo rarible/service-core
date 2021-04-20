@@ -77,7 +77,12 @@
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
-                <artifactId>rarible-core-telemetry</artifactId>
+                <artifactId>rarible-core-telemetry-starter</artifactId>
+                <version>1.2-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.rarible.core</groupId>
+                <artifactId>rarible-core-starter</artifactId>
                 <version>1.2-SNAPSHOT</version>
             </dependency>
             <dependency>
@@ -160,6 +165,7 @@
         <module>telemetry</module>
         <module>metrics</module>
         <module>mongo-watcher</module>
+        <module>starter</module>
     </modules>
 
 </project>
