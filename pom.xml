@@ -136,6 +136,11 @@
                 <artifactId>rarible-core-kafka</artifactId>
                 <version>1.2-SNAPSHOT</version>
             </dependency>
+            <dependency>
+                <groupId>com.rarible.core</groupId>
+                <artifactId>rarible-core-mongo-watcher</artifactId>
+                <version>1.2-SNAPSHOT</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -154,6 +159,7 @@
         <module>application</module>
         <module>telemetry</module>
         <module>metrics</module>
+        <module>mongo-watcher</module>
     </modules>
 
 </project>

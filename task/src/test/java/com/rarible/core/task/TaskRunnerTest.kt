@@ -1,19 +1,17 @@
 package com.rarible.core.task
 
 import com.rarible.core.test.wait.BlockingWait.waitAssert
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitFirst
-import kotlinx.coroutines.runBlocking
 import org.apache.commons.lang3.RandomUtils
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import reactor.core.publisher.FluxSink
 import reactor.core.publisher.ReplayProcessor
 
+@FlowPreview
 @ExperimentalCoroutinesApi
 class TaskRunnerTest : AbstractIntegrationTest() {
     private val events: ReplayProcessor<Int> = ReplayProcessor.create<Int>()
@@ -41,7 +39,7 @@ class TaskRunnerTest : AbstractIntegrationTest() {
 
     @Test
     fun doesnRunIfUnable() = runBlocking<Unit> {
-        runner.runLongTask("", handlerUnableToRun)
+        runner.runLongTask("", handlerUnableToRun, null)
 
         val task = taskRepository.findByTypeAndParam("MOCK2", "").awaitFirst()
         assertThat(task)
@@ -63,7 +61,7 @@ class TaskRunnerTest : AbstractIntegrationTest() {
         mongo.save(newTask).block()
 
         GlobalScope.launch {
-            runner.runLongTask("p1", handler)
+            runner.runLongTask("p1", handler, null)
         }
 
         Thread.sleep(500)
@@ -82,7 +80,7 @@ class TaskRunnerTest : AbstractIntegrationTest() {
         var finished = false
 
         GlobalScope.launch {
-            runner.runLongTask("p1", handler)
+            runner.runLongTask("p1", handler, null)
             finished = true
         }
 
@@ -92,8 +90,6 @@ class TaskRunnerTest : AbstractIntegrationTest() {
                 .hasFieldOrPropertyWithValue(Task::lastStatus.name, TaskStatus.NONE)
             assertThat(found)
                 .hasFieldOrPropertyWithValue(Task::running.name, true)
-            assertThat(runnerEvents)
-                .hasSize(1)
         }
 
         val state1 = RandomUtils.nextInt()
@@ -112,8 +108,6 @@ class TaskRunnerTest : AbstractIntegrationTest() {
                 .hasFieldOrPropertyWithValue(Task::state.name, state2)
             assertThat(found)
                 .hasFieldOrPropertyWithValue(Task::running.name, true)
-            assertThat(runnerEvents)
-                .hasSize(1)
         }
 
         sink.complete()
@@ -127,8 +121,6 @@ class TaskRunnerTest : AbstractIntegrationTest() {
                 .hasFieldOrPropertyWithValue(Task::lastStatus.name, TaskStatus.COMPLETED)
             assertThat(finished)
                 .isTrue()
-            assertThat(runnerEvents)
-                .hasSize(2)
         }
     }
 
@@ -139,7 +131,7 @@ class TaskRunnerTest : AbstractIntegrationTest() {
 
         GlobalScope.launch {
             try {
-                runner.runLongTask("p1", handler)
+                runner.runLongTask("p1", handler, null)
                 finished = true
             } catch (e: Throwable) {
                 error = e

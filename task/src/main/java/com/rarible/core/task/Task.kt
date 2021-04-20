@@ -23,6 +23,7 @@ data class Task(
     val lastError: String? = null,
     val lastFinishDate: Date? = null,
     val lastUpdateDate: Date = Date(),
+    val sample: Long? = DEFAULT_SAMPLE,
     @Id
     val id: ObjectId = ObjectId.get(),
     @Version
@@ -36,6 +37,10 @@ data class Task(
     fun clearRunning() = copy(
         running = false,
         lastUpdateDate = Date()
+    )
+
+    fun withSample(sample: Long?) = copy(
+        sample = sample
     )
 
     fun markRunning() = copy(
@@ -57,6 +62,10 @@ data class Task(
         lastUpdateDate = Date(),
         lastFinishDate = Date()
     )
+
+    companion object {
+        const val DEFAULT_SAMPLE = 5000L
+    }
 }
 
 enum class TaskStatus {

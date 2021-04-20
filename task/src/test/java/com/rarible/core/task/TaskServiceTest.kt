@@ -2,6 +2,7 @@ package com.rarible.core.task
 
 import com.rarible.core.test.wait.BlockingWait.waitAssert
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.awaitFirst
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 
+@FlowPreview
 @ExperimentalCoroutinesApi
 class TaskServiceTest : AbstractIntegrationTest() {
     @Autowired
