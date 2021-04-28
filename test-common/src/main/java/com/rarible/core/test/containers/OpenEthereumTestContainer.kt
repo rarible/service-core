@@ -1,6 +1,6 @@
 package com.rarible.core.test.containers
 
-import com.rarible.rpc.mono.WebClientTransport
+import io.daonomic.rpc.mono.WebClientTransport
 import org.testcontainers.containers.wait.strategy.Wait
 import org.web3j.utils.Numeric
 import reactor.core.publisher.Mono

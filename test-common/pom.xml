@@ -92,12 +92,12 @@
             <artifactId>mongodb-driver-reactivestreams</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.rarible.scalether</groupId>
+            <groupId>io.daonomic.scalether</groupId>
             <artifactId>transport-mono_${scala.major.version}</artifactId>
             <version>${scalether.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.rarible.scalether</groupId>
+            <groupId>io.daonomic.scalether</groupId>
             <artifactId>transaction-mono_${scala.major.version}</artifactId>
             <version>${scalether.version}</version>
         </dependency>
