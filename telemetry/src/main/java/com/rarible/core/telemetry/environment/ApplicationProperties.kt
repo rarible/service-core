@@ -27,5 +27,5 @@ data class ApplicationProperties(
     /**
      * Name of the project the application represents. Defaults `rarible`.
      */
-    val project: String = "rarible"
+    val project: String = "com/rarible"
 )
