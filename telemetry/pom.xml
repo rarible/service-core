@@ -52,5 +52,9 @@
             <groupId>com.rarible.core</groupId>
             <artifactId>rarible-core-application</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.codehaus.janino</groupId>
+            <artifactId>janino</artifactId>
+        </dependency>
     </dependencies>
 </project>
