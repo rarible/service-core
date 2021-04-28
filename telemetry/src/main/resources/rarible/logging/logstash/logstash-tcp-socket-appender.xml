@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<included>
+    <springProperty name="APPLICATION_SERVICE_NAME" source="spring.application.name" defaultValue="unknown"/>
+    <springProperty name="APPLICATION_ENVIRONMENT" source="application.environment" defaultValue="dev"/>
+
+    <appender name="STASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+        <destination>logstash:4560</destination>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <customFields>{"service":"${APPLICATION_SERVICE_NAME}","environment":"${APPLICATION_ENVIRONMENT}"}</customFields>
+        </encoder>
+    </appender>
+</included>

@@ -1,0 +1,53 @@
+spring:
+  jmx:
+    enabled: false
+  cloud:
+    service-registry:
+      auto-registration:
+        enabled: true
+    consul:
+      discovery:
+        health-check-path: /_status/ping
+        healt h-check-critical-timeout: "3m"
+      host: consul-agent
+      port: 8500
+      config:
+        watch:
+          enabled: false
+        enabled: true
+        prefix:
+
+logging:
+  logstash:
+    tcp-socket:
+      enabled: true
+      destinations: logstash:4560
+
+management:
+  endpoints:
+    enabled-by-default: false
+    web:
+      exposure.include: ping, metrics, prometheus, info, health, version
+      base-path: /_status
+  endpoint:
+    info:
+      enabled: true
+      git.mode: full
+    ping.enabled: true
+    metrics.enabled: true
+    health.enabled: true
+    version.enabled: true
+    prometheus.enabled: true
+    health.show-details: always
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      slo:
+        http.server.requests: 100ms,150ms,250ms,500ms,1s
+    export:
+      prometheus:
+        enabled: true
+    naming:
+      suffix-tags:
+        - statistic

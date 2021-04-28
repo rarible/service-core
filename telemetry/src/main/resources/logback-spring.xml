@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <springProperty name="LOGSTASH_TCP_SOCKET_ENABLED" source="logging.logstash.tcp-socket.enabled" defaultValue="false"/>
+
+    <include resource="org/springframework/boot/logging/logback/defaults.xml" />
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml" />
+
+    <if condition='property("LOGSTASH_TCP_SOCKET_ENABLED").contains("true")'>
+        <then>
+            <include resource="com/rarible/logging/logstash/logstash-tcp-socket-appender.xml"/>
+        </then>
+    </if>
+
+    <root level="INFO">
+        <if condition='property("LOGSTASH_TCP_SOCKET_ENABLED").contains("true")'>
+            <then>
+                <appender-ref ref="STASH" />
+            </then>
+        </if>
+
+        <appender-ref ref="CONSOLE" />
+    </root>
+</configuration>
