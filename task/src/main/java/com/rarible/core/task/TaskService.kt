@@ -31,8 +31,11 @@ class TaskService(
             taskRepository.findByRunning(true)
                 .asFlow()
                 .collect {
-                    logger.info("marking as not running: ${it.type}:${it.param} $it")
-                    taskRepository.save(it.clearRunning()).awaitFirst()
+                    val handler = handlersMap[it.type]
+                    if (handler != null) {
+                        logger.info("marking as not running: ${it.type}:${it.param} $it")
+                        taskRepository.save(it.clearRunning()).awaitFirst()
+                    }
                 }
         }
     }
