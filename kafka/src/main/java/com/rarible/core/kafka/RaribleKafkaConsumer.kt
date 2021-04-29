@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.reactive.asFlow
 import org.apache.kafka.clients.consumer.ConsumerConfig
+import org.apache.kafka.clients.consumer.OffsetResetStrategy
 import org.apache.kafka.common.header.Headers
 import org.apache.kafka.common.serialization.Deserializer
 import org.apache.kafka.common.serialization.StringDeserializer
@@ -63,21 +64,4 @@ class RaribleKafkaConsumer<V>(
     fun receive(topic: String = defaultTopic): Flow<KafkaMessage<V>> {
         return receiveBatch(topic).flatMapConcat { it }
     }
-}
-
-enum class OffsetResetStrategy {
-    /**
-     * throw exception to the consumer if no previous offset is found for the consumer's group
-     */
-    NONE,
-
-    /**
-     * automatically reset the offset to the latest offset
-     */
-    LATEST,
-
-    /**
-     * automatically reset the offset to the earliest offset
-     */
-    EARLIEST
 }
