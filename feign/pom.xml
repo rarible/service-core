@@ -16,10 +16,6 @@
             <artifactId>guava</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.rarible.core</groupId>
-            <artifactId>rarible-core-logging</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.playtika.reactivefeign</groupId>
             <artifactId>feign-reactor-webclient</artifactId>
         </dependency>
