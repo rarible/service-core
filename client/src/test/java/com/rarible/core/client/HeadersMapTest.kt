@@ -1,4 +1,4 @@
-package com.rarible.core.feign
+package com.rarible.core.client
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test

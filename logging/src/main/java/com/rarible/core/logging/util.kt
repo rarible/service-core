@@ -1,8 +1,10 @@
 package com.rarible.core.logging
 
 import com.rarible.core.logging.LoggerContext.addToContext
+import com.rarible.core.logging.LoggingUtils.extractMDCMap
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import reactor.kotlin.core.publisher.switchIfEmpty
 import reactor.util.context.Context
 
 fun <T> Mono<T>.loggerContext(key: String, value: String): Mono<T> =
@@ -24,4 +26,9 @@ object LoggerContext {
             acc.put(LoggingUtils.LOG_ + pair.first, pair.second)
         }
     }
+
+    @JvmStatic
+    val MDC_MAP: Mono<Map<String, String>> = Mono.subscriberContext()
+        .map { extractMDCMap(it) }
+        .switchIfEmpty { Mono.just(emptyMap()) }
 }

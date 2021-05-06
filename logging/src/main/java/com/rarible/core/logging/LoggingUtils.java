@@ -33,13 +33,17 @@ public class LoggingUtils {
     }
 
     private static Marker createMarker(Context ctx) {
-        final Map<String, Object> map = ctx.stream()
-            .filter(it -> it.getKey() instanceof String && ((String) it.getKey()).startsWith(LOG_))
-            .collect(Collectors.toMap(it -> it.getKey().toString().substring(LOG_.length()), Map.Entry::getValue));
-        if (!map.isEmpty()) {
-            return Markers.appendEntries(map);
+        final Map<String, String> mdcMap = extractMDCMap(ctx);
+        if (!mdcMap.isEmpty()) {
+            return Markers.appendEntries(mdcMap);
         } else {
             return EMPTY_MARKER;
         }
+    }
+
+    public static Map<String, String> extractMDCMap(Context ctx) {
+        return ctx.stream()
+            .filter(it -> it.getValue() instanceof String && it.getKey() instanceof String && ((String) it.getKey()).startsWith(LOG_))
+            .collect(Collectors.toMap(it -> it.getKey().toString().substring(LOG_.length()), it -> it.getValue().toString()));
     }
 }

@@ -152,6 +152,11 @@
                 <artifactId>rarible-core-mongo-watcher</artifactId>
                 <version>1.2-SNAPSHOT</version>
             </dependency>
+            <dependency>
+                <groupId>com.rarible.core</groupId>
+                <artifactId>rarible-core-client</artifactId>
+                <version>1.2-SNAPSHOT</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -173,6 +178,7 @@
         <module>mongo-watcher</module>
         <module>starter</module>
         <module>daemon</module>
+        <module>client</module>
     </modules>
 
 </project>

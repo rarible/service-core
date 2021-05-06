@@ -1,7 +1,6 @@
 package com.rarible.core.feign
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.google.common.base.CaseFormat
 import org.springframework.cloud.openfeign.support.SpringMvcContract
 import org.springframework.http.MediaType
 import org.springframework.http.codec.ClientCodecConfigurer
@@ -35,9 +34,3 @@ object FeignHelper {
         return createClient(T::class.java, mapper, baseUrl)
     }
 }
-
-fun Map<String, String>.toHeadersMap() =
-    this.map { entry -> "x-log-${CONVERTER.convert(entry.key)}" to entry.value }
-        .toMap()
-
-private val CONVERTER = CaseFormat.LOWER_CAMEL.converterTo(CaseFormat.LOWER_HYPHEN)

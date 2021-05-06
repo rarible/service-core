@@ -1,12 +1,12 @@
 package com.rarible.core.logging
 
+import com.rarible.core.logging.LoggingUtils.extractMDCMap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ThreadContextElement
 import kotlinx.coroutines.reactor.ReactorContext
 import kotlinx.coroutines.withContext
 import org.slf4j.MDC
-import java.util.stream.Collectors.toMap
 import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.CoroutineContext
 
@@ -21,9 +21,7 @@ class RaribleMDCContext : ThreadContextElement<MDCContextMap>, AbstractCoroutine
         val oldState = MDC.getCopyOfContextMap()
         val reactorContext = context[ReactorContext]
         if (reactorContext != null) {
-            val map: Map<String, String> = reactorContext.context.stream()
-                .filter { it.key is String && it.key.toString().startsWith(LoggingUtils.LOG_) }
-                .collect(toMap({ it.key.toString().substring(LoggingUtils.LOG_.length) }, { it.value.toString() }))
+            val map = extractMDCMap(reactorContext.context)
             setCurrent(map)
         }
         return oldState
