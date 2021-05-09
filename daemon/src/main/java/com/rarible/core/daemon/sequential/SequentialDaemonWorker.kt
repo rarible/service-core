@@ -7,8 +7,9 @@ import kotlinx.coroutines.CoroutineScope
 
 abstract class SequentialDaemonWorker(
     meterRegistry: MeterRegistry,
-    properties: DaemonWorkerProperties
-) : AbstractDaemonWorker(meterRegistry, properties) {
+    properties: DaemonWorkerProperties,
+    workerName: String? = null
+) : AbstractDaemonWorker(meterRegistry, properties, workerName) {
 
     protected abstract suspend fun handle()
 

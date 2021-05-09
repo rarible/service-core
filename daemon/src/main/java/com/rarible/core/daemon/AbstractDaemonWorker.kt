@@ -25,11 +25,12 @@ import kotlin.system.exitProcess
 
 abstract class AbstractDaemonWorker(
     private val meterRegistry: MeterRegistry,
-    properties: DaemonWorkerProperties
+    properties: DaemonWorkerProperties,
+    workerName: String? = null
 ) : AutoCloseable, HealthIndicator {
 
     protected val logger: Logger = LoggerFactory.getLogger(this::class.java)
-    protected val workerName = this::class.simpleName!!.decapitalize()
+    protected val workerName = workerName ?: defaultName()
 
     protected val errorDelay = properties.errorDelay
     protected val pollingPeriod = properties.pollingPeriod
@@ -95,7 +96,9 @@ abstract class AbstractDaemonWorker(
         }
     }
 
+    private fun defaultName(): String = this::class.simpleName!!.decapitalize()
+
     private companion object {
-        val DAEMON_DISPATCHER_INDEX = AtomicLong(0)
+        private val DAEMON_DISPATCHER_INDEX = AtomicLong(0)
     }
 }
