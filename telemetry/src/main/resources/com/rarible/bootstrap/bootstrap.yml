@@ -8,7 +8,7 @@ spring:
     consul:
       discovery:
         health-check-path: /_status/ping
-        healt h-check-critical-timeout: "3m"
+        health-check-critical-timeout: "3m"
       host: consul-agent
       port: 8500
       config:
