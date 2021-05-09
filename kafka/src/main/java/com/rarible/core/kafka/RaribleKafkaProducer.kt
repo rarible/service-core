@@ -1,5 +1,6 @@
 package com.rarible.core.kafka
 
+import com.rarible.core.kafka.json.RARIBLE_KAFKA_CLASS_PARAM
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map
@@ -26,7 +27,7 @@ class RaribleKafkaProducer<V>(
      * Anything to identify the client
      */
     clientId: String,
-    valueSerializerClass: Class<out Serializer<V>>,
+    valueSerializerClass: Class<out Serializer<*>>,
     private val defaultTopic: String,
     bootstrapServers: String,
     /**
@@ -37,17 +38,19 @@ class RaribleKafkaProducer<V>(
     /**
      * Max time to retry delivery of a message
      */
-    deliveryTimeout: Duration = Duration.ofMinutes(2)
-    ) : AutoCloseable {
+    deliveryTimeout: Duration = Duration.ofMinutes(2),
+    valueClass: Class<V>? = null
+) : AutoCloseable, KafkaProducer<V> {
 
     private val sender: KafkaSender<String, V>
 
     init {
-        val senderProperties: Map<String, Any> = mapOf(
+        val senderProperties: Map<String, Any?> = mapOf(
             ProducerConfig.CLIENT_ID_CONFIG to clientId,
             ProducerConfig.BOOTSTRAP_SERVERS_CONFIG to bootstrapServers,
             ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG to StringSerializer::class.java,
             ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG to valueSerializerClass,
+            RARIBLE_KAFKA_CLASS_PARAM to valueClass,
             ProducerConfig.ACKS_CONFIG to acknowledgement.kafkaValue,
             ProducerConfig.DELIVERY_TIMEOUT_MS_CONFIG to deliveryTimeout.toMillis().toInt()
         )
@@ -58,7 +61,7 @@ class RaribleKafkaProducer<V>(
         sender = KafkaSender.create(senderOptions)
     }
 
-    fun send(messages: Flow<KafkaMessage<V>>, topic: String = defaultTopic): Flow<KafkaSendResult> {
+    override fun send(messages: Flow<KafkaMessage<V>>, topic: String): Flow<KafkaSendResult> {
         return sender.send(messages.map {
             val record = it.toProducerRecord(topic)
             val correlationId = it.id
@@ -67,17 +70,26 @@ class RaribleKafkaProducer<V>(
             val correlationId = it.correlationMetadata()
             val exception = it.exception()
 
-            if (exception == null) KafkaSendResult.Success(correlationId) else KafkaSendResult.Fail(correlationId, exception)
+            if (exception == null) KafkaSendResult.Success(correlationId) else KafkaSendResult.Fail(
+                correlationId,
+                exception
+            )
         }.asFlow()
     }
 
-    fun send(messages: Collection<KafkaMessage<V>>, topic: String = defaultTopic): Flow<KafkaSendResult> {
+    override fun send(messages: Collection<KafkaMessage<V>>, topic: String): Flow<KafkaSendResult> {
         return send(messages.asFlow(), topic)
     }
 
-    suspend fun send(message: KafkaMessage<V>, topic: String = defaultTopic): KafkaSendResult {
+    override suspend fun send(message: KafkaMessage<V>, topic: String): KafkaSendResult {
         return send(listOf(message).asFlow(), topic).single()
     }
+
+    override suspend fun send(message: KafkaMessage<V>): KafkaSendResult = send(message, defaultTopic)
+
+    override fun send(messages: Flow<KafkaMessage<V>>): Flow<KafkaSendResult> = send(messages, defaultTopic)
+
+    override fun send(messages: Collection<KafkaMessage<V>>): Flow<KafkaSendResult> = send(messages, defaultTopic)
 
     private fun <V> KafkaMessage<V>.toProducerRecord(topic: String): ProducerRecord<String, V> {
         return ProducerRecord(topic, null, key, value, headers.toRecordHeaders())
@@ -98,15 +110,17 @@ class RaribleKafkaProducer<V>(
     }
 }
 
-enum class Acknowledgement (val kafkaValue: String){
+enum class Acknowledgement(val kafkaValue: String) {
     /**
      * No guarantees (fastest)
      */
     NONE("0"),
+
     /**
      * Delivery not guaranteed in case of master failure
      */
     MASTER("1"),
+
     /**
      * Delivery guaranteed (slowest)
      */
