@@ -110,6 +110,11 @@
             <artifactId>mockk</artifactId>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>com.ninja-squad</groupId>
+            <artifactId>springmockk</artifactId>
+            <version>${springmockk.version}</version>
+        </dependency>
     </dependencies>
 
 </project>
