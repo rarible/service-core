@@ -1,5 +1,7 @@
 package com.rarible.core.telemetry.bootstrap
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.env.EnvironmentPostProcessor
 import org.springframework.boot.env.YamlPropertySourceLoader
@@ -11,6 +13,7 @@ import java.util.*
 
 class DefaultBootstrapEnvironmentPostProcessor : EnvironmentPostProcessor {
     override fun postProcessEnvironment(environment: ConfigurableEnvironment, application: SpringApplication) {
+        logger.info("postProcessEnvironment")
         val sources = YamlPropertySourceLoader().load(
             "rarible-bootstrap-defaults",
             ClassPathResource("/com/rarible/bootstrap/bootstrap.yml")
@@ -34,6 +37,8 @@ class DefaultBootstrapEnvironmentPostProcessor : EnvironmentPostProcessor {
     }
 
     private companion object {
+        val logger: Logger = LoggerFactory.getLogger(DefaultBootstrapEnvironmentPostProcessor::class.java)
+
         const val APPLICATION_ENVIRONMENT = "application.environment"
         const val CONSUL_ROOT_PATH = "consul.root-path"
         const val CONSUL_CONFIG_DEFAULT_CONTEXT_PROPERTY = "spring.cloud.consul.config.default-context"
