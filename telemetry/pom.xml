@@ -5,7 +5,7 @@
     <parent>
         <artifactId>rarible-core-parent</artifactId>
         <groupId>com.rarible.core</groupId>
-        <version>1.2-SNAPSHOT</version>
+        <version>1.3-spring25-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>rarible-core-telemetry-starter</artifactId>
@@ -38,7 +38,7 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-consul-config</artifactId>
+            <artifactId>spring-cloud-consul-config</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.cloud</groupId>
