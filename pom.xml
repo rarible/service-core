@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.rarible.core</groupId>
 	<artifactId>rarible-core-parent</artifactId>
-	<version>1.2-SNAPSHOT</version>
+	<version>1.3-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <repositories>
@@ -25,7 +25,7 @@
     <parent>
         <groupId>com.rarible</groupId>
         <artifactId>rarible-parent-pom</artifactId>
-        <version>1.1-SNAPSHOT</version>
+        <version>1.2-SNAPSHOT</version>
     </parent>
 
     <properties>
@@ -34,10 +34,25 @@
         <springfox.version>3.0.0</springfox.version>
         <nexus.maven.public>http://nexus.rarible.int/repository/maven-public/</nexus.maven.public>
         <springmockk.version>2.0.3</springmockk.version>
+        <io.mock.version>1.10.6</io.mock.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-consul-dependencies</artifactId>
+                <version>3.0.3</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>2020.0.3</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <dependency>
                 <groupId>org.testcontainers</groupId>
                 <artifactId>testcontainers-bom</artifactId>
@@ -90,11 +105,6 @@
             <dependency>
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-metrics</artifactId>
-                <version>1.2-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>com.rarible.core</groupId>
-                <artifactId>rarible-core-feign</artifactId>
                 <version>1.2-SNAPSHOT</version>
             </dependency>
             <dependency>
@@ -167,7 +177,6 @@
     </dependencyManagement>
 
     <modules>
-        <module>feign</module>
         <module>logging</module>
         <module>test-common</module>
         <module>logging-filter</module>
