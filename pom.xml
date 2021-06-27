@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.rarible.core</groupId>
 	<artifactId>rarible-core-parent</artifactId>
-	<version>1.3-SNAPSHOT.spring25</version>
+	<version>1.3-spring25-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <repositories>
@@ -24,7 +24,7 @@
     <parent>
         <groupId>com.rarible</groupId>
         <artifactId>rarible-parent-pom</artifactId>
-        <version>1.3-spring25-SNAPSHOT</version>
+        <version>1.3-SNAPSHOT.spring25</version>
     </parent>
 
     <properties>
