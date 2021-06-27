@@ -34,7 +34,7 @@
         <nexus.maven.public>http://nexus.rarible.int/repository/maven-public/</nexus.maven.public>
         <springmockk.version>2.0.3</springmockk.version>
         <io.mock.version>1.10.6</io.mock.version>
-        <rarible.core.version>1.3-SNAPSHOT.spring25</rarible.core.version>
+        <rarible.core.version>1.3-spring25-SNAPSHOT</rarible.core.version>
     </properties>
 
     <dependencyManagement>
