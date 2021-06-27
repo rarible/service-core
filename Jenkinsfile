@@ -1,6 +1,6 @@
 @Library('shared-library') _
 
-def credentialsId = 'jenkins-rarible-ci'
+def credentialsId = 'nexus-ci'
 
 pipeline {
     agent any
