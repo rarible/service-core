@@ -1,10 +1,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    
-	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.rarible.core</groupId>
-	<artifactId>rarible-core-parent</artifactId>
-	<version>1.2-SNAPSHOT</version>
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.rarible.core</groupId>
+    <artifactId>rarible-core-parent</artifactId>
+    <version>1.2-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <repositories>
@@ -166,6 +166,15 @@
         </dependencies>
     </dependencyManagement>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
     <modules>
         <module>feign</module>
         <module>logging</module>
@@ -185,6 +194,7 @@
         <module>starter</module>
         <module>daemon</module>
         <module>client</module>
+        <module>test-coverage</module>
     </modules>
 
 </project>
