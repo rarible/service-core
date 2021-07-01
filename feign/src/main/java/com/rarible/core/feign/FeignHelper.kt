@@ -9,6 +9,7 @@ import org.springframework.http.client.reactive.ReactorClientHttpConnector
 import org.springframework.http.codec.ClientCodecConfigurer
 import org.springframework.http.codec.json.Jackson2JsonDecoder
 import org.springframework.http.codec.json.Jackson2JsonEncoder
+import org.springframework.util.unit.DataSize
 import org.springframework.web.reactive.function.client.ExchangeStrategies
 import org.springframework.web.reactive.function.client.WebClient
 import reactivefeign.ReactiveContract
@@ -25,6 +26,9 @@ object FeignHelper {
                 )
                 clientDefaultCodecsConfigurer.defaultCodecs().jackson2JsonDecoder(
                     Jackson2JsonDecoder(mapper, MediaType.APPLICATION_JSON)
+                )
+                clientDefaultCodecsConfigurer.defaultCodecs().maxInMemorySize(
+                    DataSize.ofMegabytes(10).toBytes().toInt()
                 )
             }.build()
 
