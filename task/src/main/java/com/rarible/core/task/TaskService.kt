@@ -14,6 +14,7 @@ import org.springframework.data.mongodb.core.query.isEqualTo
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
+import java.util.concurrent.Executors
 
 @FlowPreview
 @ExperimentalCoroutinesApi
@@ -24,10 +25,14 @@ class TaskService(
     private val mongo: ReactiveMongoOperations,
     handlers: List<TaskHandler<*>>
 ) {
+    private val scope = CoroutineScope(
+        SupervisorJob() + Executors.newCachedThreadPool().asCoroutineDispatcher()
+    )
+
     val handlersMap = handlers.associateBy { it.type }
 
     init {
-        GlobalScope.launch {
+        scope.launch {
             taskRepository.findByRunning(true)
                 .asFlow()
                 .collect {
@@ -51,7 +56,7 @@ class TaskService(
 
     @Scheduled(initialDelayString = "\${rarible.task.initialDelay:30000}", fixedDelayString = "\${rarible.task.delay:60000}")
     fun readAndRun() {
-        GlobalScope.launch {
+        scope.launch {
             logger.info("readAndRun()")
             Flux.concat(
                 taskRepository.findByRunningAndLastStatus(false, TaskStatus.ERROR),
@@ -69,7 +74,7 @@ class TaskService(
     }
 
     fun runTask(type: String, param: String, sample: Long? = Task.DEFAULT_SAMPLE) {
-        GlobalScope.launch { //todo GlobalScope - not good
+        scope.launch {
             val handler = handlersMap[type]
             if (handler != null) {
                 logger.info("runTask type=$type param=$param")

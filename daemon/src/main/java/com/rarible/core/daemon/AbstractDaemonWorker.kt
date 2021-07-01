@@ -4,14 +4,7 @@ import com.rarible.core.daemon.healthcheck.LivenessHealthIndicator
 import com.rarible.core.daemon.healthcheck.TouchLivenessHealthIndicator
 import com.rarible.core.telemetry.metrics.increment
 import io.micrometer.core.instrument.MeterRegistry
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CompletionHandler
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kotlinx.coroutines.time.delay
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -62,7 +55,9 @@ abstract class AbstractDaemonWorker(
             }
         }.asCoroutineDispatcher()
 
-    private val job = GlobalScope.launch(daemonDispatcher, start = CoroutineStart.LAZY) { run(this) }
+    private val scope = CoroutineScope(SupervisorJob() + daemonDispatcher)
+
+    private val job = scope.launch(start = CoroutineStart.LAZY) { run(this) }
 
     fun start() {
         logger.info("Run $workerName")
