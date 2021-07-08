@@ -2,7 +2,7 @@ package com.rarible.core.reduce.service
 
 import com.rarible.core.common.retryOptimisticLock
 import com.rarible.core.reduce.model.DataKey
-import com.rarible.core.reduce.model.DataRepository
+import com.rarible.core.reduce.repository.DataRepository
 import com.rarible.core.reduce.model.ReduceEvent
 import com.rarible.core.reduce.model.ReduceSnapshot
 import com.rarible.core.reduce.repository.ReduceEventRepository
@@ -16,19 +16,21 @@ import reactor.kotlin.core.publisher.toFlux
 import java.util.concurrent.atomic.AtomicReference
 
 class ReduceService<in Event : ReduceEvent<Mark>, Mark : Comparable<Mark>, Data, Key : DataKey>(
-    private val reducible: Reducible<Event, Mark, Data, Key>,
+    private val reducer: Reducer<Event, Mark, Data, Key>,
     private val eventRepository: ReduceEventRepository<Event, Mark, Key>,
     private val snapshotRepository: SnapshotRepository<Mark, Data, Key>,
     private val dataRepository: DataRepository<Data>,
-    private val minEventsBeforeNexSnapshot: Int
+    private val minEventsBeforeNexSnapshot: Long
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     suspend fun onEvents(events: List<Event>) {
+        if (events.isEmpty()) return
+
         val context = ReduceContext(events)
 
         events.toFlux()
-            .map { event -> reducible.getDataKeyFromEvent(event) }
+            .map { event -> reducer.getDataKeyFromEvent(event) }
             .distinct()
             .flatMap { update(it, context) }
             .awaitFirstOrNull()
@@ -40,16 +42,16 @@ class ReduceService<in Event : ReduceEvent<Mark>, Mark : Comparable<Mark>, Data,
             ?.takeIf { context.minMark > it.mark }
 
         eventRepository.getEvents(key, snapshot?.mark)
-            .windowUntilChanged { event -> reducible.getDataKeyFromEvent(event) }
+            .windowUntilChanged { event -> reducer.getDataKeyFromEvent(event) }
             .concatMap {
                 it.switchOnFirst { first, events ->
                     val firstEvent = first.get()
 
                     if (firstEvent != null) {
-                        val targetKey = reducible.getDataKeyFromEvent(firstEvent)
+                        val targetKey = reducer.getDataKeyFromEvent(firstEvent)
                         logger.info("Started processing $targetKey")
 
-                        val initial = snapshot?.data ?: reducible.getInitialData(targetKey)
+                        val initial = snapshot?.data ?: reducer.getInitialData(targetKey)
 
                         updateData(initial, events)
                             .retryOptimisticLock()
@@ -65,9 +67,9 @@ class ReduceService<in Event : ReduceEvent<Mark>, Mark : Comparable<Mark>, Data,
     private fun updateData(initial: Data, events: Flux<Event>) = mono {
         val nextSnapshotReference = AtomicReference<ReduceSnapshot<Data, Mark>?>()
 
-        val indexedSnapshot = reducible.reduce(initial, events)
+        val indexedSnapshot = reducer.reduce(initial, events)
             .index { index, snapshot ->
-                if (index >= minEventsBeforeNexSnapshot) nextSnapshotReference.compareAndExchange(null, snapshot)
+                if (index > 0 && (index % minEventsBeforeNexSnapshot) == 0L) nextSnapshotReference.set(snapshot)
                 IndexedSnapshot(snapshot, index)
             }
             .last()

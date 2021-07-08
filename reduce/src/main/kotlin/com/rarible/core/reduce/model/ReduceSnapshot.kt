@@ -1,6 +1,6 @@
 package com.rarible.core.reduce.model
 
-data class ReduceSnapshot<Data, Mark : Comparable<Mark>>(
-    val data: Data,
-    val mark: Mark
-)
+abstract class ReduceSnapshot<Data, Mark : Comparable<Mark>> {
+    abstract val data: Data
+    abstract val mark: Mark
+}
