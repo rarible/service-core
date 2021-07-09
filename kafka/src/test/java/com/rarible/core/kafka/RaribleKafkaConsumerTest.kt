@@ -22,7 +22,6 @@ internal class RaribleKafkaConsumerTest {
     private val kafkaContainer = KafkaTestContainer()
 
     @Test
-    @Disabled
     fun sendReceiveKafkaMessage() = runBlocking<Unit> {
         val producer = RaribleKafkaProducer<TestObject>(
             clientId = "test-producer",
@@ -40,7 +39,7 @@ internal class RaribleKafkaConsumerTest {
             bootstrapServers = kafkaContainer.kafkaBoostrapServers(),
             offsetResetStrategy = OffsetResetStrategy.EARLIEST
         )
-        val sendResult = withTimeout(Duration.ofSeconds(5)) {
+        val sendResult = withTimeout(Duration.ofSeconds(10)) {
             val headers = hashMapOf("header1" to "value1", "header2" to "value2")
             producer.send(KafkaMessage(key = "key", value = TestObject("field1", 1), headers = headers))
         }
