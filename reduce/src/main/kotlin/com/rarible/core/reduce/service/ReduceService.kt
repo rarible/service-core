@@ -17,10 +17,15 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.toFlux
 
-class ReduceService<in Event : ReduceEvent<Mark>, Mark : Comparable<Mark>, Data, Key : DataKey>(
-    private val reducer: Reducer<Event, Mark, Data, Key>,
+class ReduceService<
+        Event : ReduceEvent<Mark>,
+        Snapshot : ReduceSnapshot<Data, Mark>,
+        Mark : Comparable<Mark>,
+        Data,
+        Key : DataKey>(
+    private val reducer: Reducer<Event, Snapshot, Mark, Data, Key>,
     private val eventRepository: ReduceEventRepository<Event, Mark, Key>,
-    private val snapshotRepository: SnapshotRepository<ReduceSnapshot<Data, Mark>, Data, Mark, Key>,
+    private val snapshotRepository: SnapshotRepository<Snapshot, Data, Mark, Key>,
     private val dataRepository: DataRepository<Data>,
     private val eventsCountBeforeSnapshot: Long
 ) {
@@ -67,7 +72,7 @@ class ReduceService<in Event : ReduceEvent<Mark>, Mark : Comparable<Mark>, Data,
     }
 
     private fun updateData(initialData: Data, events: Flux<Event>) = mono {
-        val limitedQueue = LimitedQueue<ReduceSnapshot<Data, Mark>>(INTERMEDIATE_SNAPSHOT_COUNT)
+        val limitedQueue = LimitedQueue<Snapshot>(INTERMEDIATE_SNAPSHOT_COUNT)
 
         val reducedData = events
             .window(eventsCountBeforeSnapshot.toInt())
