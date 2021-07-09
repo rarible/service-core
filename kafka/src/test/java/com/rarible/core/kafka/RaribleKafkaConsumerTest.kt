@@ -11,6 +11,7 @@ import org.apache.kafka.clients.consumer.OffsetResetStrategy
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.kafka.common.serialization.StringSerializer
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.Duration
 
@@ -21,6 +22,7 @@ internal class RaribleKafkaConsumerTest {
     private val kafkaContainer = KafkaTestContainer()
 
     @Test
+    @Disabled
     fun sendReceiveKafkaMessage() = runBlocking<Unit> {
         val producer = RaribleKafkaProducer<TestObject>(
             clientId = "test-producer",
