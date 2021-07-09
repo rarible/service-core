@@ -7,13 +7,15 @@ import com.rarible.core.reduce.model.ReduceEvent
 import com.rarible.core.reduce.model.ReduceSnapshot
 import com.rarible.core.reduce.repository.ReduceEventRepository
 import com.rarible.core.reduce.repository.SnapshotRepository
+import kotlinx.coroutines.flow.fold
+import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactor.mono
 import org.slf4j.LoggerFactory
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.toFlux
-import java.util.concurrent.atomic.AtomicReference
+import java.util.*
 
 class ReduceService<in Event : ReduceEvent<Mark>, Mark : Comparable<Mark>, Data, Key : DataKey>(
     private val reducer: Reducer<Event, Mark, Data, Key>,
@@ -64,33 +66,30 @@ class ReduceService<in Event : ReduceEvent<Mark>, Mark : Comparable<Mark>, Data,
             .then()
     }
 
-    private fun updateData(initial: Data, events: Flux<Event>) = mono {
-        val nextSnapshotReference = AtomicReference<ReduceSnapshot<Data, Mark>?>()
+    private fun updateData(initialData: Data, events: Flux<Event>) = mono {
+        val stack = Stack<ReduceSnapshot<Data, Mark>>()
 
-        val indexedSnapshot = reducer.reduce(initial, events)
-            .index { index, snapshot ->
-                if (index > 0 && (index % minEventsBeforeNexSnapshot) == 0L) nextSnapshotReference.set(snapshot)
-                IndexedSnapshot(snapshot, index)
+        val reducedData = events
+            .window(minEventsBeforeNexSnapshot.toInt())
+            .asFlow()
+            .fold(initialData) { initial, window ->
+                val intermediateSnapshot = reducer.reduce(initial, window.asFlow())
+                stack.push(intermediateSnapshot)
+
+                intermediateSnapshot.data
             }
-            .last()
-            .awaitFirstOrNull()
 
-        if (indexedSnapshot != null) {
-            dataRepository.save(indexedSnapshot.snapshot.data)
+        if (reducedData != initialData) {
+            dataRepository.save(reducedData)
 
-            val nextSnapshot = nextSnapshotReference.get()
-            val needSaveSnapshot = indexedSnapshot.index >= (minEventsBeforeNexSnapshot * 2)
+            val nextSnapshot = stack.lastOrNull()
+            val needSaveSnapshot = stack.size == 3
 
             if (nextSnapshot != null && needSaveSnapshot) {
                 snapshotRepository.save(nextSnapshot)
             }
         }
     }
-
-    data class IndexedSnapshot<Data, Mark : Comparable<Mark>>(
-        val snapshot: ReduceSnapshot<Data, Mark>,
-        val index: Long
-    )
 
     private class ReduceContext<out Event : ReduceEvent<Mark>, Mark : Comparable<Mark>>(
         events: List<Event>
