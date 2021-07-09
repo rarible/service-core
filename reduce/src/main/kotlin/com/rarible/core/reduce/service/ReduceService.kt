@@ -20,7 +20,7 @@ import reactor.kotlin.core.publisher.toFlux
 class ReduceService<in Event : ReduceEvent<Mark>, Mark : Comparable<Mark>, Data, Key : DataKey>(
     private val reducer: Reducer<Event, Mark, Data, Key>,
     private val eventRepository: ReduceEventRepository<Event, Mark, Key>,
-    private val snapshotRepository: SnapshotRepository<Mark, Data, Key>,
+    private val snapshotRepository: SnapshotRepository<ReduceSnapshot<Data, Mark>, Data, Mark, Key>,
     private val dataRepository: DataRepository<Data>,
     private val eventsCountBeforeSnapshot: Long
 ) {
