@@ -2,9 +2,10 @@ package com.rarible.core.reduce.service
 
 import com.rarible.core.common.retryOptimisticLock
 import com.rarible.core.reduce.model.DataKey
-import com.rarible.core.reduce.repository.DataRepository
 import com.rarible.core.reduce.model.ReduceEvent
 import com.rarible.core.reduce.model.ReduceSnapshot
+import com.rarible.core.reduce.queue.LimitedQueue
+import com.rarible.core.reduce.repository.DataRepository
 import com.rarible.core.reduce.repository.ReduceEventRepository
 import com.rarible.core.reduce.repository.SnapshotRepository
 import kotlinx.coroutines.flow.fold
@@ -15,14 +16,13 @@ import org.slf4j.LoggerFactory
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.toFlux
-import java.util.*
 
 class ReduceService<in Event : ReduceEvent<Mark>, Mark : Comparable<Mark>, Data, Key : DataKey>(
     private val reducer: Reducer<Event, Mark, Data, Key>,
     private val eventRepository: ReduceEventRepository<Event, Mark, Key>,
     private val snapshotRepository: SnapshotRepository<Mark, Data, Key>,
     private val dataRepository: DataRepository<Data>,
-    private val minEventsBeforeNexSnapshot: Long
+    private val eventsCountBeforeSnapshot: Long
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -67,14 +67,14 @@ class ReduceService<in Event : ReduceEvent<Mark>, Mark : Comparable<Mark>, Data,
     }
 
     private fun updateData(initialData: Data, events: Flux<Event>) = mono {
-        val stack = Stack<ReduceSnapshot<Data, Mark>>()
+        val limitedQueue = LimitedQueue<ReduceSnapshot<Data, Mark>>(INTERMEDIATE_SNAPSHOT_COUNT)
 
         val reducedData = events
-            .window(minEventsBeforeNexSnapshot.toInt())
+            .window(eventsCountBeforeSnapshot.toInt())
             .asFlow()
             .fold(initialData) { initial, window ->
                 val intermediateSnapshot = reducer.reduce(initial, window.asFlow())
-                stack.push(intermediateSnapshot)
+                limitedQueue.push(intermediateSnapshot)
 
                 intermediateSnapshot.data
             }
@@ -82,10 +82,11 @@ class ReduceService<in Event : ReduceEvent<Mark>, Mark : Comparable<Mark>, Data,
         if (reducedData != initialData) {
             dataRepository.save(reducedData)
 
-            val nextSnapshot = stack.lastOrNull()
-            val needSaveSnapshot = stack.size == 3
+            val latestSnapshots = limitedQueue.getElementList()
+            val needSaveSnapshot = latestSnapshots.size >= INTERMEDIATE_SNAPSHOT_COUNT
 
-            if (nextSnapshot != null && needSaveSnapshot) {
+            if (needSaveSnapshot) {
+                val nextSnapshot = latestSnapshots[NEXT_SNAPSHOT_INDEX]
                 snapshotRepository.save(nextSnapshot)
             }
         }
@@ -95,5 +96,10 @@ class ReduceService<in Event : ReduceEvent<Mark>, Mark : Comparable<Mark>, Data,
         events: List<Event>
     ) {
         val minMark: Mark = events.minBy { it.mark }?.mark ?: error("Events array can't be empty")
+    }
+
+    companion object {
+        const val INTERMEDIATE_SNAPSHOT_COUNT = 3
+        const val NEXT_SNAPSHOT_INDEX = INTERMEDIATE_SNAPSHOT_COUNT - 1
     }
 }
