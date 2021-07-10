@@ -10,6 +10,7 @@ import com.rarible.core.reduce.service.repository.AccountBalanceRepository
 import com.rarible.core.reduce.service.repository.AccountBalanceSnapshotRepository
 import com.rarible.core.reduce.service.repository.AccountReduceEventRepository
 import com.rarible.core.reduce.service.repository.ReduceDataRepository
+import kotlinx.coroutines.reactive.awaitFirst
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -29,6 +30,27 @@ internal class ReduceServiceTest : AbstractIntegrationTest() {
         dataRepository = dataRepository,
         eventsCountBeforeSnapshot = 12
     )
+
+    @Test
+    fun `should get all events by account id`() = runBlocking<Unit> {
+        val accountId = createAccountId()
+
+        val event1 = createAccountIncomeTransfer(accountId).copy(value = BigInteger.valueOf(10), blockNumber = 3)
+        val event2 = createAccountIncomeTransfer(accountId).copy(value = BigInteger.valueOf(5), blockNumber = 1)
+        val event3 = createAccountOutcomeTransfer(accountId).copy(value = BigInteger.valueOf(7), blockNumber = 4)
+        val event4 = createAccountOutcomeTransfer(accountId).copy(value = BigInteger.valueOf(7), blockNumber = 2)
+
+        listOf(event1, event2, event3, event4, createAccountOutcomeTransfer()).forEach {
+            eventRepository.save(it)
+        }
+
+        val eventList = eventRepository.getEvents(reducer.getDataKeyFromEvent(AccountReduceEvent(event1)), null).collectList().awaitFirst()
+        assertThat(eventList).hasSize(4)
+        assertThat(eventList[0].event.blockNumber).isEqualTo(1)
+        assertThat(eventList[1].event.blockNumber).isEqualTo(2)
+        assertThat(eventList[2].event.blockNumber).isEqualTo(3)
+        assertThat(eventList[3].event.blockNumber).isEqualTo(4)
+    }
 
     @Test
     fun `should reduce simple events`() = runBlocking<Unit> {

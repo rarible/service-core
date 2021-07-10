@@ -10,12 +10,14 @@ import com.rarible.core.reduce.repository.ReduceEventRepository
 import com.rarible.core.reduce.repository.SnapshotRepository
 import kotlinx.coroutines.flow.fold
 import kotlinx.coroutines.reactive.asFlow
+import kotlinx.coroutines.reactive.awaitFirst
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactor.mono
 import org.slf4j.LoggerFactory
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.toFlux
+import java.lang.RuntimeException
 
 class ReduceService<
         Event : ReduceEvent<Mark>,
@@ -68,7 +70,7 @@ class ReduceService<
                     }
                 }
             }
-            .then()
+            .awaitFirstOrNull()
     }
 
     private fun updateData(initialSnapshot: Snapshot, events: Flux<Event>) = mono {
