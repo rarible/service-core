@@ -22,7 +22,7 @@ internal class ReduceServiceTest : AbstractIntegrationTest() {
     private val snapshotRepository = AccountBalanceSnapshotRepository(template)
     private val eventRepository = AccountReduceEventRepository(template)
     private val dataRepository = ReduceDataRepository(balanceRepository)
-    private val reducer = AccountBalanceReducer()
+    private val reducer = AccountBalanceReducer(balanceRepository)
 
     private val service = ReduceService(
         reducer = reducer,
@@ -115,7 +115,12 @@ internal class ReduceServiceTest : AbstractIntegrationTest() {
 
         service.onEvents(incomes)
 
+        eventRepository.dropCollection()
+
+        val oldOtherIncomes = createSeqAccountIncomeReduceEvent(accountId, income = 1000, amount = 10, startBlockNumber = 0)
         val newIncomes = createSeqAccountIncomeReduceEvent(accountId, income = 1, amount = 2, startBlockNumber = 13)
+
+        (oldOtherIncomes + newIncomes).forEach { eventRepository.save(it.event) }
 
         service.onEvents(newIncomes)
 

@@ -2,11 +2,15 @@ package com.rarible.core.reduce.service.reducer
 
 import com.rarible.core.reduce.service.Reducer
 import com.rarible.core.reduce.service.model.*
+import com.rarible.core.reduce.service.repository.AccountBalanceRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.fold
 import java.math.BigInteger
 
-class AccountBalanceReducer : Reducer<AccountReduceEvent, AccountReduceSnapshot, Long, AccountBalance, AccountId> {
+class AccountBalanceReducer(
+    private val accountBalanceRepository: AccountBalanceRepository
+) : Reducer<AccountReduceEvent, AccountReduceSnapshot, Long, AccountBalance, AccountId> {
+
     override fun getDataKeyFromEvent(event: AccountReduceEvent): AccountId {
         return AccountId(bank = event.event.bank, owner = event.event.owner)
     }
@@ -24,8 +28,10 @@ class AccountBalanceReducer : Reducer<AccountReduceEvent, AccountReduceSnapshot,
         initial: AccountReduceSnapshot,
         events: Flow<AccountReduceEvent>
     ): AccountReduceSnapshot {
-        val accountBalance = initial.data
-        val initialState = BalanceState(accountBalance.balance, initial.mark)
+        val initialBalance = initial.data.balance
+        val accountBalance = accountBalanceRepository.get(initial.data.id) ?: initial.data
+
+        val initialState = BalanceState(initialBalance, initial.mark)
 
         val (balance, mark) = events.fold(initialState) { balance, history ->
             val value = history.event.value
