@@ -128,6 +128,29 @@ internal class ReduceServiceTest : AbstractIntegrationTest() {
         assertThat(accountBalance1?.balance).isEqualTo(BigInteger.valueOf(10))
     }
 
+    @Test
+    fun `should drop snapshot if come old mark`() = runBlocking<Unit> {
+        val accountId = createAccountId()
+        val incomes = createSeqAccountIncomeReduceEvent(accountId, income = 1, amount = 10, startBlockNumber = 0)
+        val outcomes = createSeqAccountOutcomeReduceEvent(accountId, outcome = 1, amount = 10, startBlockNumber = 10)
+
+        (incomes + outcomes).forEach { eventRepository.save(it.event) }
+
+        service.onEvents(incomes)
+
+        eventRepository.dropCollection()
+
+        val newIncomes = createSeqAccountIncomeReduceEvent(accountId, income = 1, amount = 3, startBlockNumber = 0)
+        val newOutcomes = createSeqAccountOutcomeReduceEvent(accountId, outcome = 1, amount = 2, startBlockNumber = 9)
+
+        (newIncomes + newOutcomes).forEach { eventRepository.save(it.event) }
+
+        service.onEvents(newOutcomes)
+
+        val accountBalance1 = balanceRepository.get(accountId)
+        assertThat(accountBalance1?.balance).isEqualTo(BigInteger.valueOf(1))
+    }
+
     private fun createSeqAccountIncomeReduceEvent(
         accountId: AccountId,
         income: Long,
