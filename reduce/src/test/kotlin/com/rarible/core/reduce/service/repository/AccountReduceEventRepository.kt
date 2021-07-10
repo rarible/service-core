@@ -5,6 +5,7 @@ import com.rarible.core.reduce.service.model.AccountBalanceEvent
 import com.rarible.core.reduce.service.model.AccountId
 import com.rarible.core.reduce.service.model.AccountReduceEvent
 import kotlinx.coroutines.reactive.awaitFirst
+import kotlinx.coroutines.reactive.awaitFirstOrNull
 import org.springframework.data.domain.Sort
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate
 import org.springframework.data.mongodb.core.query.*
@@ -13,6 +14,10 @@ import reactor.core.publisher.Flux
 class AccountReduceEventRepository(
     private val template: ReactiveMongoTemplate
 ) : ReduceEventRepository<AccountReduceEvent, Long, AccountId> {
+
+    suspend fun dropCollection() {
+        template.dropCollection(AccountBalanceEvent::class.java).awaitFirstOrNull()
+    }
 
     suspend fun save(event: AccountBalanceEvent): AccountBalanceEvent {
         return template.save(event).awaitFirst()

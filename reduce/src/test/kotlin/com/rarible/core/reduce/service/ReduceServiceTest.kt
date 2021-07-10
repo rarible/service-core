@@ -4,6 +4,7 @@ import com.rarible.core.reduce.AbstractIntegrationTest
 import com.rarible.core.reduce.factory.createAccountId
 import com.rarible.core.reduce.factory.createAccountIncomeTransfer
 import com.rarible.core.reduce.factory.createAccountOutcomeTransfer
+import com.rarible.core.reduce.service.model.AccountId
 import com.rarible.core.reduce.service.model.AccountReduceEvent
 import com.rarible.core.reduce.service.reducer.AccountBalanceReducer
 import com.rarible.core.reduce.service.repository.AccountBalanceRepository
@@ -28,7 +29,7 @@ internal class ReduceServiceTest : AbstractIntegrationTest() {
         eventRepository = eventRepository,
         snapshotRepository = snapshotRepository,
         dataRepository = dataRepository,
-        eventsCountBeforeSnapshot = 12
+        eventsCountBeforeSnapshot = 4
     )
 
     @Test
@@ -84,5 +85,71 @@ internal class ReduceServiceTest : AbstractIntegrationTest() {
         val accountBalance2 = balanceRepository.get(accountId2)
         assertThat(accountBalance2).isNotNull
         assertThat(accountBalance2?.balance).isEqualTo(BigInteger.valueOf(5))
+    }
+
+    @Test
+    fun `should make latest snapshot after full reduce`() = runBlocking<Unit> {
+        val accountId = createAccountId()
+        val incomes = createSeqAccountIncomeReduceEvent(accountId, income = 1, amount = 10, startBlockNumber = 0)
+        val outcomes = createSeqAccountOutcomeReduceEvent(accountId, outcome = 1, amount = 10, startBlockNumber = 10)
+
+        (incomes + outcomes).forEach { eventRepository.save(it.event) }
+
+        service.onEvents(incomes)
+
+        val accountBalance1 = balanceRepository.get(accountId)
+        assertThat(accountBalance1?.balance).isEqualTo(BigInteger.valueOf(0))
+
+        val snapshot = snapshotRepository.get(accountId)
+        assertThat(snapshot?.mark).isEqualTo(12)
+        assertThat(snapshot?.data?.balance).isEqualTo(8)
+    }
+
+    @Test
+    fun `should use latest snapshot for next reduce`() = runBlocking<Unit> {
+        val accountId = createAccountId()
+        val incomes = createSeqAccountIncomeReduceEvent(accountId, income = 1, amount = 10, startBlockNumber = 0)
+        val outcomes = createSeqAccountOutcomeReduceEvent(accountId, outcome = 1, amount = 10, startBlockNumber = 10)
+
+        (incomes + outcomes).forEach { eventRepository.save(it.event) }
+
+        service.onEvents(incomes)
+
+        val newIncomes = createSeqAccountIncomeReduceEvent(accountId, income = 1, amount = 2, startBlockNumber = 13)
+
+        service.onEvents(newIncomes)
+
+        val accountBalance1 = balanceRepository.get(accountId)
+        assertThat(accountBalance1?.balance).isEqualTo(BigInteger.valueOf(10))
+    }
+
+    private fun createSeqAccountIncomeReduceEvent(
+        accountId: AccountId,
+        income: Long,
+        amount: Long,
+        startBlockNumber: Long
+    ): List<AccountReduceEvent> {
+        return (1..amount)
+            .map {
+                createAccountIncomeTransfer(accountId).copy(value = BigInteger.valueOf(income), blockNumber = startBlockNumber + it)
+            }
+            .map {
+                AccountReduceEvent(it)
+            }
+    }
+
+    private fun createSeqAccountOutcomeReduceEvent(
+        accountId: AccountId,
+        outcome: Long,
+        amount: Long,
+        startBlockNumber: Long
+    ): List<AccountReduceEvent> {
+        return (1..amount)
+            .map {
+                createAccountOutcomeTransfer(accountId).copy(value = BigInteger.valueOf(outcome), blockNumber = startBlockNumber + it)
+            }
+            .map {
+                AccountReduceEvent(it)
+            }
     }
 }
