@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 interface Reducer<Event : ReduceEvent<Mark>, Snapshot : ReduceSnapshot<Data, Mark>, Mark : Comparable<Mark>, Data, Key : DataKey> {
     fun getDataKeyFromEvent(event: Event): Key
 
-    fun getInitialData(key: Key): Data
+    fun getInitialData(key: Key): Snapshot
 
-    suspend fun reduce(initial: Data, events: Flow<Event>): Snapshot
+    suspend fun reduce(initial: Snapshot, events: Flow<Event>): Snapshot
 }

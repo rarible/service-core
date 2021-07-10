@@ -6,12 +6,13 @@ import org.springframework.data.annotation.Transient
 import org.springframework.data.annotation.Version
 import org.springframework.data.mongodb.core.mapping.Document
 import java.math.BigInteger
-import java.util.*
+
+typealias Address = String
 
 @Document(collection = "account_balance")
 data class AccountBalance(
-    val bank: UUID,
-    val owner: UUID,
+    val bank: Address,
+    val owner: Address,
     val balance: BigInteger,
     @Version
     val version: Long? = null

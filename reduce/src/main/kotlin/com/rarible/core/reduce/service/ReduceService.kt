@@ -58,7 +58,7 @@ class ReduceService<
                         val targetKey = reducer.getDataKeyFromEvent(firstEvent)
                         logger.info("Started processing $targetKey")
 
-                        val initial = snapshot?.data ?: reducer.getInitialData(targetKey)
+                        val initial = snapshot ?: reducer.getInitialData(targetKey)
 
                         updateData(initial, events)
                             .retryOptimisticLock()
@@ -71,21 +71,21 @@ class ReduceService<
             .then()
     }
 
-    private fun updateData(initialData: Data, events: Flux<Event>) = mono {
+    private fun updateData(initialSnapshot: Snapshot, events: Flux<Event>) = mono {
         val limitedQueue = LimitedQueue<Snapshot>(INTERMEDIATE_SNAPSHOT_COUNT)
 
-        val reducedData = events
+        val reducedSnapshot = events
             .window(eventsCountBeforeSnapshot.toInt())
             .asFlow()
-            .fold(initialData) { initial, window ->
+            .fold(initialSnapshot) { initial, window ->
                 val intermediateSnapshot = reducer.reduce(initial, window.asFlow())
                 limitedQueue.push(intermediateSnapshot)
 
-                intermediateSnapshot.data
+                intermediateSnapshot
             }
 
-        if (reducedData != initialData) {
-            dataRepository.save(reducedData)
+        if (reducedSnapshot != initialSnapshot) {
+            dataRepository.save(reducedSnapshot.data)
 
             val latestSnapshots = limitedQueue.getElementList()
             val needSaveSnapshot = latestSnapshots.size >= INTERMEDIATE_SNAPSHOT_COUNT
