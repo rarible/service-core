@@ -19,7 +19,7 @@ import reactor.kotlin.core.publisher.toFlux
 
 class ReduceService<
         Event : ReduceEvent<Mark>,
-        Snapshot : ReduceSnapshot<Data, Mark>,
+        Snapshot : ReduceSnapshot<Data, Mark, Key>,
         Mark : Comparable<Mark>,
         Data,
         Key : DataKey>(

@@ -17,7 +17,7 @@ class AccountBalanceReducer : Reducer<AccountReduceEvent, AccountReduceSnapshot,
             owner = key.owner,
             balance = BigInteger.ZERO
         )
-        return AccountReduceSnapshot(accountBalance, 0)
+        return AccountReduceSnapshot(accountBalance.id, accountBalance, 0)
     }
 
     override suspend fun reduce(
@@ -37,6 +37,7 @@ class AccountBalanceReducer : Reducer<AccountReduceEvent, AccountReduceSnapshot,
             }
         }
         return AccountReduceSnapshot(
+            id = accountBalance.id,
             data = accountBalance.withBalance(balance),
             mark = mark
         )
