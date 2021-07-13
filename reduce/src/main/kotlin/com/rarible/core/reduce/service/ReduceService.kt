@@ -35,19 +35,19 @@ class ReduceService<
     suspend fun onEvents(events: List<Event>) {
         if (events.isEmpty()) return
 
-        val context = ReduceContext(events)
+        val minMark: Mark = events.minBy { it.mark }?.mark ?: error("Events array can't be empty")
 
         events.toFlux()
             .map { event -> reducer.getDataKeyFromEvent(event) }
             .distinct()
-            .flatMap { update(it, context) }
+            .flatMap { update(it, minMark) }
             .awaitFirstOrNull()
     }
 
-    private fun update(key: Key?, context: ReduceContext<Event, Mark>) = mono {
+    private fun update(key: Key?, minMark: Mark) = mono {
         val snapshot = key
             ?.let { snapshotRepository.get(it) }
-            ?.takeIf { context.minMark > it.mark }
+            ?.takeIf { minMark > it.mark }
 
         eventRepository.getEvents(key, snapshot?.mark)
             .asFlux()
@@ -70,6 +70,7 @@ class ReduceService<
                     }
                 }
             }
+            .then()
             .awaitFirstOrNull()
     }
 
@@ -96,11 +97,5 @@ class ReduceService<
                 snapshotRepository.save(nextSnapshot)
             }
         }
-    }
-
-    private class ReduceContext<out Event : ReduceEvent<Mark>, Mark : Comparable<Mark>>(
-        events: List<Event>
-    ) {
-        val minMark: Mark = events.minBy { it.mark }?.mark ?: error("Events array can't be empty")
     }
 }

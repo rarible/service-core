@@ -55,6 +55,34 @@ internal class ReduceServiceTest : AbstractIntegrationTest() {
     }
 
     @Test
+    fun `should reduce events for all accounts`() = runBlocking<Unit> {
+        val accountId1 = createAccountId()
+        val accountId2 = createAccountId()
+
+        val event1 = createAccountIncomeTransfer(accountId1).copy(value = BigInteger.valueOf(10), blockNumber = 3)
+        val event2 = createAccountOutcomeTransfer(accountId1).copy(value = BigInteger.valueOf(9), blockNumber = 4)
+        val event3 = createAccountIncomeTransfer(accountId2).copy(value = BigInteger.valueOf(10), blockNumber = 3)
+        val event4 = createAccountOutcomeTransfer(accountId2).copy(value = BigInteger.valueOf(9), blockNumber = 4)
+
+        listOf(event1, event2, event3, event4, createAccountOutcomeTransfer()).forEach {
+            eventRepository.save(it)
+        }
+        service.onEvents(
+            listOf(
+                AccountReduceEvent(event1),
+                AccountReduceEvent(event2),
+                AccountReduceEvent(event3),
+                AccountReduceEvent(event4)
+            )
+        )
+        val balance1 = balanceRepository.get(accountId1)
+        assertThat(balance1?.balance).isEqualTo(BigInteger.ONE)
+
+        val balance2 = balanceRepository.get(accountId2)
+        assertThat(balance2?.balance).isEqualTo(BigInteger.ONE)
+    }
+
+    @Test
     fun `should reduce simple events`() = runBlocking<Unit> {
         val accountId1 = createAccountId()
         val accountId2 = createAccountId()
