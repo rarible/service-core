@@ -4,7 +4,7 @@ import com.rarible.core.common.retryOptimisticLock
 import com.rarible.core.reduce.model.DataKey
 import com.rarible.core.reduce.model.ReduceEvent
 import com.rarible.core.reduce.model.ReduceSnapshot
-import com.rarible.core.reduce.queue.LimitedQueue
+import com.rarible.core.reduce.queue.LimitedSnapshotQueue
 import com.rarible.core.reduce.repository.DataRepository
 import com.rarible.core.reduce.repository.ReduceEventRepository
 import com.rarible.core.reduce.repository.SnapshotRepository
@@ -75,7 +75,7 @@ class ReduceService<
     }
 
     private fun updateData(initialSnapshot: Snapshot, events: Flux<Event>) = mono {
-        val limitedQueue = LimitedQueue<Snapshot>(eventsCountBeforeNextSnapshot)
+        val limitedQueue = LimitedSnapshotQueue<Snapshot, Data, Mark, Key>(eventsCountBeforeNextSnapshot)
 
         val reducedSnapshot = events
             .asFlow()
@@ -89,7 +89,7 @@ class ReduceService<
         if (reducedSnapshot != initialSnapshot) {
             dataRepository.saveReduceResult(reducedSnapshot.data)
 
-            val latestSnapshots = limitedQueue.getElementList()
+            val latestSnapshots = limitedQueue.getSnapshotList()
             val needSaveSnapshot = latestSnapshots.size >= eventsCountBeforeNextSnapshot
 
             if (needSaveSnapshot) {
