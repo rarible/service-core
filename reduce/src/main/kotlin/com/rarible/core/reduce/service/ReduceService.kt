@@ -11,6 +11,7 @@ import com.rarible.core.reduce.repository.SnapshotRepository
 import kotlinx.coroutines.flow.fold
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitFirstOrNull
+import kotlinx.coroutines.reactor.asFlux
 import kotlinx.coroutines.reactor.mono
 import org.slf4j.LoggerFactory
 import reactor.core.publisher.Flux
@@ -27,7 +28,7 @@ class ReduceService<
     private val eventRepository: ReduceEventRepository<Event, Mark, Key>,
     private val snapshotRepository: SnapshotRepository<Snapshot, Data, Mark, Key>,
     private val dataRepository: DataRepository<Data>,
-    private val eventsCountBeforeSnapshot: Long
+    private val eventsCountBeforeNextSnapshot: Int
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -49,6 +50,7 @@ class ReduceService<
             ?.takeIf { context.minMark > it.mark }
 
         eventRepository.getEvents(key, snapshot?.mark)
+            .asFlux()
             .windowUntilChanged { event -> reducer.getDataKeyFromEvent(event) }
             .concatMap {
                 it.switchOnFirst { first, events ->
@@ -72,26 +74,25 @@ class ReduceService<
     }
 
     private fun updateData(initialSnapshot: Snapshot, events: Flux<Event>) = mono {
-        val limitedQueue = LimitedQueue<Snapshot>(INTERMEDIATE_SNAPSHOT_COUNT)
+        val limitedQueue = LimitedQueue<Snapshot>(eventsCountBeforeNextSnapshot)
 
         val reducedSnapshot = events
-            .window(eventsCountBeforeSnapshot.toInt())
             .asFlow()
-            .fold(initialSnapshot) { initial, window ->
-                val intermediateSnapshot = reducer.reduce(initial, window.asFlow())
+            .fold(initialSnapshot) { initial, event ->
+                val intermediateSnapshot = reducer.reduce(initial, event)
                 limitedQueue.push(intermediateSnapshot)
 
                 intermediateSnapshot
             }
 
         if (reducedSnapshot != initialSnapshot) {
-            dataRepository.save(reducedSnapshot.data)
+            dataRepository.saveReduceResult(reducedSnapshot.data)
 
             val latestSnapshots = limitedQueue.getElementList()
-            val needSaveSnapshot = latestSnapshots.size >= INTERMEDIATE_SNAPSHOT_COUNT
+            val needSaveSnapshot = latestSnapshots.size >= eventsCountBeforeNextSnapshot
 
             if (needSaveSnapshot) {
-                val nextSnapshot = latestSnapshots[NEXT_SNAPSHOT_INDEX]
+                val nextSnapshot = latestSnapshots.last()
                 snapshotRepository.save(nextSnapshot)
             }
         }
@@ -101,10 +102,5 @@ class ReduceService<
         events: List<Event>
     ) {
         val minMark: Mark = events.minBy { it.mark }?.mark ?: error("Events array can't be empty")
-    }
-
-    companion object {
-        const val INTERMEDIATE_SNAPSHOT_COUNT = 3
-        const val NEXT_SNAPSHOT_INDEX = INTERMEDIATE_SNAPSHOT_COUNT - 1
     }
 }

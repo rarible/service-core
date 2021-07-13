@@ -3,8 +3,6 @@ package com.rarible.core.reduce.service.reducer
 import com.rarible.core.reduce.service.Reducer
 import com.rarible.core.reduce.service.model.*
 import com.rarible.core.reduce.service.repository.AccountBalanceRepository
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.fold
 import java.math.BigInteger
 
 class AccountBalanceReducer(
@@ -26,39 +24,19 @@ class AccountBalanceReducer(
 
     override suspend fun reduce(
         initial: AccountReduceSnapshot,
-        events: Flow<AccountReduceEvent>
+        event: AccountReduceEvent
     ): AccountReduceSnapshot {
         val initialBalance = initial.data.balance
         val accountBalance = accountBalanceRepository.get(initial.data.id) ?: initial.data
 
-        val initialState = BalanceState(initialBalance, initial.mark)
-
-        val (balance, mark) = events.fold(initialState) { balance, history ->
-            val value = history.event.value
-            val mark = history.mark
-
-            when (history.event) {
-                is AccountIncomeTransfer -> balance.plus(value, mark)
-                is AccountOutcomeTransfer -> balance.minus(value, mark)
-            }
+        val reducedBalance = when (event.event) {
+            is AccountIncomeTransfer -> initial.data.withBalance(initialBalance + event.event.value)
+            is AccountOutcomeTransfer -> initial.data.withBalance(initialBalance - event.event.value)
         }
         return AccountReduceSnapshot(
             id = accountBalance.id,
-            data = accountBalance.withBalance(balance),
-            mark = mark
+            data = reducedBalance,
+            mark = event.mark
         )
-    }
-
-    private data class BalanceState(
-        val balance: BigInteger,
-        val mark: Long
-    ) {
-        fun minus(balance: BigInteger, mark: Long): BalanceState {
-            return copy(balance = this.balance - balance, mark = mark)
-        }
-
-        fun plus(balance: BigInteger, mark: Long): BalanceState {
-            return copy(balance = this.balance + balance, mark = mark)
-        }
     }
 }

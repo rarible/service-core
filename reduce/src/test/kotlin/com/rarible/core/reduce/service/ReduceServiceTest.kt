@@ -12,6 +12,7 @@ import com.rarible.core.reduce.service.repository.AccountBalanceSnapshotReposito
 import com.rarible.core.reduce.service.repository.AccountReduceEventRepository
 import com.rarible.core.reduce.service.repository.ReduceDataRepository
 import kotlinx.coroutines.reactive.awaitFirst
+import kotlinx.coroutines.reactor.asFlux
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -29,7 +30,7 @@ internal class ReduceServiceTest : AbstractIntegrationTest() {
         eventRepository = eventRepository,
         snapshotRepository = snapshotRepository,
         dataRepository = dataRepository,
-        eventsCountBeforeSnapshot = 4
+        eventsCountBeforeNextSnapshot = 4
     )
 
     @Test
@@ -45,7 +46,7 @@ internal class ReduceServiceTest : AbstractIntegrationTest() {
             eventRepository.save(it)
         }
 
-        val eventList = eventRepository.getEvents(reducer.getDataKeyFromEvent(AccountReduceEvent(event1)), null).collectList().awaitFirst()
+        val eventList = eventRepository.getEvents(reducer.getDataKeyFromEvent(AccountReduceEvent(event1)), null).asFlux().collectList().awaitFirst()
         assertThat(eventList).hasSize(4)
         assertThat(eventList[0].event.blockNumber).isEqualTo(1)
         assertThat(eventList[1].event.blockNumber).isEqualTo(2)
@@ -101,8 +102,8 @@ internal class ReduceServiceTest : AbstractIntegrationTest() {
         assertThat(accountBalance1?.balance).isEqualTo(BigInteger.valueOf(0))
 
         val snapshot = snapshotRepository.get(accountId)
-        assertThat(snapshot?.mark).isEqualTo(12)
-        assertThat(snapshot?.data?.balance).isEqualTo(8)
+        assertThat(snapshot?.mark).isEqualTo(17)
+        assertThat(snapshot?.data?.balance).isEqualTo(3)
     }
 
     @Test
@@ -118,14 +119,14 @@ internal class ReduceServiceTest : AbstractIntegrationTest() {
         eventRepository.dropCollection()
 
         val oldOtherIncomes = createSeqAccountIncomeReduceEvent(accountId, income = 1000, amount = 10, startBlockNumber = 0)
-        val newIncomes = createSeqAccountIncomeReduceEvent(accountId, income = 1, amount = 2, startBlockNumber = 13)
+        val newIncomes = createSeqAccountIncomeReduceEvent(accountId, income = 1, amount = 2, startBlockNumber = 18)
 
         (oldOtherIncomes + newIncomes).forEach { eventRepository.save(it.event) }
 
         service.onEvents(newIncomes)
 
         val accountBalance1 = balanceRepository.get(accountId)
-        assertThat(accountBalance1?.balance).isEqualTo(BigInteger.valueOf(10))
+        assertThat(accountBalance1?.balance).isEqualTo(BigInteger.valueOf(5))
     }
 
     @Test

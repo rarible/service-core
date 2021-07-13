@@ -4,12 +4,13 @@ import com.rarible.core.reduce.repository.ReduceEventRepository
 import com.rarible.core.reduce.service.model.AccountBalanceEvent
 import com.rarible.core.reduce.service.model.AccountId
 import com.rarible.core.reduce.service.model.AccountReduceEvent
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitFirst
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import org.springframework.data.domain.Sort
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate
 import org.springframework.data.mongodb.core.query.*
-import reactor.core.publisher.Flux
 
 class AccountReduceEventRepository(
     private val template: ReactiveMongoTemplate
@@ -23,7 +24,7 @@ class AccountReduceEventRepository(
         return template.save(event).awaitFirst()
     }
 
-    override fun getEvents(key: AccountId?, after: Long?): Flux<AccountReduceEvent> {
+    override fun getEvents(key: AccountId?, after: Long?): Flow<AccountReduceEvent> {
         val criteria = listOfNotNull(
             key?.let { (AccountBalanceEvent::bank isEqualTo key.bank).and(AccountBalanceEvent::owner).isEqualTo(key.owner) },
             after?.let { AccountBalanceEvent::blockNumber gt after }
@@ -36,5 +37,6 @@ class AccountReduceEventRepository(
         return template
             .find(query, AccountBalanceEvent::class.java)
             .map { AccountReduceEvent(it) }
+            .asFlow()
     }
 }

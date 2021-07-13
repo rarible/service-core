@@ -12,7 +12,7 @@ internal class LimitedQueue<E>(private val limit: Int) {
     fun push(element: E) {
         concurrentLinkedDeque.push(element)
 
-        if (concurrentLinkedDeque.size > limit) {
+        while (concurrentLinkedDeque.size > limit) {
             concurrentLinkedDeque.removeLast()
         }
     }

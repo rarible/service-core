@@ -7,7 +7,8 @@ class ReduceDataRepository(
     private val delegate: AccountBalanceRepository
 ) : DataRepository<AccountBalance> {
 
-    override suspend fun save(data: AccountBalance) {
-        delegate.save(data)
+    override suspend fun saveReduceResult(data: AccountBalance) {
+        val currentBalance = delegate.get(data.id)
+        delegate.save(currentBalance?.withBalance(data.balance) ?: data)
     }
 }
