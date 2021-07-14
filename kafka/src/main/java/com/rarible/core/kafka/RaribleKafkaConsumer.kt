@@ -54,6 +54,14 @@ class RaribleKafkaConsumer<V>(
             }.asFlow()
     }
 
+    override fun receiveManualAcknowledge(): Flow<KafkaMessage<V>> {
+        return KafkaReceiver.create(receiverOptions.subscription(listOf(defaultTopic)))
+            .receive()
+            .map {
+                KafkaMessage(it.key(), it.value(), headers = it.headers().toMap(), receiverRecord = it)
+            }.asFlow()
+    }
+
     override fun receiveBatch(): Flow<Flow<KafkaMessage<V>>> = receiveBatch(defaultTopic)
 
     @FlowPreview

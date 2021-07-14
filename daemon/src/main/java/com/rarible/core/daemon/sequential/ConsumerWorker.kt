@@ -1,10 +1,9 @@
 package com.rarible.core.daemon.sequential
 
-import com.rarible.core.daemon.DaemonClosedChannelEvent
-import com.rarible.core.daemon.DaemonIncome
-import com.rarible.core.daemon.DaemonWorkerProperties
+import com.rarible.core.daemon.*
 import com.rarible.core.daemon.healthcheck.DowntimeLivenessHealthIndicator
 import com.rarible.core.kafka.KafkaConsumer
+import com.rarible.core.kafka.KafkaMessage
 import com.rarible.core.telemetry.metrics.increment
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
@@ -23,6 +22,7 @@ class ConsumerWorker<T>(
     private val eventHandler: ConsumerEventHandler<T>,
     workerName: String,
     private val properties: DaemonWorkerProperties = DaemonWorkerProperties(),
+    private val retryProperties: RetryProperties = RetryProperties(),
     private val meterRegistry: MeterRegistry = SimpleMeterRegistry()
 ) : SequentialDaemonWorker(meterRegistry, properties, workerName) {
 
@@ -33,25 +33,25 @@ class ConsumerWorker<T>(
     @ExperimentalCoroutinesApi
     override suspend fun handle() {
         try {
-            consumer.receive()
+            consumer.receiveManualAcknowledge()
                 .onStart {
                     healthCheck.up()
                 }
                 .onCompletion {
                     logger.info("Flux was completed")
+                }.let {
+                    if (properties.buffer) {
+                        it.buffer(backPressureSize)
+                    } else {
+                        it
+                    }
                 }
-                .buffer(backPressureSize)
                 .collect { event ->
                     onEvent()
 
-                    when (handleInternal(event.value)) {
-                        true -> {
-                        }
-                        false -> {
-                            delay(errorDelay)
-                            throw AbortFlowException()
-                        }
-                    }
+                    handleInternal(event)
+
+                    event.receiverRecord?.receiverOffset()?.acknowledge()
                 }
             delay(properties.pollingPeriod)
         } catch (ignored: AbortFlowException) {
@@ -68,13 +68,19 @@ class ConsumerWorker<T>(
         meterRegistry.increment(DaemonIncome(workerName))
     }
 
-    private suspend fun handleInternal(event: T): Boolean {
-        return try {
-            eventHandler.handle(event)
-            true
-        } catch (ex: Exception) {
-            logger.error("Can't process event", ex)
-            false
+    private suspend fun handleInternal(event: KafkaMessage<T>) {
+        for (i in (1..retryProperties.attempts)) {
+            try {
+                eventHandler.handle(event.value)
+                return
+            } catch (ex: Exception) {
+                logger.error("Can't process event $event", ex)
+                meterRegistry.increment(DaemonProcessingError(workerName))
+                if (i < retryProperties.attempts) {
+                    logger.info("Retrying in ${retryProperties.delay}. Attempt #${i+1}")
+                    delay(retryProperties.delay)
+                }
+            }
         }
     }
 
