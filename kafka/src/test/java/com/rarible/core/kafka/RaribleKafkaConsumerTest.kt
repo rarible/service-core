@@ -9,12 +9,14 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.time.withTimeout
 import org.apache.kafka.clients.consumer.OffsetResetStrategy
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.Duration
 
 data class TestObject(val field1: String, val field2: Int)
 
 @FlowPreview
+@Disabled
 internal class RaribleKafkaConsumerTest {
     private val kafkaContainer = KafkaTestContainer()
 
