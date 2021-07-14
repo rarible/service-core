@@ -12,9 +12,13 @@ internal class LimitedSnapshotQueue<Snapshot : ReduceSnapshot<Data, Mark, Key>, 
 
     private val concurrentLinkedDeque = ConcurrentLinkedDeque<Snapshot>()
 
+
     fun push(snapshot: Snapshot) {
-        concurrentLinkedDeque.removeIf { it.mark == snapshot.mark }
-        concurrentLinkedDeque.push(snapshot)
+        // This two operations allowed to execute without synchronized as all thread confined
+        run {
+            concurrentLinkedDeque.removeIf { it.mark == snapshot.mark }
+            concurrentLinkedDeque.push(snapshot)
+        }
 
         while (concurrentLinkedDeque.size > limit) {
             concurrentLinkedDeque.removeLast()
