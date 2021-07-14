@@ -17,6 +17,8 @@ import org.slf4j.LoggerFactory
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.toFlux
+import java.lang.IllegalArgumentException
+import java.util.concurrent.atomic.AtomicReference
 
 class ReduceService<
         Event : ReduceEvent<Mark>,
@@ -76,12 +78,22 @@ class ReduceService<
 
     private fun updateData(initialSnapshot: Snapshot, events: Flux<Event>) = mono {
         val limitedQueue = LimitedSnapshotQueue<Snapshot, Data, Mark, Key>(eventsCountBeforeNextSnapshot)
+        val previousMarkReference = AtomicReference<Mark>(initialSnapshot.mark)
 
         val reducedSnapshot = events
             .asFlow()
             .fold(initialSnapshot) { initial, event ->
+                val previousMark = previousMarkReference.get()
+                val currentMark = event.mark
+
+                if (previousMark > currentMark) {
+                    throw IllegalArgumentException(
+                        "Previous mark $previousMark is greater than current mark $currentMark"
+                    )
+                }
                 val intermediateSnapshot = reducer.reduce(initial, event)
                 limitedQueue.push(intermediateSnapshot)
+                previousMarkReference.set(event.mark)
 
                 intermediateSnapshot
             }
