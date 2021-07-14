@@ -162,6 +162,11 @@
                 <artifactId>rarible-core-client</artifactId>
                 <version>1.2-SNAPSHOT</version>
             </dependency>
+            <dependency>
+                <groupId>com.rarible.core</groupId>
+                <artifactId>rarible-core-reduce</artifactId>
+                <version>1.2-SNAPSHOT</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
