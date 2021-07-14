@@ -193,6 +193,7 @@
         <module>starter</module>
         <module>daemon</module>
         <module>client</module>
+        <module>reduce</module>
         <module>test-coverage</module>
     </modules>
 
