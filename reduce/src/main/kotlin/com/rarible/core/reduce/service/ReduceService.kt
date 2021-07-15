@@ -20,6 +20,7 @@ import reactor.kotlin.core.publisher.toFlux
 import java.lang.IllegalArgumentException
 import java.util.concurrent.atomic.AtomicReference
 
+@Suppress("MemberVisibilityCanBePrivate")
 class ReduceService<
         Event : ReduceEvent<Mark>,
         Snapshot : ReduceSnapshot<Data, Mark, Key>,
@@ -46,7 +47,7 @@ class ReduceService<
             .awaitFirstOrNull()
     }
 
-    private fun update(key: Key?, minMark: Mark) = mono {
+    fun update(key: Key?, minMark: Mark) = mono {
         val snapshot = key
             ?.let { snapshotRepository.get(it) }
             ?.takeIf { minMark > it.mark }
