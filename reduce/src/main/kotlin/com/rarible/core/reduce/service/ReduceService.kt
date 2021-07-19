@@ -18,6 +18,7 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.toFlux
 import java.lang.IllegalArgumentException
+import java.util.*
 import java.util.concurrent.atomic.AtomicReference
 
 @Suppress("MemberVisibilityCanBePrivate")
@@ -44,40 +45,40 @@ class ReduceService<
             .map { event -> reducer.getDataKeyFromEvent(event) }
             .distinct()
             .flatMap { update(it, minMark) }
-            .awaitFirstOrNull()
-    }
-
-    fun update(key: Key?, minMark: Mark) = mono {
-        val snapshot = key
-            ?.let { snapshotRepository.get(it) }
-            ?.takeIf { minMark > it.mark }
-
-        eventRepository.getEvents(key, snapshot?.mark)
-            .asFlux()
-            .windowUntilChanged { event -> reducer.getDataKeyFromEvent(event) }
-            .concatMap {
-                it.switchOnFirst { first, events ->
-                    val firstEvent = first.get()
-
-                    if (firstEvent != null) {
-                        val targetKey = reducer.getDataKeyFromEvent(firstEvent)
-                        logger.info("Started processing $targetKey")
-
-                        val initial = snapshot ?: reducer.getInitialData(targetKey)
-
-                        updateData(initial, events)
-                            .retryOptimisticLock()
-                            .thenReturn(targetKey)
-                    } else {
-                        Mono.empty()
-                    }
-                }
-            }
             .then()
             .awaitFirstOrNull()
     }
 
-    private fun updateData(initialSnapshot: Snapshot, events: Flux<Event>) = mono {
+    fun update(key: Key?, minMark: Mark): Flux<Key> {
+        return getSnapshot(key, minMark)
+            .flatMapMany { optionalSnapshot ->
+                val snapshot = optionalSnapshot.orElse(null)
+
+                eventRepository.getEvents(key, snapshot?.mark)
+                    .asFlux()
+                    .windowUntilChanged { event -> reducer.getDataKeyFromEvent(event) }
+                    .concatMap {
+                        it.switchOnFirst { first, events ->
+                            val firstEvent = first.get()
+
+                            if (firstEvent != null) {
+                                val targetKey = reducer.getDataKeyFromEvent(firstEvent)
+                                logger.info("Started processing $targetKey")
+
+                                val initial = snapshot ?: reducer.getInitialData(targetKey)
+
+                                updateData(initial, events)
+                                    .retryOptimisticLock()
+                                    .thenReturn(targetKey)
+                            } else {
+                                Mono.empty()
+                            }
+                        }
+                    }
+            }
+    }
+
+    private fun updateData(initialSnapshot: Snapshot, events: Flux<Event>): Mono<Key> = mono {
         val limitedQueue = LimitedSnapshotQueue<Snapshot, Data, Mark, Key>(eventsCountBeforeNextSnapshot)
         val previousMarkReference = AtomicReference<Mark>(initialSnapshot.mark)
 
@@ -110,5 +111,14 @@ class ReduceService<
                 snapshotRepository.save(nextSnapshot)
             }
         }
+        initialSnapshot.id
+    }
+
+    private fun getSnapshot(key: Key?, minMark: Mark): Mono<Optional<Snapshot>> = mono {
+        key
+            ?.let { snapshotRepository.get(it) }
+            ?.takeIf { minMark > it.mark }
+            ?.let { Optional.of(it) }
+            ?: Optional.empty()
     }
 }
