@@ -63,7 +63,6 @@ class ReduceService<
 
                             if (firstEvent != null) {
                                 val targetKey = reducer.getDataKeyFromEvent(firstEvent)
-                                logger.info("Started processing $targetKey")
 
                                 val initial = snapshot ?: reducer.getInitialData(targetKey)
 
@@ -79,8 +78,11 @@ class ReduceService<
     }
 
     private fun updateData(initialSnapshot: Snapshot, events: Flux<Event>): Mono<Key> = mono {
+        val key = initialSnapshot.id
         val limitedQueue = LimitedSnapshotQueue<Snapshot, Data, Mark, Key>(eventsCountBeforeNextSnapshot)
         val previousMarkReference = AtomicReference<Mark>(initialSnapshot.mark)
+
+        logger.info("Started processing $key, startMark=${initialSnapshot.mark}")
 
         val reducedSnapshot = events
             .asFlow()
@@ -102,6 +104,7 @@ class ReduceService<
 
         if (reducedSnapshot != initialSnapshot) {
             dataRepository.saveReduceResult(reducedSnapshot.data)
+            logger.info("Save new reduce data for $key")
 
             val latestSnapshots = limitedQueue.getSnapshotList()
             val needSaveSnapshot = latestSnapshots.size >= eventsCountBeforeNextSnapshot
@@ -109,9 +112,11 @@ class ReduceService<
             if (needSaveSnapshot) {
                 val nextSnapshot = latestSnapshots.last()
                 snapshotRepository.save(nextSnapshot)
+                logger.info("Save new snapshot for $key")
             }
         }
-        initialSnapshot.id
+        logger.info("Finish for $key, endMark=${reducedSnapshot.mark}")
+        key
     }
 
     private fun getSnapshot(key: Key?, minMark: Mark): Mono<Optional<Snapshot>> = mono {
