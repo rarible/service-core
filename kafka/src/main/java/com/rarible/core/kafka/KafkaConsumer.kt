@@ -7,4 +7,5 @@ interface KafkaConsumer<V> {
     fun receiveBatch(): Flow<Flow<KafkaMessage<V>>>
     fun receive(topic: String): Flow<KafkaMessage<V>>
     fun receive(): Flow<KafkaMessage<V>>
+    fun receiveManualAcknowledge(): Flow<KafkaMessage<V>>
 }

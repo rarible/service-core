@@ -14,7 +14,6 @@ class RaribleNginxExposeAutoConfiguration(
     private val properties: RaribleNginxExposeProperties
 ) {
     @Bean
-    @ConditionalOnProperty(prefix = "spring.cloud.service-registry.auto-registration", name = ["enabled"], havingValue = "true")
     fun raribleNginxExposeConsulRegistrationCustomizer(): ConsulRegistrationCustomizer {
         return ConsulRegistrationCustomizer { consulRegistration ->
             consulRegistration.service.apply {

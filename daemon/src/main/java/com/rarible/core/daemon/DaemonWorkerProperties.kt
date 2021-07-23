@@ -7,5 +7,7 @@ data class DaemonWorkerProperties(
 
     val errorDelay: Duration = Duration.ofSeconds(60),
 
-    val backpressureSize: Int = Int.MAX_VALUE
+    val backpressureSize: Int = Int.MAX_VALUE,
+
+    val buffer: Boolean = false
 )

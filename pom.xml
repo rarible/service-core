@@ -166,8 +166,22 @@
                 <artifactId>rarible-core-client</artifactId>
                 <version>${rarible.core.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.rarible.core</groupId>
+                <artifactId>rarible-core-reduce</artifactId>
+                <version>1.2-SNAPSHOT</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
 
     <modules>
         <module>logging</module>
@@ -187,6 +201,8 @@
         <module>starter</module>
         <module>daemon</module>
         <module>client</module>
+        <module>reduce</module>
+        <module>test-coverage</module>
     </modules>
 
 </project>

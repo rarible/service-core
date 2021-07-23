@@ -8,28 +8,28 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.time.withTimeout
 import org.apache.kafka.clients.consumer.OffsetResetStrategy
-import org.apache.kafka.common.serialization.StringDeserializer
-import org.apache.kafka.common.serialization.StringSerializer
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.Duration
 
 data class TestObject(val field1: String, val field2: Int)
 
 @FlowPreview
+@Disabled
 internal class RaribleKafkaConsumerTest {
     private val kafkaContainer = KafkaTestContainer()
 
     @Test
     fun sendReceiveKafkaMessage() = runBlocking<Unit> {
-        val producer = RaribleKafkaProducer<TestObject>(
+        val producer = RaribleKafkaProducer(
             clientId = "test-producer",
             valueSerializerClass = JsonSerializer::class.java,
             valueClass = TestObject::class.java,
             defaultTopic = "test-topic",
             bootstrapServers = kafkaContainer.kafkaBoostrapServers()
         )
-        val consumer = RaribleKafkaConsumer<TestObject>(
+        val consumer = RaribleKafkaConsumer(
             clientId = "test-consumer",
             consumerGroup = "test-group",
             valueDeserializerClass = JsonDeserializer::class.java,

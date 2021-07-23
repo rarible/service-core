@@ -35,5 +35,9 @@
             <artifactId>consul-api</artifactId>
             <optional>true</optional>
         </dependency>
+        <dependency>
+            <groupId>com.rarible.core</groupId>
+            <artifactId>rarible-core-test-common</artifactId>
+        </dependency>
     </dependencies>
 </project>

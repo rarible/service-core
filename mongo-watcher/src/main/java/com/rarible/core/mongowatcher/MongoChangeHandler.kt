@@ -1,5 +1,6 @@
 package com.rarible.core.mongowatcher
 
+import com.mongodb.MongoCommandException
 import com.mongodb.client.model.changestream.ChangeStreamDocument
 import com.mongodb.client.model.changestream.FullDocument
 import com.rarible.core.task.RunTask
@@ -11,7 +12,10 @@ import kotlinx.coroutines.reactive.asFlow
 import org.bson.BsonDocument
 import org.bson.BsonString
 import org.bson.Document
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.data.mongodb.core.ReactiveMongoOperations
+import reactor.core.publisher.Flux
 import java.time.Instant
 
 abstract class MongoChangeHandler(
@@ -28,11 +32,22 @@ abstract class MongoChangeHandler(
 
     override fun runLongTask(from: String?, param: String): Flow<String> {
         return observe(from)
+            .onErrorResume { error ->
+                if (from != null && error is MongoCommandException
+                    && (error.code == CHANGE_STREAM_FATAL_ERROR || error.code == CHANGE_STREAM_HISTORY_LOST)
+                ) {
+                    logger.error("Non resumable change stream error '${error.errorCodeName}', reset resume token")
+                    observe(null)
+                } else {
+                    Flux.error(error)
+                }
+            }
+            .asFlow()
             .onEach { onEvent(it) }
             .map { it.id }
     }
 
-    private fun observe(from: String?): Flow<MongoEvent> =
+    private fun observe(from: String?): Flux<MongoEvent> =
         mongo.getCollection(collection)
             .flatMapMany {
                 it.watch().apply {
@@ -59,7 +74,6 @@ abstract class MongoChangeHandler(
                     updateDescription = event.updateDescription
                 )
             }
-            .asFlow()
 
     private fun getTimestamp(event: ChangeStreamDocument<Document>): Instant {
         return event.clusterTime?.time?.let { Instant.ofEpochSecond(it.toLong()) } ?: Instant.now()
@@ -100,5 +114,12 @@ abstract class MongoChangeHandler(
 
     private fun createResumeToken(nextEventId: String): BsonDocument {
         return BsonDocument("_data", BsonString(nextEventId))
+    }
+
+    private companion object {
+        private val logger: Logger = LoggerFactory.getLogger(MongoChangeHandler::class.java)
+
+        const val CHANGE_STREAM_FATAL_ERROR = 280
+        const val CHANGE_STREAM_HISTORY_LOST = 286
     }
 }

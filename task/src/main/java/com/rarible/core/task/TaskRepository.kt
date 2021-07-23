@@ -1,7 +1,5 @@
 package com.rarible.core.task
 
-import com.rarible.core.task.Task
-import com.rarible.core.task.TaskStatus
 import org.springframework.data.repository.reactive.ReactiveCrudRepository
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
