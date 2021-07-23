@@ -65,6 +65,7 @@ class OpenEthereumTestContainer {
                 withExposedPorts(OPEN_ETHEREUM_HTTP_PORT, OPEN_ETHEREUM_WEB_SOCKET_PORT)
                 withCommand("--network-id 18 --chain /home/openethereum/.local/share/config/openethereum/chain.json --jsonrpc-interface all --unsafe-expose")
                 waitingFor(Wait.defaultWaitStrategy())
+                withReuse(true)
             }
         }
 

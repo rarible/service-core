@@ -11,6 +11,7 @@ class RedisTestContainer {
 
         private val redis: KGenericContainer = KGenericContainer("redis:6.0.9-alpine")
             .withExposedPorts(REDIS_PORT)
+            .withReuse(true)
 
         init {
             redis.start()

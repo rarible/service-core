@@ -17,6 +17,7 @@ class MongodbTestContainer {
         val mongo: MongoDBContainer by lazy {
             MongoDBContainer(MONGO_IMAGE)
                 .withExposedPorts(MONGODB_EXPOSED_PORT)
+                .withReuse(true)
         }
 
         init {
