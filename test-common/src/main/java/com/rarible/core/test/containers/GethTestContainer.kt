@@ -65,6 +65,7 @@ open class GethTestContainer {
                 withExposedPorts(GETH_WEB_SOCKET_PORT, GETH_HTTP_PORT)
                 withCommand("--dev --http --http.api eth,net,web3,debug --http.addr 0.0.0.0 --http.corsdomain '*' --rpcvhosts=* --ws --ws.addr 0.0.0.0 --ws.origins \"*\"")
                 waitingFor(Wait.defaultWaitStrategy())
+                withReuse(true)
             }
         }
 
