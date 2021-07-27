@@ -19,6 +19,7 @@ class ElasticsearchTestContainer {
             ElasticsearchContainer(ELASTIC_SEARCH__IMAGE).apply {
                 withEnv("discovery.type", "single-node")
                 waitingFor(Wait.defaultWaitStrategy())
+                withReuse(true)
             }
         }
 

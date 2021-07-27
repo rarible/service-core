@@ -17,6 +17,7 @@ class KafkaTestContainer {
         private val kafka: KafkaContainer by lazy {
             KafkaContainer(KAFKA__IMAGE).apply {
                 waitingFor(Wait.defaultWaitStrategy())
+                withReuse(true)
             }
         }
 
