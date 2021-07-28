@@ -13,7 +13,9 @@ import kotlin.coroutines.CoroutineContext
 typealias MDCContextMap = Map<String, String>?
 
 @ExperimentalCoroutinesApi
-class RaribleMDCContext : ThreadContextElement<MDCContextMap>, AbstractCoroutineContextElement(RaribleMDCContext) {
+class RaribleMDCContext(
+    public val contextMap: MDCContextMap = MDC.getCopyOfContextMap()
+) : ThreadContextElement<MDCContextMap>, AbstractCoroutineContextElement(RaribleMDCContext) {
 
     companion object Key : CoroutineContext.Key<RaribleMDCContext>
 
@@ -22,7 +24,13 @@ class RaribleMDCContext : ThreadContextElement<MDCContextMap>, AbstractCoroutine
         val reactorContext = context[ReactorContext]
         if (reactorContext != null) {
             val map = extractMDCMap(reactorContext.context)
-            setCurrent(map)
+            val result = HashMap(map)
+            if (contextMap != null) {
+                result.putAll(contextMap)
+            }
+            setCurrent(result)
+        } else {
+            setCurrent(contextMap)
         }
         return oldState
     }
