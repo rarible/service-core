@@ -200,6 +200,7 @@
         <module>client</module>
         <module>reduce</module>
         <module>test-coverage</module>
+        <module>api</module>
     </modules>
 
 </project>
