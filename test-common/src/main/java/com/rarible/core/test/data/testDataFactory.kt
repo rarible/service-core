@@ -1,7 +1,10 @@
 package com.rarible.core.test.data
 
+import io.daonomic.rpc.domain.Binary
+import io.daonomic.rpc.domain.Word
 import org.apache.commons.lang3.RandomStringUtils
 import org.apache.commons.lang3.RandomUtils
+import scalether.domain.AddressFactory
 import java.math.BigDecimal
 import java.math.BigInteger
 import kotlin.random.Random
@@ -50,6 +53,7 @@ fun randomBigDecimal(intLength: Int, decimalLength: Int): BigDecimal {
     val decimalPart = RandomStringUtils.randomNumeric(decimalLength)
     return BigDecimal("$integerPart.$decimalPart")
 }
+
 fun randomBigDecimalSigned(intLength: Int, decimalLength: Int): BigDecimal {
     val result = randomBigDecimal(intLength, decimalLength)
     return if (randomBoolean()) result else result.negate()
@@ -60,4 +64,11 @@ fun randomBytes(size: Int) = RandomUtils.nextBytes(size)
 
 fun randomByteArray() = randomByteArray(32)
 fun randomByteArray(size: Int) = Random.nextBytes(size)
+
+fun randomAddress() = AddressFactory.create()
+
+fun randomBinary() = randomBinary(64)
+fun randomBinary(length: Int) = Binary.apply(Random.nextBytes(length))
+
+fun randomWord() = Word(Random.nextBytes(32)).toString()
 
