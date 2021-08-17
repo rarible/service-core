@@ -4,7 +4,6 @@ import com.rarible.core.common.retryOptimisticLock
 import com.rarible.core.reduce.model.DataKey
 import com.rarible.core.reduce.model.ReduceEvent
 import com.rarible.core.reduce.model.ReduceSnapshot
-import com.rarible.core.reduce.queue.LimitedSnapshotQueue
 import com.rarible.core.reduce.repository.DataRepository
 import com.rarible.core.reduce.repository.ReduceEventRepository
 import com.rarible.core.reduce.repository.SnapshotRepository
@@ -17,9 +16,7 @@ import org.slf4j.LoggerFactory
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.toFlux
-import java.lang.IllegalArgumentException
 import java.util.*
-import java.util.concurrent.atomic.AtomicReference
 
 @Suppress("MemberVisibilityCanBePrivate")
 class ReduceService<
@@ -32,7 +29,7 @@ class ReduceService<
     private val eventRepository: ReduceEventRepository<Event, Mark, Key>,
     private val snapshotRepository: SnapshotRepository<Snapshot, Data, Mark, Key>,
     private val dataRepository: DataRepository<Data>,
-    private val eventsCountBeforeNextSnapshot: Int
+    private val snapshotStrategy: SnapshotStrategy<Snapshot, Mark>
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -79,26 +76,15 @@ class ReduceService<
 
     private fun updateData(initialSnapshot: Snapshot, events: Flux<Event>): Mono<Key> = mono {
         val key = initialSnapshot.id
-        val limitedQueue = LimitedSnapshotQueue<Snapshot, Data, Mark, Key>(eventsCountBeforeNextSnapshot)
-        val previousMarkReference = AtomicReference<Mark>(initialSnapshot.mark)
+        var ctx = snapshotStrategy.ctx(initialSnapshot)
 
         logger.info("Started processing $key, startMark=${initialSnapshot.mark}")
-
         val reducedSnapshot = events
             .asFlow()
             .fold(initialSnapshot) { initial, event ->
-                val previousMark = previousMarkReference.get()
-                val currentMark = event.mark
-
-                if (previousMark > currentMark) {
-                    throw IllegalArgumentException(
-                        "Previous mark $previousMark is greater than current mark $currentMark"
-                    )
-                }
+                ctx.validate(event.mark)
                 val intermediateSnapshot = reducer.reduce(initial, event)
-                limitedQueue.push(intermediateSnapshot)
-                previousMarkReference.set(event.mark)
-
+                ctx.push(intermediateSnapshot)
                 intermediateSnapshot
             }
 
@@ -106,12 +92,8 @@ class ReduceService<
             dataRepository.saveReduceResult(reducedSnapshot.data)
             logger.info("Save new reduce data for $key")
 
-            val latestSnapshots = limitedQueue.getSnapshotList()
-            val needSaveSnapshot = latestSnapshots.size >= eventsCountBeforeNextSnapshot
-
-            if (needSaveSnapshot) {
-                val nextSnapshot = latestSnapshots.last()
-                snapshotRepository.save(nextSnapshot)
+            if (ctx.needSave()) {
+                snapshotRepository.save(ctx.last())
                 logger.info("Save new snapshot for $key")
             }
         }
