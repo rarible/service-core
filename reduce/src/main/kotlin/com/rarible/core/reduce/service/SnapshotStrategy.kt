@@ -7,6 +7,6 @@ interface SnapshotStrategy<Snapshot, Mark> {
         fun push(snapshot: Snapshot)
         fun needSave(): Boolean
         fun validate(mark: Mark)
-        fun last(): Snapshot
+        fun next(): Snapshot
     }
 }

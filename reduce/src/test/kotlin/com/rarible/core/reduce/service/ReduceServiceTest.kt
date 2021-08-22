@@ -1,13 +1,15 @@
 package com.rarible.core.reduce.service
 
 import com.rarible.core.reduce.AbstractIntegrationTest
+import com.rarible.core.reduce.blockchain.BlockchainSnapshotStrategy
 import com.rarible.core.reduce.factory.createAccountId
 import com.rarible.core.reduce.factory.createAccountIncomeTransfer
 import com.rarible.core.reduce.factory.createAccountOutcomeTransfer
+import com.rarible.core.reduce.service.model.AccountBalance
 import com.rarible.core.reduce.service.model.AccountId
 import com.rarible.core.reduce.service.model.AccountReduceEvent
+import com.rarible.core.reduce.service.model.AccountReduceSnapshot
 import com.rarible.core.reduce.service.reducer.AccountBalanceReducer
-import com.rarible.core.reduce.service.reducer.AccountSnapshotStrategy
 import com.rarible.core.reduce.service.repository.AccountBalanceRepository
 import com.rarible.core.reduce.service.repository.AccountBalanceSnapshotRepository
 import com.rarible.core.reduce.service.repository.AccountReduceEventRepository
@@ -22,7 +24,7 @@ import java.math.BigInteger
 internal class ReduceServiceTest : AbstractIntegrationTest() {
     private val balanceRepository = AccountBalanceRepository(template)
     private val snapshotRepository = AccountBalanceSnapshotRepository(template)
-    private val snapshotStrategy = AccountSnapshotStrategy(4)
+    private val snapshotStrategy = BlockchainSnapshotStrategy<AccountReduceSnapshot, AccountBalance, AccountId>(4)
     private val eventRepository = AccountReduceEventRepository(template)
     private val dataRepository = ReduceDataRepository(balanceRepository)
     private val reducer = AccountBalanceReducer(balanceRepository)

@@ -93,7 +93,7 @@ class ReduceService<
             logger.info("Save new reduce data for $key")
 
             if (ctx.needSave()) {
-                snapshotRepository.save(ctx.last())
+                snapshotRepository.save(ctx.next())
                 logger.info("Save new snapshot for $key")
             }
         }
