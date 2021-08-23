@@ -35,12 +35,12 @@ class RaribleKafkaProducer<V>(
      */
     backpressure: Int = 512,
     acknowledgement: Acknowledgement = Acknowledgement.ALL,
-    compression: Compression = Compression.NONE,
     /**
      * Max time to retry delivery of a message
      */
     deliveryTimeout: Duration = Duration.ofMinutes(2),
-    valueClass: Class<V>? = null
+    valueClass: Class<V>? = null,
+    compression: Compression = Compression.NONE
 ) : AutoCloseable, KafkaProducer<V> {
 
     private val sender: KafkaSender<String, V>
