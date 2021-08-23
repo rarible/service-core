@@ -36,12 +36,13 @@ open class BlockchainSnapshotStrategy<
                 previousMark.set(snapshot.mark)
             }
 
-            override fun needSave(): Boolean = test(initial, linkedDeque.last)
+            override fun needSave(): Boolean = test(linkedDeque.last, linkedDeque.first)
 
-            override fun next(): Snapshot = linkedDeque.sortedBy { it.mark }.find { test(initial, it) } ?: linkedDeque.last
+            // start from the first item in the deque and find candidate for snapshot
+            override fun next(): Snapshot = linkedDeque.find { test(it, linkedDeque.first) } ?: linkedDeque.last
 
             private fun test(prev: Snapshot, next: Snapshot): Boolean {
-                return next.mark - prev.mark >= eventsCountBeforeNextSnapshot
+                return next.mark - prev.mark >= eventsCountBeforeNextSnapshot - 1
             }
         }
     }
