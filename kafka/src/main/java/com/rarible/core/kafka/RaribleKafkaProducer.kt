@@ -39,7 +39,8 @@ class RaribleKafkaProducer<V>(
      * Max time to retry delivery of a message
      */
     deliveryTimeout: Duration = Duration.ofMinutes(2),
-    valueClass: Class<V>? = null
+    valueClass: Class<V>? = null,
+    compression: Compression = Compression.NONE
 ) : AutoCloseable, KafkaProducer<V> {
 
     private val sender: KafkaSender<String, V>
@@ -52,7 +53,8 @@ class RaribleKafkaProducer<V>(
             ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG to valueSerializerClass,
             RARIBLE_KAFKA_CLASS_PARAM to valueClass,
             ProducerConfig.ACKS_CONFIG to acknowledgement.kafkaValue,
-            ProducerConfig.DELIVERY_TIMEOUT_MS_CONFIG to deliveryTimeout.toMillis().toInt()
+            ProducerConfig.DELIVERY_TIMEOUT_MS_CONFIG to deliveryTimeout.toMillis().toInt(),
+            ProducerConfig.COMPRESSION_TYPE_CONFIG to compression
         )
         val senderOptions = SenderOptions
             .create<String, V>(senderProperties)
@@ -125,4 +127,12 @@ enum class Acknowledgement(val kafkaValue: String) {
      * Delivery guaranteed (slowest)
      */
     ALL("all")
+}
+
+enum class Compression(val kafkaValue: String) {
+    NONE("none"),
+    LZ4("lz4"),
+    SNAPPY("snappy"),
+    ZSTD("zstd"),
+    GZIP("gzip")
 }
