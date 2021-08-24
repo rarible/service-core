@@ -54,7 +54,7 @@ class RaribleKafkaProducer<V>(
             RARIBLE_KAFKA_CLASS_PARAM to valueClass,
             ProducerConfig.ACKS_CONFIG to acknowledgement.kafkaValue,
             ProducerConfig.DELIVERY_TIMEOUT_MS_CONFIG to deliveryTimeout.toMillis().toInt(),
-            ProducerConfig.COMPRESSION_TYPE_CONFIG to compression
+            ProducerConfig.COMPRESSION_TYPE_CONFIG to compression.kafkaValue
         )
         val senderOptions = SenderOptions
             .create<String, V>(senderProperties)
