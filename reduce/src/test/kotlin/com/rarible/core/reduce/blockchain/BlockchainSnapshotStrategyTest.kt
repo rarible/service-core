@@ -69,6 +69,15 @@ internal class BlockchainSnapshotStrategyTest {
     }
 
     @Test
+    fun `should not get next snapshot if not enough blocks arrived`() {
+        val cxt = snapshotStrategy.context(initSnapshot)
+        val snap1 = AccountReduceSnapshot(createAccountId(), createAccountBalance(), 24)
+        cxt.push(snap1)
+
+        assertThat(cxt.needSave()).isFalse()
+    }
+
+    @Test
     fun `should not save if not changes`() {
         val cxt = snapshotStrategy.context(initSnapshot)
         assertThat(cxt.needSave()).isFalse()
