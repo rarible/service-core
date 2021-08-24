@@ -139,6 +139,42 @@ internal class ReduceServiceTest : AbstractIntegrationTest() {
     }
 
     @Test
+    fun `should make latest snapshot if enough block conformations`() = runBlocking<Unit> {
+        val accountId = createAccountId()
+        val incomes = createSeqAccountIncomeReduceEvent(accountId, income = 1, amount = 1, startBlockNumber = 0)
+        val outcomes = createSeqAccountOutcomeReduceEvent(accountId, outcome = 1, amount = 1, startBlockNumber = 20)
+
+        (incomes + outcomes).forEach { eventRepository.save(it.event) }
+
+        service.onEvents(incomes)
+
+        val accountBalance1 = balanceRepository.get(accountId)
+        assertThat(accountBalance1?.balance).isEqualTo(BigInteger.valueOf(0))
+
+        val snapshot = snapshotRepository.get(accountId)
+        assertThat(snapshot?.mark).isEqualTo(1)
+        assertThat(snapshot?.data?.balance).isEqualTo(1)
+    }
+
+    @Test
+    fun `should make latest snapshot if enough block conformations, complex test`() = runBlocking<Unit> {
+        val accountId = createAccountId()
+        val incomes = createSeqAccountIncomeReduceEvent(accountId, income = 1, amount = 2, startBlockNumber = 0)
+        val outcomes = createSeqAccountOutcomeReduceEvent(accountId, outcome = 1, amount = 1, startBlockNumber = 30)
+
+        (incomes + outcomes).forEach { eventRepository.save(it.event) }
+
+        service.onEvents(incomes)
+
+        val accountBalance1 = balanceRepository.get(accountId)
+        assertThat(accountBalance1?.balance).isEqualTo(BigInteger.valueOf(1))
+
+        val snapshot = snapshotRepository.get(accountId)
+        assertThat(snapshot?.mark).isEqualTo(2)
+        assertThat(snapshot?.data?.balance).isEqualTo(2)
+    }
+
+    @Test
     fun `should use latest snapshot for next reduce`() = runBlocking<Unit> {
         val accountId = createAccountId()
         val incomes = createSeqAccountIncomeReduceEvent(accountId, income = 1, amount = 10, startBlockNumber = 0)

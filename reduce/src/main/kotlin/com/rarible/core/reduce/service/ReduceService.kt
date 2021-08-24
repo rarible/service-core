@@ -76,15 +76,17 @@ class ReduceService<
 
     private fun updateData(initialSnapshot: Snapshot, events: Flux<Event>): Mono<Key> = mono {
         val key = initialSnapshot.id
-        var ctx = snapshotStrategy.ctx(initialSnapshot)
+        val context = snapshotStrategy.context(initialSnapshot)
 
         logger.info("Started processing $key, startMark=${initialSnapshot.mark}")
         val reducedSnapshot = events
             .asFlow()
             .fold(initialSnapshot) { initial, event ->
-                ctx.validate(event.mark)
+                context.validate(event.mark)
+
                 val intermediateSnapshot = reducer.reduce(initial, event)
-                ctx.push(intermediateSnapshot)
+
+                context.push(intermediateSnapshot)
                 intermediateSnapshot
             }
 
@@ -92,8 +94,8 @@ class ReduceService<
             dataRepository.saveReduceResult(reducedSnapshot.data)
             logger.info("Save new reduce data for $key")
 
-            if (ctx.needSave()) {
-                snapshotRepository.save(ctx.next())
+            if (context.needSave()) {
+                snapshotRepository.save(context.next())
                 logger.info("Save new snapshot for $key")
             }
         }
