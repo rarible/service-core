@@ -46,7 +46,7 @@ class BatchConsumerWorker<T>(
 
                     handleInternal(eventsList)
 
-                    eventsList.last().receiverRecord?.receiverOffset()?.acknowledge()
+                    eventsList.forEach { it.receiverRecord?.receiverOffset()?.acknowledge() }
                 }
             delay(properties.pollingPeriod)
         } catch (ignored: AbortFlowException) {
