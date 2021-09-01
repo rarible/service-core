@@ -64,10 +64,10 @@ class RaribleKafkaConsumer<V>(
     }
 
 
-    override fun receiveBatchManualAcknowledge(batchSize: Int): Flow<Flow<KafkaMessage<V>>> {
+    override fun receiveBatchManualAcknowledge(batchSize: Int, timeout: Duration): Flow<Flow<KafkaMessage<V>>> {
         return KafkaReceiver.create(receiverOptions.subscription(listOf(defaultTopic)))
             .receive()
-            .windowTimeout(batchSize, Duration.ofSeconds(1))
+            .windowTimeout(batchSize, timeout)
             .map { batch ->
                 batch.map {
                     KafkaMessage(it.key(), it.value(), headers = it.headers().toMap())

@@ -34,7 +34,7 @@ class BatchConsumerWorker<T>(
     @ExperimentalCoroutinesApi
     override suspend fun handle() {
         try {
-            consumer.receiveBatchManualAcknowledge(backPressureSize)
+            consumer.receiveBatchManualAcknowledge(properties.batchSize, properties.batchWindowTimeout)
                 .onStart {
                     healthCheck.up()
                 }

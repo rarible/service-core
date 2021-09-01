@@ -9,5 +9,9 @@ data class DaemonWorkerProperties(
 
     val backpressureSize: Int = Int.MAX_VALUE,
 
-    val buffer: Boolean = false
+    val buffer: Boolean = false,
+
+    val batchSize: Int = 1000,
+
+    val batchWindowTimeout: Duration = Duration.ofMillis(100)
 )
