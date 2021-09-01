@@ -8,7 +8,7 @@ import org.apache.kafka.common.serialization.Deserializer
 
 open class JsonDeserializer : Deserializer<Any> {
 
-    private var objectMapper: ObjectMapper? = null
+    private lateinit var objectMapper: ObjectMapper
     private var valueClass: Class<*>? = null
 
     override fun configure(configs: MutableMap<String, *>?, isKey: Boolean) {
@@ -26,10 +26,10 @@ open class JsonDeserializer : Deserializer<Any> {
 
     override fun deserialize(topic: String?, headers: Headers?, data: ByteArray?): Any {
         if (valueClass != null) {
-            return objectMapper!!.readValue(data, valueClass)
+            return objectMapper.readValue(data, valueClass)
         } else {
             val type = getType(headers)
-            return objectMapper!!.readerFor(type).readValue(data)
+            return objectMapper.readerFor(type).readValue(data)
         }
     }
 

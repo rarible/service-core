@@ -11,7 +11,7 @@ const val RARIBLE_KAFKA_CLASS_PARAM = "RARIBLE_KAFKA_CLASS_PARAM"
 
 open class JsonSerializer : Serializer<Any> {
 
-    private var objectMapper: ObjectMapper? = null
+    private lateinit var objectMapper: ObjectMapper
     private var valueClass: Class<*>? = null
 
     override fun configure(configs: MutableMap<String, *>?, isKey: Boolean) {
@@ -32,7 +32,7 @@ open class JsonSerializer : Serializer<Any> {
             if (valueClass != null) {
                 headers.add(RARIBLE_KAFKA_CLASS_HEADER, valueClass!!.name.toByteArray())
             } else {
-                val type = objectMapper!!.constructType(data::class.java)
+                val type = objectMapper.constructType(data::class.java)
                 headers.add(RARIBLE_KAFKA_CLASS_HEADER, type.rawClass.name.toByteArray())
                 if (type.isContainerType() && !type.isArrayType()) {
                     headers.add(RARIBLE_KAFKA_CONTAINER_CLASS_HEADER, type.contentType.rawClass.name.toByteArray())
@@ -42,6 +42,6 @@ open class JsonSerializer : Serializer<Any> {
                 }
             }
         }
-        return objectMapper!!.writeValueAsBytes(data)
+        return objectMapper.writeValueAsBytes(data)
     }
 }
