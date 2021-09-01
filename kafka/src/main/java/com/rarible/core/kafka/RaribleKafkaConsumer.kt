@@ -13,6 +13,7 @@ import org.apache.kafka.common.serialization.StringDeserializer
 import reactor.kafka.receiver.KafkaReceiver
 import reactor.kafka.receiver.ReceiverOptions
 import java.nio.charset.StandardCharsets
+import java.time.Duration
 
 class RaribleKafkaConsumer<V>(
     /**
@@ -59,6 +60,18 @@ class RaribleKafkaConsumer<V>(
             .receive()
             .map {
                 KafkaMessage(it.key(), it.value(), headers = it.headers().toMap(), receiverRecord = it)
+            }.asFlow()
+    }
+
+
+    override fun receiveBatchManualAcknowledge(batchSize: Int): Flow<Flow<KafkaMessage<V>>> {
+        return KafkaReceiver.create(receiverOptions.subscription(listOf(defaultTopic)))
+            .receive()
+            .windowTimeout(batchSize, Duration.ofSeconds(1))
+            .map { batch ->
+                batch.map {
+                    KafkaMessage(it.key(), it.value(), headers = it.headers().toMap())
+                }.asFlow()
             }.asFlow()
     }
 
