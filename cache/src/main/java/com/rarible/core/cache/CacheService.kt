@@ -13,6 +13,9 @@ import org.springframework.dao.DuplicateKeyException
 import org.springframework.dao.OptimisticLockingFailureException
 import org.springframework.data.mongodb.core.ReactiveMongoOperations
 import org.springframework.data.mongodb.core.findById
+import org.springframework.data.mongodb.core.query.Criteria
+import org.springframework.data.mongodb.core.query.Query
+import org.springframework.data.mongodb.core.query.isEqualTo
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
 import java.util.*
@@ -48,6 +51,13 @@ class CacheService(
                 }
         }
     }
+
+    fun <T : Any> reset(id: String, descriptor: CacheDescriptor<T>): Mono<Void> =
+        LoggingUtils.withMarker { marker ->
+            logger.info(marker, "resetting $id from ${descriptor.collection}")
+            val criteria = Criteria.where("_id").isEqualTo(id)
+            mongo.remove(Query(criteria), descriptor.collection).then()
+        }
 
     private fun <T: Any> getCachedInternalSync(
         marker: Marker,
