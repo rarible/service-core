@@ -75,98 +75,98 @@
             <dependency>
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-common</artifactId>
-                <version>${revision}</version>
+                <version>${project.revision}</version>
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-telemetry-starter</artifactId>
-                <version>${revision}</version>
+                <version>${project.revision}</version>
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-starter</artifactId>
-                <version>${revision}</version>
+                <version>${project.revision}</version>
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-metrics</artifactId>
-                <version>${revision}</version>
+                <version>${project.revision}</version>
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-feign</artifactId>
-                <version>${revision}</version>
+                <version>${project.revision}</version>
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-logging</artifactId>
-                <version>${revision}</version>
+                <version>${project.revision}</version>
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-application</artifactId>
-                <version>${revision}</version>
+                <version>${project.revision}</version>
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-logging-filter</artifactId>
-                <version>${revision}</version>
+                <version>${project.revision}</version>
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-lock</artifactId>
-                <version>${revision}</version>
+                <version>${project.revision}</version>
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-lock-redis</artifactId>
-                <version>${revision}</version>
+                <version>${project.revision}</version>
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-test-common</artifactId>
-                <version>${revision}</version>
+                <version>${project.revision}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-mongo</artifactId>
-                <version>${revision}</version>
+                <version>${project.revision}</version>
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-cache</artifactId>
-                <version>${revision}</version>
+                <version>${project.revision}</version>
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-task</artifactId>
-                <version>${revision}</version>
+                <version>${project.revision}</version>
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-kafka</artifactId>
-                <version>${revision}</version>
+                <version>${project.revision}</version>
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-daemon</artifactId>
-                <version>${revision}</version>
+                <version>${project.revision}</version>
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-mongo-watcher</artifactId>
-                <version>${revision}</version>
+                <version>${project.revision}</version>
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-client</artifactId>
-                <version>${revision}</version>
+                <version>${project.revision}</version>
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-reduce</artifactId>
-                <version>${revision}</version>
+                <version>${project.revision}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -176,6 +176,31 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>flatten-maven-plugin</artifactId>
+                <version>1.2.7</version>
+                <configuration>
+                    <updatePomFile>true</updatePomFile>
+                    <flattenMode>resolveCiFriendliesOnly</flattenMode>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>flatten</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>flatten</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>flatten.clean</id>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
