@@ -1,16 +1,23 @@
 package com.rarible.core.kafka.json
 
 import com.fasterxml.jackson.databind.JavaType
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.type.TypeFactory
 import org.apache.kafka.common.header.Headers
 import org.apache.kafka.common.serialization.Deserializer
 
-class JsonDeserializer : Deserializer<Any> {
-    val objectMapper = kafkaObjectMapper()
+open class JsonDeserializer : Deserializer<Any> {
+
+    private var objectMapper: ObjectMapper? = null
     private var valueClass: Class<*>? = null
 
     override fun configure(configs: MutableMap<String, *>?, isKey: Boolean) {
         valueClass = configs?.get(RARIBLE_KAFKA_CLASS_PARAM) as Class<*>?
+        objectMapper = createMapper()
+    }
+
+    open fun createMapper(): ObjectMapper {
+        return KafkaObjectMapperFactory.getMapper()
     }
 
     override fun deserialize(topic: String?, data: ByteArray?): Any {
@@ -19,10 +26,10 @@ class JsonDeserializer : Deserializer<Any> {
 
     override fun deserialize(topic: String?, headers: Headers?, data: ByteArray?): Any {
         if (valueClass != null) {
-            return objectMapper.readValue(data, valueClass)
+            return objectMapper!!.readValue(data, valueClass)
         } else {
             val type = getType(headers)
-            return objectMapper.readerFor(type).readValue(data)
+            return objectMapper!!.readerFor(type).readValue(data)
         }
     }
 
