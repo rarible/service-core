@@ -4,6 +4,7 @@ import com.rarible.core.kafka.json.RARIBLE_KAFKA_CLASS_PARAM
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.asFlow
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.OffsetResetStrategy
@@ -64,14 +65,14 @@ class RaribleKafkaConsumer<V>(
     }
 
 
-    override fun receiveBatchManualAcknowledge(batchSize: Int, timeout: Duration): Flow<List<KafkaMessage<V>>> {
+    override fun receiveBatchManualAcknowledge(batchSize: Int, timeout: Duration): Flow<Flow<KafkaMessage<V>>> {
         return KafkaReceiver.create(receiverOptions.subscription(listOf(defaultTopic)))
             .receive()
-            .bufferTimeout(batchSize, timeout)
+            .windowTimeout(batchSize, timeout)
             .map { batch ->
                 batch.map {
                     KafkaMessage(it.key(), it.value(), headers = it.headers().toMap())
-                }
+                }.asFlow()
             }.asFlow()
     }
 
