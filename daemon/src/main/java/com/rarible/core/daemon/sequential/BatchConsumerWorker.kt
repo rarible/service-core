@@ -41,8 +41,7 @@ class BatchConsumerWorker<T>(
                 .onCompletion {
                     logger.info("Flux was completed")
                 }
-                .collect { events ->
-                    val eventsList = events.toList()
+                .collect { eventsList ->
                     onEvent(eventsList.size)
 
                     handleInternal(eventsList)
