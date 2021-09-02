@@ -167,11 +167,6 @@
                 <artifactId>rarible-core-reduce</artifactId>
                 <version>1.2-SNAPSHOT</version>
             </dependency>
-            <dependency>
-                <groupId>io.projectreactor.kafka</groupId>
-                <artifactId>reactor-kafka</artifactId>
-                <version>1.3.5</version>
-            </dependency>
         </dependencies>
     </dependencyManagement>
 
