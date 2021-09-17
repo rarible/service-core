@@ -15,9 +15,13 @@
     </repositories>
 
     <distributionManagement>
-        <repository>
+        <snapshotRepository>
             <id>nexus-snapshots</id>
             <url>http://nexus.rarible.int/repository/maven-snapshots/</url>
+        </snapshotRepository>
+        <repository>
+            <id>nexus-releases</id>
+            <url>http://nexus.rarible.int/repository/maven-releases/</url>
         </repository>
     </distributionManagement>
 
