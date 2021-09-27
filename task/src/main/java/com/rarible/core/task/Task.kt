@@ -9,6 +9,11 @@ import org.springframework.data.mongodb.core.index.CompoundIndexes
 import org.springframework.data.mongodb.core.mapping.Document
 import java.util.*
 
+/**
+ * NOT A PUBLIC API.
+ *
+ * Internal state of the running task persisted in the database to allow task resuming.
+ */
 @Document(collection = "task")
 @CompoundIndexes(
     CompoundIndex(def = "{type: 1, param: 1}", background = true, unique = true),

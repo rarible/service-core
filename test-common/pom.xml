@@ -5,7 +5,7 @@
     <parent>
         <artifactId>rarible-core-parent</artifactId>
         <groupId>com.rarible.core</groupId>
-        <version>1.3-spring25-SNAPSHOT</version>
+        <version>${revision}</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>rarible-core-test-common</artifactId>
@@ -103,6 +103,11 @@
         <dependency>
             <groupId>io.daonomic.scalether</groupId>
             <artifactId>transaction-mono_${scala.major.version}</artifactId>
+            <version>${scalether.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.daonomic.scalether</groupId>
+            <artifactId>domain-test_${scala.major.version}</artifactId>
             <version>${scalether.version}</version>
         </dependency>
         <dependency>

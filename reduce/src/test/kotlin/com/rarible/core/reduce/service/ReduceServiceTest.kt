@@ -1,11 +1,14 @@
 package com.rarible.core.reduce.service
 
 import com.rarible.core.reduce.AbstractIntegrationTest
+import com.rarible.core.reduce.blockchain.BlockchainSnapshotStrategy
 import com.rarible.core.reduce.factory.createAccountId
 import com.rarible.core.reduce.factory.createAccountIncomeTransfer
 import com.rarible.core.reduce.factory.createAccountOutcomeTransfer
+import com.rarible.core.reduce.service.model.AccountBalance
 import com.rarible.core.reduce.service.model.AccountId
 import com.rarible.core.reduce.service.model.AccountReduceEvent
+import com.rarible.core.reduce.service.model.AccountReduceSnapshot
 import com.rarible.core.reduce.service.reducer.AccountBalanceReducer
 import com.rarible.core.reduce.service.repository.AccountBalanceRepository
 import com.rarible.core.reduce.service.repository.AccountBalanceSnapshotRepository
@@ -21,6 +24,7 @@ import java.math.BigInteger
 internal class ReduceServiceTest : AbstractIntegrationTest() {
     private val balanceRepository = AccountBalanceRepository(template)
     private val snapshotRepository = AccountBalanceSnapshotRepository(template)
+    private val snapshotStrategy = BlockchainSnapshotStrategy<AccountReduceSnapshot, AccountBalance, AccountId>(4)
     private val eventRepository = AccountReduceEventRepository(template)
     private val dataRepository = ReduceDataRepository(balanceRepository)
     private val reducer = AccountBalanceReducer(balanceRepository)
@@ -28,9 +32,9 @@ internal class ReduceServiceTest : AbstractIntegrationTest() {
     private val service = ReduceService(
         reducer = reducer,
         eventRepository = eventRepository,
-        snapshotRepository = snapshotRepository,
         dataRepository = dataRepository,
-        eventsCountBeforeNextSnapshot = 4
+        snapshotRepository = snapshotRepository,
+        snapshotStrategy = snapshotStrategy
     )
 
     @Test
@@ -132,6 +136,42 @@ internal class ReduceServiceTest : AbstractIntegrationTest() {
         val snapshot = snapshotRepository.get(accountId)
         assertThat(snapshot?.mark).isEqualTo(17)
         assertThat(snapshot?.data?.balance).isEqualTo(3)
+    }
+
+    @Test
+    fun `should make latest snapshot if enough block conformations`() = runBlocking<Unit> {
+        val accountId = createAccountId()
+        val incomes = createSeqAccountIncomeReduceEvent(accountId, income = 1, amount = 1, startBlockNumber = 0)
+        val outcomes = createSeqAccountOutcomeReduceEvent(accountId, outcome = 1, amount = 1, startBlockNumber = 20)
+
+        (incomes + outcomes).forEach { eventRepository.save(it.event) }
+
+        service.onEvents(incomes)
+
+        val accountBalance1 = balanceRepository.get(accountId)
+        assertThat(accountBalance1?.balance).isEqualTo(BigInteger.valueOf(0))
+
+        val snapshot = snapshotRepository.get(accountId)
+        assertThat(snapshot?.mark).isEqualTo(1)
+        assertThat(snapshot?.data?.balance).isEqualTo(1)
+    }
+
+    @Test
+    fun `should make latest snapshot if enough block conformations, complex test`() = runBlocking<Unit> {
+        val accountId = createAccountId()
+        val incomes = createSeqAccountIncomeReduceEvent(accountId, income = 1, amount = 2, startBlockNumber = 0)
+        val outcomes = createSeqAccountOutcomeReduceEvent(accountId, outcome = 1, amount = 1, startBlockNumber = 30)
+
+        (incomes + outcomes).forEach { eventRepository.save(it.event) }
+
+        service.onEvents(incomes)
+
+        val accountBalance1 = balanceRepository.get(accountId)
+        assertThat(accountBalance1?.balance).isEqualTo(BigInteger.valueOf(1))
+
+        val snapshot = snapshotRepository.get(accountId)
+        assertThat(snapshot?.mark).isEqualTo(2)
+        assertThat(snapshot?.data?.balance).isEqualTo(2)
     }
 
     @Test

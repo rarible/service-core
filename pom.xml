@@ -4,20 +4,24 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.rarible.core</groupId>
     <artifactId>rarible-core-parent</artifactId>
-    <version>1.3-spring25-SNAPSHOT</version>
+    <version>${revision}</version>
     <packaging>pom</packaging>
 
-<!--    <repositories>-->
-<!--        <repository>-->
-<!--            <id>nexus-maven-public</id>-->
-<!--            <url>http://nexus.rarible.int/repository/maven-public/</url>-->
-<!--        </repository>-->
-<!--    </repositories>-->
+    <repositories>
+        <repository>
+            <id>nexus-maven-public</id>
+            <url>http://nexus.rarible.int/repository/maven-public/</url>
+        </repository>
+    </repositories>
 
     <distributionManagement>
-        <repository>
+        <snapshotRepository>
             <id>nexus-snapshots</id>
             <url>http://nexus.rarible.int/repository/maven-snapshots/</url>
+        </snapshotRepository>
+        <repository>
+            <id>nexus-releases</id>
+            <url>http://nexus.rarible.int/repository/maven-releases/</url>
         </repository>
     </distributionManagement>
 
@@ -28,6 +32,7 @@
     </parent>
 
     <properties>
+        <revision>1.3-spring25-SNAPSHOT</revision>
         <logstash-encoder.version>6.6</logstash-encoder.version>
         <testcontainers.version>1.15.2</testcontainers.version>
         <springfox.version>3.0.0</springfox.version>
@@ -83,93 +88,88 @@
             <dependency>
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-common</artifactId>
-                <version>${rarible.core.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-telemetry-starter</artifactId>
-                <version>${rarible.core.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-starter</artifactId>
-                <version>${rarible.core.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-metrics</artifactId>
-                <version>${rarible.core.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-logging</artifactId>
-                <version>${rarible.core.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-application</artifactId>
-                <version>${rarible.core.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-logging-filter</artifactId>
-                <version>${rarible.core.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-lock</artifactId>
-                <version>${rarible.core.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-lock-redis</artifactId>
-                <version>${rarible.core.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-test-common</artifactId>
-                <version>${rarible.core.version}</version>
+                <version>${project.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-mongo</artifactId>
-                <version>${rarible.core.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-cache</artifactId>
-                <version>${rarible.core.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-task</artifactId>
-                <version>${rarible.core.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-kafka</artifactId>
-                <version>${rarible.core.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-daemon</artifactId>
-                <version>${rarible.core.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.rarible.core</groupId>
-                <artifactId>rarible-core-mongo-watcher</artifactId>
-                <version>${rarible.core.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-client</artifactId>
-                <version>${rarible.core.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-reduce</artifactId>
-                <version>1.2-SNAPSHOT</version>
+                <version>${project.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -179,6 +179,10 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>flatten-maven-plugin</artifactId>
             </plugin>
         </plugins>
     </build>
@@ -197,7 +201,6 @@
         <module>application</module>
         <module>telemetry</module>
         <module>metrics</module>
-        <module>mongo-watcher</module>
         <module>starter</module>
         <module>daemon</module>
         <module>client</module>

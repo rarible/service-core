@@ -58,6 +58,20 @@ class CacheServiceTest : AbstractIntegrationTest() {
         println(read)
     }
 
+    @Test
+    fun `reset key`() {
+        val descriptor = object : CacheDescriptor<SaveObject> {
+            override val collection: String = "test"
+            override fun getMaxAge(value: SaveObject?): Long = 100000
+            override fun get(id: String): Mono<SaveObject> =
+                Mono.just(SaveObject("value", Random.nextInt()))
+        }
+        val first = cacheService.getCached("id", descriptor).block()!!
+        cacheService.reset("id", descriptor).block()
+        val second = cacheService.getCached("id", descriptor).block()!!
+        assertNotEquals(first, second)
+    }
+
     private data class SaveObject(
         val filed1: String,
         val filed2: Int

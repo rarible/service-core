@@ -1,11 +1,6 @@
 package com.rarible.core.kafka.json
 
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.KotlinModule
 import org.apache.kafka.common.header.Headers
 import org.apache.kafka.common.serialization.Serializer
 
@@ -14,22 +9,18 @@ const val RARIBLE_KAFKA_CONTAINER_CLASS_HEADER = "RARIBLE_KAFKA_CONTAINER_CLASS_
 const val RARIBLE_KAFKA_KEY_CLASS_HEADER = "RARIBLE_KAFKA_KEY_CLASS_HEADER"
 const val RARIBLE_KAFKA_CLASS_PARAM = "RARIBLE_KAFKA_CLASS_PARAM"
 
-fun kafkaObjectMapper(): ObjectMapper {
-    val objectMapper = ObjectMapper()
-    objectMapper.registerModule(KotlinModule())
-    objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-    objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL)
-    objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-    objectMapper.registerModule(JavaTimeModule())
-    return objectMapper
-}
+open class JsonSerializer : Serializer<Any> {
 
-class JsonSerializer : Serializer<Any> {
-    private val objectMapper = kafkaObjectMapper()
+    private lateinit var objectMapper: ObjectMapper
     private var valueClass: Class<*>? = null
 
     override fun configure(configs: MutableMap<String, *>?, isKey: Boolean) {
         valueClass = configs?.get(RARIBLE_KAFKA_CLASS_PARAM) as Class<*>?
+        objectMapper = createMapper()
+    }
+
+    open fun createMapper(): ObjectMapper {
+        return KafkaObjectMapperFactory.getMapper()
     }
 
     override fun serialize(topic: String?, data: Any): ByteArray {

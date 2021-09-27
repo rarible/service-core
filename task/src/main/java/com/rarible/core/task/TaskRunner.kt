@@ -11,6 +11,11 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
+/**
+ * NOT A PUBLIC API.
+ *
+ * Internal task runner responsible for running tasks, handling errors and saving tasks' states.
+ */
 @FlowPreview
 @Service
 class TaskRunner(
