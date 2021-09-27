@@ -40,5 +40,10 @@
             <groupId>com.rarible.core</groupId>
             <artifactId>rarible-core-test-common</artifactId>
         </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${logback.version}</version>
+        </dependency>
     </dependencies>
 </project>
