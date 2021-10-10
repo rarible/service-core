@@ -92,7 +92,7 @@ class ReduceService<
 
         if (reducedSnapshot != initialSnapshot) {
             dataRepository.saveReduceResult(reducedSnapshot.data)
-            logger.info("Save new reduce data for $key")
+            logger.info("Save new reduce data for {}: {}", key, reducedSnapshot.data)
 
             if (context.needSave()) {
                 snapshotRepository.save(context.next())
