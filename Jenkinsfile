@@ -1,4 +1,4 @@
-@Library('shared-library@quick-fix') _
+@Library('shared-library') _
 
 def credentialsId = 'nexus-ci'
 
