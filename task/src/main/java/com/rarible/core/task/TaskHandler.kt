@@ -15,6 +15,10 @@ import kotlinx.coroutines.flow.Flow
  * - run [TaskService.runTask] with `type` parameter equal to this handler's [type] and a parameter to run with.
  * - override [getAutorunParams] with non-empty list of params. [TaskService] will schedule the task for execution
  * after a fixed delay on the application startup (usually after 30 seconds).
+ *
+ * **Note!** `<T>` type parameter can be only of types `String | Long | Int | MyDataClass`.
+ * Do not use `Address | EthUInt256` or other types that internally serialize to string, but cannot be deserialized without a hint.
+ * This is because the current implementation of `TaskRunner` loses type information of the state field (RPN-1164).
  */
 interface TaskHandler<T: Any> {
     /**

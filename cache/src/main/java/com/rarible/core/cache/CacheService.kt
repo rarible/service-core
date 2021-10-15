@@ -54,7 +54,7 @@ class CacheService(
 
     fun <T : Any> reset(id: String, descriptor: CacheDescriptor<T>): Mono<Void> =
         LoggingUtils.withMarker { marker ->
-            logger.info(marker, "resetting $id from ${descriptor.collection}")
+            logger.debug(marker, "resetting $id from ${descriptor.collection}")
             val criteria = Criteria.where("_id").isEqualTo(id)
             mongo.remove(Query(criteria), descriptor.collection).then()
         }
@@ -87,7 +87,7 @@ class CacheService(
                         cache.data.justOrEmpty()
                     }
                     else -> {
-                        logger.info(marker, "$description: getting $id from ${d.collection}. fetching")
+                        logger.debug(marker, "$description: getting $id from ${d.collection}. fetching")
                         getAndUpdateCache(marker, cache, id, d.collection) { d.get(id) }
                     }
                 }
@@ -101,7 +101,7 @@ class CacheService(
         collection: String,
         get: () -> Mono<T>
     ): Mono<T> {
-        logger.info(marker, "getAndUpdateCache $id cached: ${cache != null}")
+        logger.debug(marker, "getAndUpdateCache $id cached: ${cache != null}")
         return get()
             .toOptional()
             .flatMap { fetched ->

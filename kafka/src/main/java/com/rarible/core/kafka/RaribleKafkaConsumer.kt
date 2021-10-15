@@ -27,7 +27,8 @@ class RaribleKafkaConsumer<V>(
     private val defaultTopic: String,
     bootstrapServers: String,
     offsetResetStrategy: OffsetResetStrategy = OffsetResetStrategy.LATEST,
-    valueClass: Class<V>? = null
+    valueClass: Class<V>? = null,
+    properties: Map<String, String> = emptyMap()
 ) : KafkaConsumer<V> {
     private val receiverOptions: ReceiverOptions<String, V>
 
@@ -40,7 +41,7 @@ class RaribleKafkaConsumer<V>(
             RARIBLE_KAFKA_CLASS_PARAM to valueClass,
             ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG to bootstrapServers,
             ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to offsetResetStrategy.name.toLowerCase()
-        )
+        ) + properties
         receiverOptions = ReceiverOptions.create<String, V>(receiverProperties)
     }
 
