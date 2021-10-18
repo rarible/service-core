@@ -38,6 +38,7 @@
         <springfox.version>3.0.0</springfox.version>
         <nexus.maven.public>http://nexus.rarible.int/repository/maven-public/</nexus.maven.public>
         <springmockk.version>2.0.3</springmockk.version>
+        <elastic-apm.version>1.26.0</elastic-apm.version>
     </properties>
 
     <dependencyManagement>
@@ -54,6 +55,11 @@
                 <groupId>net.logstash.logback</groupId>
                 <artifactId>logstash-logback-encoder</artifactId>
                 <version>${logstash-encoder.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>co.elastic.apm</groupId>
+                <artifactId>apm-agent-api</artifactId>
+                <version>${elastic-apm.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.google.guava</groupId>
@@ -167,6 +173,16 @@
                 <artifactId>rarible-core-reduce</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.rarible.core</groupId>
+                <artifactId>rarible-core-apm</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.rarible.core</groupId>
+                <artifactId>rarible-core-apm-filter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -204,6 +220,8 @@
         <module>reduce</module>
         <module>test-coverage</module>
         <module>api</module>
+        <module>apm</module>
+        <module>apm-filter</module>
     </modules>
 
 </project>
