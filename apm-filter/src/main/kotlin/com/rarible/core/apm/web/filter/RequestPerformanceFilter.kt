@@ -24,10 +24,15 @@ class RequestPerformanceFilter(
         val request = exchange.request
         val response = exchange.response
 
+        val headers = request.headers
+
         val path = request.path.pathWithinApplication().value()
         val method = request.methodValue
 
-        val transaction = ElasticApm.startTransaction()
+        val transaction = ElasticApm.startTransactionWithRemoteParent(
+            { header -> headers.getFirst(header) },
+            { header -> headers[header] }
+        )
         transaction.setName("$service#$method#$path")
         transaction.setLabel("env", environment)
 
