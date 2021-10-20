@@ -9,6 +9,7 @@ import co.elastic.apm.api.Span
 import co.elastic.apm.api.Transaction
 import kotlinx.coroutines.reactor.ReactorContext
 import kotlinx.coroutines.withContext
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.util.context.Context
 import java.util.Optional
@@ -90,6 +91,18 @@ private val apmContext: Mono<ApmContext> =
             }
         }
 
+fun <T> Flux<T>.withSpan(
+    name: String,
+    type: String? = null,
+    subType: String? = null,
+    action: String? = null,
+    labels: List<Pair<String, Any>> = emptyList()
+): Flux<T> {
+    return apmContext
+        .map { it.span.createSpan(name, type, subType, action, labels) }
+        .usingFlux(this)
+}
+
 fun <T> Mono<T>.withSpan(
     name: String,
     type: String? = null,
@@ -128,6 +141,23 @@ private fun <T> Mono<out Span>.using(mono: Mono<T>): Mono<T> {
                 }.subscriberContext { it.put(ApmContext.Key, ApmContext(span)) }
             } else {
                 mono
+            }
+        }
+}
+
+private fun <T> Mono<out Span>.usingFlux(flux: Flux<T>): Flux<T> {
+    return this
+        .map { Optional.of(it) }
+        .switchIfEmpty(Mono.just(Optional.empty()))
+        .flatMapMany { opt ->
+            if (opt.isPresent) {
+                val span = opt.get()
+                flux
+                    .doOnError { span.captureException(it.cause) }
+                    .doOnComplete { span.end() }
+                    .subscriberContext { it.put(ApmContext.Key, ApmContext(span)) }
+            } else {
+                flux
             }
         }
 }
