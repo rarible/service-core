@@ -172,3 +172,24 @@ private fun Span.setLabels(labels: List<Pair<String, Any>> = emptyList()) {
         }
     }
 }
+
+object JavaHelpers {
+    @JvmStatic
+    fun <T> withTransaction(
+        mono: Mono<T>,
+        name: String,
+        labels: List<Pair<String, Any>> = emptyList(),
+        headerExtractor: HeaderExtractor? = null,
+        headersExtractor: HeadersExtractor? = null
+    ) = mono.withTransaction(name, labels, headerExtractor, headersExtractor)
+
+    @JvmStatic
+    fun <T> withSpan(
+        mono: Mono<T>,
+        name: String,
+        type: String? = null,
+        subType: String? = null,
+        action: String? = null,
+        labels: List<Pair<String, Any>> = emptyList()
+    ) = mono.withSpan(name, type, subType, action, labels)
+}
