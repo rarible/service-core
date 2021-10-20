@@ -1,10 +1,12 @@
-@file:Suppress("REDUNDANT_INLINE_SUSPEND_FUNCTION_TYPE")
+@file:Suppress("REDUNDANT_INLINE_SUSPEND_FUNCTION_TYPE", "EXPERIMENTAL_API_USAGE")
 
 package com.rarible.core.apm
 
 import co.elastic.apm.api.ElasticApm
 import co.elastic.apm.api.Span
+import kotlinx.coroutines.reactor.ReactorContext
 import kotlinx.coroutines.withContext
+import reactor.util.context.Context
 import kotlin.coroutines.coroutineContext
 
 suspend fun <T> withSpan(
@@ -27,8 +29,7 @@ suspend fun <T> withSpan(
     action: String? = null,
     body: suspend () -> T
 ): T {
-    val ctx = coroutineContext[ApmContext.Key]
-
+    val ctx = getApmContext()
     return if (ctx != null) {
         val span = ctx.span.startSpan(type, subType, action)
         span.setName(name)
@@ -42,18 +43,28 @@ suspend fun <T> withTransaction(name: String, body: suspend () -> T): T {
     val transaction = ElasticApm.startTransaction()
     transaction.setName(name)
 
-    return withContext(ApmContext(transaction)) {
-        transaction.using(body)
-    }
+    return transaction.using(body)
 }
 
-suspend inline fun <T> Span.using(body: suspend () -> T): T {
+suspend fun <T> Span.using(body: suspend () -> T): T {
     return try {
-        body()
+        val current = coroutineContext[ReactorContext.Key]?.context ?: Context.empty()
+        withContext(ReactorContext(current.put(ApmContext.Key, ApmContext(this)))) {
+            body()
+        }
     } catch (e: Throwable) {
         captureException(e)
         throw e
     } finally {
         end()
+    }
+}
+
+suspend fun getApmContext(): ApmContext? {
+    val ctx = coroutineContext[ReactorContext.Key]?.context
+    return if (ctx != null && ctx.hasKey(ApmContext.Key)) {
+        ctx.get(ApmContext.Key)
+    } else {
+        null
     }
 }

@@ -20,5 +20,16 @@
             <groupId>co.elastic.apm</groupId>
             <artifactId>apm-agent-api</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlinx</groupId>
+            <artifactId>kotlinx-coroutines-reactor</artifactId>
+        </dependency>
+
+        <!-- ================== Test ===================== -->
+        <dependency>
+            <groupId>com.rarible.core</groupId>
+            <artifactId>rarible-core-test-common</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>
