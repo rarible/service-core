@@ -10,6 +10,6 @@ internal const val RARIBLE_APM_AGENT = "rarible.core.apm.agent"
 @ConfigurationProperties(RARIBLE_APM_AGENT)
 data class ApmAgentProperties(
     val enabled: Boolean = false,
-    val server: URI = URI.create("http://elastic-apm:8200"),
+    val server: URI = URI.create("http://apm-server:8200"),
     val packages: String? = null
 )
