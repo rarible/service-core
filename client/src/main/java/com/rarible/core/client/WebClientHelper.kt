@@ -1,7 +1,10 @@
 package com.rarible.core.client
 
+import co.elastic.apm.api.Span
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.base.CaseFormat
+import com.rarible.core.apm.ApmContext
+import com.rarible.core.common.orNull
 import com.rarible.core.logging.LoggerContext.MDC_MAP
 import org.springframework.http.MediaType
 import org.springframework.http.client.reactive.ClientHttpConnector
@@ -12,16 +15,25 @@ import org.springframework.http.codec.json.Jackson2JsonEncoder
 import org.springframework.web.reactive.function.client.ExchangeStrategies
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.core.publisher.Mono
+import java.util.Optional
 import java.util.concurrent.TimeUnit
-import java.util.function.Consumer
 
 object WebClientHelper {
     @JvmStatic
     val LOG_HEADERS: Mono<Map<String, String>> = MDC_MAP
         .map { it.toHeadersMap() }
+    val APM_SPAN: Mono<Optional<Span>> = Mono.subscriberContext()
+        .map {
+            val ctx: ApmContext? = if (it.hasKey(ApmContext.Key)) {
+                it.get(ApmContext.Key)
+            } else {
+                null
+            }
+            Optional.ofNullable(ctx?.span)
+        }
 
     @JvmStatic
-    fun createConnector(connectTimeoutMs: Int, readTimeoutMs: Int): ClientHttpConnector? {
+    fun createConnector(connectTimeoutMs: Int, readTimeoutMs: Int): ClientHttpConnector {
         return createConnector(connectTimeoutMs, readTimeoutMs, false)
     }
 
@@ -59,8 +71,13 @@ object WebClientHelper {
 
     @JvmStatic
     fun preprocess(requestBuilder: WebClient.RequestBodySpec): Mono<WebClient.RequestBodySpec> {
-        return LOG_HEADERS
-            .map { preprocess(requestBuilder, it) }
+        return Mono.zip(LOG_HEADERS, APM_SPAN) { headers, span ->
+            preprocess(requestBuilder, headers)
+            span.orNull()?.injectTraceHeaders { key, value ->
+                requestBuilder.header(key, value)
+            }
+            requestBuilder
+        }
     }
 
     private fun preprocess(requestBuilder: WebClient.RequestBodySpec, headers: Map<String, String>) =
