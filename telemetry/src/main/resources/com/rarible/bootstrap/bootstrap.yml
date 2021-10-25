@@ -27,13 +27,14 @@ management:
   endpoints:
     enabled-by-default: false
     web:
-      exposure.include: ping, metrics, prometheus, info, health, version
+      exposure.include: ping, metrics, prometheus, info, health, version, loggers
       base-path: /_status
   endpoint:
     info:
       enabled: true
       git.mode: full
     ping.enabled: true
+    loggers.enabled: true
     metrics.enabled: true
     health.enabled: true
     version.enabled: true
