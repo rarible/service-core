@@ -138,7 +138,9 @@ private fun <T> Mono<out Span>.using(mono: Mono<T>): Mono<T> {
                         it.isOnError -> span.captureException(it.throwable)
                         it.isOnComplete -> span.end()
                     }
-                }.subscriberContext { it.put(ApmContext.Key, ApmContext(span)) }
+                }.subscriberContext {
+                    it.put(ApmContext.Key, ApmContext(span))
+                }
             } else {
                 mono
             }

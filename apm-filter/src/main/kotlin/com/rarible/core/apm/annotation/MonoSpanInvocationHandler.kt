@@ -1,45 +1,47 @@
 package com.rarible.core.apm.annotation
 
 import com.rarible.core.apm.*
+import org.aopalliance.intercept.MethodInterceptor
+import org.aopalliance.intercept.MethodInvocation
 import reactor.core.publisher.Mono
-import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
 import java.util.concurrent.ConcurrentHashMap
 
 typealias MethodSignature = String
 
 class MonoSpanInvocationHandler(
-    private val type: Class<*>,
-    private val bean: Any
-) : InvocationHandler {
+    private val type: Class<*>
+) : MethodInterceptor {
+
     private val checkCache = ConcurrentHashMap<MethodSignature, Boolean>()
     private val infoCache = ConcurrentHashMap<MethodSignature, SpanCache>()
 
-    override fun invoke(proxy: Any, method: Method, args: Array<out Any>): Any {
+    override fun invoke(invocation: MethodInvocation): Any {
+        val method = invocation.method
         val signature = getMethodSignature(method)
 
         return when (checkCache[signature]) {
             false -> {
-                method.invoke(method, args)
+                invocation.proceed()
             }
             true -> {
                 val cache = infoCache[signature] ?: error("Cache must exist for signature $signature")
-                invoke(cache, method, args)
+                invoke(cache, invocation)
             }
             null -> {
                 val original = type.getMethod(method.name, *method.parameterTypes)
 
-                val validReturnType = method.returnType is Mono<*>
+                val validReturnType = method.returnType == Mono::class.java
                 val cache = extractCacheInfo(signature, original)
 
                 if (validReturnType && cache != null) {
                     checkCache[signature] = true
                     infoCache[signature] = cache
 
-                    invoke(cache, method, args)
+                    invoke(cache, invocation)
                 } else {
                     checkCache[signature] = false
-                    method.invoke(method, args)
+                    invocation.proceed()
                 }
             }
         }
@@ -75,8 +77,8 @@ class MonoSpanInvocationHandler(
 
     private fun getMethodSignature(method: Method): MethodSignature = "${type.name}#${method.name}"
 
-    private fun invoke(spanCache: SpanCache, method: Method, args: Array<out Any>): Any {
-        val result = method.invoke(bean, args) as Mono<*>
+    private fun invoke(spanCache: SpanCache, invocation: MethodInvocation): Any {
+        val result = invocation.proceed() as Mono<*>
         val spanInfo = spanCache.info
 
         return when (spanCache.type) {

@@ -40,4 +40,6 @@
             <artifactId>rarible-core-test-common</artifactId>
         </dependency>
     </dependencies>
+
+
 </project>

@@ -1,11 +1,15 @@
 package com.rarible.core.apm.web.filter.autoconfigure
 
-import com.rarible.core.apm.CaptureSpan
-import com.rarible.core.apm.CaptureTransaction
-import com.rarible.core.apm.getApmContext
+import co.elastic.apm.api.ElasticApm
+import co.elastic.apm.api.Transaction
+import com.rarible.core.apm.*
 import com.rarible.core.apm.web.filter.RequestPerformanceFilter
 import com.rarible.core.application.ApplicationEnvironmentInfo
 import com.rarible.core.application.ApplicationInfo
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -27,7 +31,7 @@ import reactor.core.publisher.Mono
     properties = [
         "rarible.core.filter.apm.enabled=true",
         "rarible.core.apm.annotation.enabled=true"
-]
+    ]
 )
 @SpringBootConfiguration
 @EnableAutoConfiguration
@@ -57,9 +61,18 @@ class RequestPerformanceFilterTest {
 
     @Test
     fun `should handle transaction annotation`() {
-        testAnnotatedClass
-            .openTransaction()
-            .subscribe {  }
+        mockkStatic(ElasticApm::class)
+        val transaction = mockk<Transaction>()
+        every { transaction.setName("testTransaction") } returns transaction
+        every { transaction.end() } returns Unit
+
+        every { ElasticApm.startTransaction() } returns transaction
+
+        testAnnotatedClass.openTransaction().block()
+
+        verify(exactly = 1) { ElasticApm.startTransaction() }
+        verify(exactly = 1) { transaction.setName("testTransaction") }
+        verify(exactly = 1) { transaction.end() }
     }
 
     @TestConfiguration
@@ -89,16 +102,15 @@ class RequestPerformanceFilterTest {
         }
     }
 
-    class TestAnnotatedClass {
-        @CaptureTransaction("transaction")
-        fun openTransaction(): Mono<String> {
-            return Mono
-                .just("Open Transaction")
-                .then(openSpan())
+    @Spanable
+    open class TestAnnotatedClass {
+        @CaptureTransaction("testTransaction")
+        open fun openTransaction(): Mono<String> {
+            return Mono.just("Open Transaction")
         }
 
-        @CaptureSpan(value = "span", type = "test", subtype = "sub", action = "testAction")
-        fun openSpan(): Mono<String> {
+        @CaptureSpan(value = "testName", type = "testType", subtype = "testSubType", action = "testAction")
+        open fun openSpan(): Mono<String> {
             return Mono.just("Open Span")
         }
     }
