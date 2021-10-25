@@ -1,5 +1,7 @@
 package com.rarible.core.apm.web.filter.autoconfigure
 
+import com.rarible.core.apm.CaptureSpan
+import com.rarible.core.apm.CaptureTransaction
 import com.rarible.core.apm.getApmContext
 import com.rarible.core.apm.web.filter.RequestPerformanceFilter
 import com.rarible.core.application.ApplicationEnvironmentInfo
@@ -18,12 +20,14 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.client.getForObject
+import reactor.core.publisher.Mono
 
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = [
-        "rarible.core.filter.apm.enabled=true"
-    ]
+        "rarible.core.filter.apm.enabled=true",
+        "rarible.core.apm.annotation.enabled=true"
+]
 )
 @SpringBootConfiguration
 @EnableAutoConfiguration
@@ -35,6 +39,9 @@ class RequestPerformanceFilterTest {
 
     @Autowired
     private lateinit var requestPerformanceFilter: RequestPerformanceFilter
+
+    @Autowired
+    private lateinit var testAnnotatedClass: TestAnnotatedClass
 
     @Test
     fun `test apm filter initialized`() {
@@ -48,6 +55,13 @@ class RequestPerformanceFilterTest {
         assertThat(result).isTrue()
     }
 
+    @Test
+    fun `should handle transaction annotation`() {
+        testAnnotatedClass
+            .openTransaction()
+            .subscribe {  }
+    }
+
     @TestConfiguration
     internal class Configuration {
         @Bean
@@ -59,6 +73,11 @@ class RequestPerformanceFilterTest {
         fun applicationInfo(): ApplicationInfo {
             return ApplicationInfo("test", "test.com")
         }
+
+        @Bean
+        fun testAnnotatedClass(): TestAnnotatedClass {
+            return TestAnnotatedClass()
+        }
     }
 
     @RestController
@@ -67,6 +86,20 @@ class RequestPerformanceFilterTest {
         suspend fun test(): Boolean {
             val ctx = getApmContext()
             return ctx != null
+        }
+    }
+
+    class TestAnnotatedClass {
+        @CaptureTransaction("transaction")
+        fun openTransaction(): Mono<String> {
+            return Mono
+                .just("Open Transaction")
+                .then(openSpan())
+        }
+
+        @CaptureSpan(value = "span", type = "test", subtype = "sub", action = "testAction")
+        fun openSpan(): Mono<String> {
+            return Mono.just("Open Span")
         }
     }
 }
