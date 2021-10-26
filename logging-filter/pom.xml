@@ -24,12 +24,14 @@
             <artifactId>rarible-core-logging</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.rarible.core</groupId>
-            <artifactId>rarible-core-test-common</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.rarible.core</groupId>
+            <artifactId>rarible-core-test-common</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

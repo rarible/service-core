@@ -23,9 +23,11 @@
             <groupId>com.rarible.core</groupId>
             <artifactId>rarible-core-common</artifactId>
         </dependency>
+
         <dependency>
             <groupId>com.rarible.core</groupId>
             <artifactId>rarible-core-test-common</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>
