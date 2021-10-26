@@ -26,7 +26,8 @@ class ApmAgentConfiguration(
             SERVER_URL_PROPERTY to server,
             APPLICATION_PACKAGES_PROPERTY to packages,
             SERVICE_NAME_PROPERTY to applicationInfo.serviceName,
-            ENVIRONMENT_PROPERTY to environmentInfo.name
+            ENVIRONMENT_PROPERTY to environmentInfo.name,
+            INSTRUMENT_PROPERTY to properties.instrument.toString()
         )
         ElasticApmAttacher.attach(settings)
     }
@@ -36,5 +37,6 @@ class ApmAgentConfiguration(
         private const val SERVICE_NAME_PROPERTY = "service_name"
         private const val ENVIRONMENT_PROPERTY = "environment"
         private const val APPLICATION_PACKAGES_PROPERTY = "application_packages"
+        private const val INSTRUMENT_PROPERTY = "instrument"
     }
 }
