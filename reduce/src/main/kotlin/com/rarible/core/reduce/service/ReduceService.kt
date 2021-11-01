@@ -1,7 +1,6 @@
 package com.rarible.core.reduce.service
 
 import com.rarible.core.common.retryOptimisticLock
-import com.rarible.core.reduce.model.DataKey
 import com.rarible.core.reduce.model.ReduceEvent
 import com.rarible.core.reduce.model.ReduceSnapshot
 import com.rarible.core.reduce.repository.DataRepository
@@ -24,7 +23,7 @@ class ReduceService<
         Snapshot : ReduceSnapshot<Data, Mark, Key>,
         Mark : Comparable<Mark>,
         Data,
-        Key : DataKey>(
+        Key>(
     private val reducer: Reducer<Event, Snapshot, Mark, Data, Key>,
     private val eventRepository: ReduceEventRepository<Event, Mark, Key>,
     private val snapshotRepository: SnapshotRepository<Snapshot, Data, Mark, Key>,
