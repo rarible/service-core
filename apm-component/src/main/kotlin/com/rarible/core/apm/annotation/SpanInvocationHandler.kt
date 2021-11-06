@@ -1,21 +1,19 @@
 package com.rarible.core.apm.annotation
 
-import co.elastic.apm.api.ElasticApm
-import co.elastic.apm.api.Span
 import com.rarible.core.apm.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.reactor.ReactorContext
 import org.aopalliance.intercept.MethodInterceptor
 import org.aopalliance.intercept.MethodInvocation
 import reactor.core.publisher.Mono
-import reactor.util.context.Context
 import java.lang.reflect.Method
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.Continuation
-import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.intrinsics.startCoroutineUninterceptedOrReturn
+import kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn
 
 typealias MethodSignature = String
 
+@Suppress("UNCHECKED_CAST")
 class MonoSpanInvocationHandler(
     private val type: Class<*>
 ) : MethodInterceptor {
@@ -23,7 +21,7 @@ class MonoSpanInvocationHandler(
     private val checkCache = ConcurrentHashMap<MethodSignature, Boolean>()
     private val spanMethodCache = ConcurrentHashMap<MethodSignature, SpanMethod>()
 
-    override fun invoke(invocation: MethodInvocation): Any {
+    override fun invoke(invocation: MethodInvocation): Any? {
         val method = invocation.method
         val signature = getMethodSignature(method)
 
@@ -85,7 +83,7 @@ class MonoSpanInvocationHandler(
     private sealed class SpanMethod {
         protected abstract val info: SpanInfo
 
-        abstract fun invoke(invocation: MethodInvocation): Any
+        abstract fun invoke(invocation: MethodInvocation): Any?
 
         companion object {
             fun createSpan(method: Method, spanInfo: SpanInfo): SpanMethod {
@@ -139,7 +137,7 @@ class MonoSpanInvocationHandler(
             override val info: SpanInfo
         ) : SpanMethod() {
 
-            override fun invoke(invocation: MethodInvocation): Any {
+            override fun invoke(invocation: MethodInvocation): Any? {
                 val result = invocation.proceed() as Mono<*>
                 return result.withTransaction(
                     name = info.name,
@@ -153,21 +151,12 @@ class MonoSpanInvocationHandler(
         ) : SpanMethod() {
 
             @ExperimentalCoroutinesApi
-            override fun invoke(invocation: MethodInvocation): Any {
-                val arguments = invocation.arguments
-                val continuation = arguments.last() as Continuation<*>
-
-                val reactorContext = continuation.context[ReactorContext.Key]?.context
-                val apmContext = reactorContext?.get<ApmContext>(ApmContext.Key)
-
-                if (apmContext != null) {
-                    val span = apmContext.span.startSpan(info.type, info.subType, info.action)
-                    span.setName(info.name)
-
-                    val spanWrappedContinuation = SpanWrappedContinuation(continuation, span, reactorContext)
-                    arguments[arguments.size - 1] = spanWrappedContinuation
+            override fun invoke(invocation: MethodInvocation): Any? {
+                return invocation.runCoroutine {
+                    withSpan(info) {
+                        invocation.proceedCoroutine()
+                    }
                 }
-                return invocation.proceed()
             }
         }
 
@@ -176,43 +165,26 @@ class MonoSpanInvocationHandler(
         ) : SpanMethod() {
 
             @ExperimentalCoroutinesApi
-            override fun invoke(invocation: MethodInvocation): Any {
-                val arguments = invocation.arguments
-                val continuation = arguments.last() as Continuation<*>
-
-                val reactorContext = continuation.context[ReactorContext.Key]?.context ?: Context.empty()
-
-                val transaction = ElasticApm.startTransaction()
-                transaction.setName(info.name)
-
-                val spanWrappedContinuation = SpanWrappedContinuation(continuation, transaction, reactorContext)
-                arguments[arguments.size - 1] = spanWrappedContinuation
-
-                return invocation.proceed()
+            override fun invoke(invocation: MethodInvocation): Any? {
+                return invocation.runCoroutine {
+                    withTransaction(info.name) {
+                        invocation.proceedCoroutine()
+                    }
+                }
             }
         }
 
-        @ExperimentalCoroutinesApi
-        class SpanWrappedContinuation<T>(
-            private val continuation: Continuation<T>,
-            private val span: Span,
-            reactorContext: Context
-        ) : Continuation<T> {
-            private val contextWithSpan = putApmContext(span, reactorContext, continuation)
+        fun MethodInvocation.runCoroutine(block: suspend () -> Any?): Any? {
+            return block.startCoroutineUninterceptedOrReturn(this.coroutineContinuation)
+        }
 
-            override val context: CoroutineContext
-                get() = contextWithSpan
+        val MethodInvocation.coroutineContinuation: Continuation<Any?>
+            get() = this.arguments.last() as Continuation<Any?>
 
-            override fun resumeWith(result: Result<T>) {
-                when {
-                    result.isSuccess -> span.end()
-                    result.isFailure -> span.captureException(result.exceptionOrNull())
-                }
-                continuation.resumeWith(result)
-            }
-
-            private fun putApmContext(span: Span, reactorContext: Context, continuation: Continuation<T>): CoroutineContext {
-                return continuation.context + ReactorContext(reactorContext.put(ApmContext.Key, ApmContext(span)))
+        suspend fun MethodInvocation.proceedCoroutine(): Any? {
+            return suspendCoroutineUninterceptedOrReturn { continuation ->
+                this.arguments[this.arguments.size - 1] = continuation
+                this.proceed()
             }
         }
     }

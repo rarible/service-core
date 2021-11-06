@@ -6,13 +6,16 @@ import co.elastic.apm.api.Transaction
 import com.rarible.core.apm.CaptureSpan
 import com.rarible.core.apm.CaptureTransaction
 import com.rarible.core.apm.Spanable
+import com.rarible.core.apm.getApmContext
 import com.rarible.core.application.ApplicationEnvironmentInfo
 import com.rarible.core.application.ApplicationInfo
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.verify
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.SpringBootConfiguration
@@ -52,6 +55,31 @@ class SpanAnnotationPostProcessorTest {
     }
 
     @Test
+    fun `should handle mono transaction and span annotation`() {
+        mockkStatic(ElasticApm::class)
+        val transaction = mockk<Transaction>()
+        val span = mockk<Span>()
+
+        every { transaction.setName("testTransaction") } returns transaction
+        every { transaction.end() } returns Unit
+        every { transaction.startSpan("testType", "testSubType", "testAction") } returns span
+
+        every { span.setName("testName") } returns span
+        every { span.end() } returns Unit
+
+        every { ElasticApm.startTransaction() } returns transaction
+
+        transactionClass.openMonoTransactionAndSpan().block()
+
+        verify(exactly = 1) { ElasticApm.startTransaction() }
+        verify(exactly = 1) { transaction.setName("testTransaction") }
+        verify(exactly = 1) { transaction.startSpan("testType", "testSubType", "testAction") }
+        verify(exactly = 1) { transaction.end() }
+        verify(exactly = 1) { span.setName("testName") }
+        verify(exactly = 1) { span.end() }
+    }
+
+    @Test
     fun `should handle suspend transaction annotation`() = runBlocking<Unit> {
         mockkStatic(ElasticApm::class)
         val transaction = mockk<Transaction>()
@@ -68,7 +96,7 @@ class SpanAnnotationPostProcessorTest {
     }
 
     @Test
-    fun `should handle transaction and span annotation`() {
+    fun `should handle suspend transaction and span annotation`() = runBlocking<Unit> {
         mockkStatic(ElasticApm::class)
         val transaction = mockk<Transaction>()
         val span = mockk<Span>()
@@ -82,7 +110,7 @@ class SpanAnnotationPostProcessorTest {
 
         every { ElasticApm.startTransaction() } returns transaction
 
-        transactionClass.openMonoTransactionAndSpan().block()
+        transactionClass.openSuspendTransactionAndSpan()
 
         verify(exactly = 1) { ElasticApm.startTransaction() }
         verify(exactly = 1) { transaction.setName("testTransaction") }
@@ -133,11 +161,14 @@ class SpanAnnotationPostProcessorTest {
 
         @CaptureTransaction("testTransaction")
         open suspend fun openSuspendTransaction(): String {
+            delay(1)
+            assertThat(getApmContext()).isNotNull
             return "Open Transaction"
         }
 
         @CaptureTransaction("testTransaction")
         open suspend fun openSuspendTransactionAndSpan(): String {
+            delay(1)
             return spanClass.openSuspendSpan()
         }
     }
@@ -151,6 +182,8 @@ class SpanAnnotationPostProcessorTest {
 
         @CaptureSpan(value = "testName", type = "testType", subtype = "testSubType", action = "testAction")
         open suspend fun openSuspendSpan(): String {
+            delay(1)
+            assertThat(getApmContext()).isNotNull
             return "Open Span"
         }
     }
