@@ -4,6 +4,7 @@ import com.rarible.core.apm.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.aopalliance.intercept.MethodInterceptor
 import org.aopalliance.intercept.MethodInvocation
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import java.lang.reflect.Method
 import java.util.concurrent.ConcurrentHashMap
@@ -90,6 +91,7 @@ class MonoSpanInvocationHandler(
                 return when (getMethodType(method)) {
                     MethodType.SUSPEND -> SuspendSpanMethod(spanInfo)
                     MethodType.MONO -> MonoSpanMethod(spanInfo)
+                    MethodType.FLUX -> TODO()
                     MethodType.NORMAL -> TODO()
                 }
             }
@@ -98,6 +100,7 @@ class MonoSpanInvocationHandler(
                 return when (getMethodType(method)) {
                     MethodType.SUSPEND -> SuspendTransactionMethod(spanInfo)
                     MethodType.MONO -> MonoTransactionMethod(spanInfo)
+                    MethodType.FLUX -> TODO()
                     MethodType.NORMAL -> TODO()
                 }
             }
@@ -105,6 +108,7 @@ class MonoSpanInvocationHandler(
             private fun getMethodType(method: Method): MethodType {
                 return when {
                     method.returnType == Mono::class.java -> MethodType.MONO
+                    method.returnType == Flux::class.java -> MethodType.FLUX
                     method.parameterCount > 0 && method.parameterTypes.last() == Continuation::class.java -> MethodType.SUSPEND
                     else -> MethodType.NORMAL
                 }
@@ -112,6 +116,7 @@ class MonoSpanInvocationHandler(
 
             enum class MethodType {
                 MONO,
+                FLUX,
                 SUSPEND,
                 NORMAL
             }
