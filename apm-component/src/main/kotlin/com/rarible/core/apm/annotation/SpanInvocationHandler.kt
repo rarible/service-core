@@ -19,112 +19,30 @@ class MonoSpanInvocationHandler(
     private val type: Class<*>
 ) : MethodInterceptor {
 
-    private val checkCache = ConcurrentHashMap<MethodSignature, Boolean>()
-    private val spanMethodCache = ConcurrentHashMap<MethodSignature, SpanMethod>()
+    private val spanMethodCache = ConcurrentHashMap<Method, SpanMethod>()
 
     override fun invoke(invocation: MethodInvocation): Any? {
-        val method = invocation.method
-        val signature = getMethodSignature(method)
+        return spanMethodCache
+            .computeIfAbsent(invocation.method) { method -> SpanMethodFactory.create(method, type) }
+            .invoke(invocation)
+    }
 
-        return when (checkCache[signature]) {
-            false -> {
-                invocation.proceed()
-            }
-            true -> {
-                val spanMethod = spanMethodCache[signature] ?: error("Cache must exist for signature $signature")
-                spanMethod.invoke(invocation)
-            }
-            null -> {
-                val original = type.getMethod(method.name, *method.parameterTypes)
-                val spanMethod = extractSpanMethod(original, signature)
+    private interface SpanMethod {
+        fun invoke(invocation: MethodInvocation): Any?
+    }
 
-                if (spanMethod != null) {
-                    checkCache[signature] = true
-                    spanMethodCache[signature] = spanMethod
-
-                    spanMethod.invoke(invocation)
-                } else {
-                    checkCache[signature] = false
-                    invocation.proceed()
-                }
-            }
+    object NonSpanMethod : SpanMethod {
+        override fun invoke(invocation: MethodInvocation): Any? {
+            return invocation.proceed()
         }
     }
 
-    private fun extractSpanMethod(method: Method, defaultName: String): SpanMethod? {
-        return when {
-            method.isAnnotationPresent(CaptureSpan::class.java) -> {
-                val info = method.getAnnotation(CaptureSpan::class.java).let { annotation ->
-                    SpanInfo(
-                        name = annotation.value.ifNotBlack() ?: defaultName,
-                        type = annotation.type.ifNotBlack(),
-                        subType = annotation.subtype.ifNotBlack(),
-                        action = annotation.action.ifNotBlack(),
-                        labels = emptyList()
-                    )
-                }
-                SpanMethod.createSpan(method, info)
-            }
-            method.isAnnotationPresent(CaptureTransaction::class.java) -> {
-                val info = method.getAnnotation(CaptureTransaction::class.java).let { annotation ->
-                    SpanInfo(
-                        name = annotation.value.ifNotBlack() ?: defaultName
-                    )
-                }
-                SpanMethod.createTransaction(method, info)
-            }
-            else -> null
-        }
-    }
-
-    private fun getMethodSignature(method: Method): MethodSignature = "${type.name}#${method.name}"
-
-    private fun String.ifNotBlack(): String? = ifBlank { null }
-
-    private sealed class SpanMethod {
+    private sealed class AbstractSpanMethod : SpanMethod {
         protected abstract val info: SpanInfo
 
-        abstract fun invoke(invocation: MethodInvocation): Any?
-
-        companion object {
-            fun createSpan(method: Method, spanInfo: SpanInfo): SpanMethod {
-                return when (getMethodType(method)) {
-                    MethodType.SUSPEND -> SuspendSpanMethod(spanInfo)
-                    MethodType.MONO -> MonoSpanMethod(spanInfo)
-                    MethodType.FLUX -> TODO()
-                    MethodType.NORMAL -> TODO()
-                }
-            }
-
-            fun createTransaction(method: Method, spanInfo: SpanInfo): SpanMethod {
-                return when (getMethodType(method)) {
-                    MethodType.SUSPEND -> SuspendTransactionMethod(spanInfo)
-                    MethodType.MONO -> MonoTransactionMethod(spanInfo)
-                    MethodType.FLUX -> TODO()
-                    MethodType.NORMAL -> TODO()
-                }
-            }
-
-            private fun getMethodType(method: Method): MethodType {
-                return when {
-                    method.returnType == Mono::class.java -> MethodType.MONO
-                    method.returnType == Flux::class.java -> MethodType.FLUX
-                    method.parameterCount > 0 && method.parameterTypes.last() == Continuation::class.java -> MethodType.SUSPEND
-                    else -> MethodType.NORMAL
-                }
-            }
-
-            enum class MethodType {
-                MONO,
-                FLUX,
-                SUSPEND,
-                NORMAL
-            }
-        }
-
-        data class MonoSpanMethod(
+        class MonoSpanMethod(
             override val info: SpanInfo
-        ) : SpanMethod() {
+        ) : AbstractSpanMethod() {
 
             override fun invoke(invocation: MethodInvocation): Any {
                 val result = invocation.proceed() as Mono<*>
@@ -140,9 +58,9 @@ class MonoSpanInvocationHandler(
 
         data class MonoTransactionMethod(
             override val info: SpanInfo
-        ) : SpanMethod() {
+        ) : AbstractSpanMethod() {
 
-            override fun invoke(invocation: MethodInvocation): Any? {
+            override fun invoke(invocation: MethodInvocation): Any {
                 val result = invocation.proceed() as Mono<*>
                 return result.withTransaction(
                     name = info.name,
@@ -153,7 +71,7 @@ class MonoSpanInvocationHandler(
 
         data class SuspendSpanMethod(
            override val info: SpanInfo
-        ) : SpanMethod() {
+        ) : AbstractSpanMethod() {
 
             @ExperimentalCoroutinesApi
             override fun invoke(invocation: MethodInvocation): Any? {
@@ -167,7 +85,7 @@ class MonoSpanInvocationHandler(
 
         data class SuspendTransactionMethod(
             override val info: SpanInfo
-        ) : SpanMethod() {
+        ) : AbstractSpanMethod() {
 
             @ExperimentalCoroutinesApi
             override fun invoke(invocation: MethodInvocation): Any? {
@@ -191,6 +109,75 @@ class MonoSpanInvocationHandler(
                 this.arguments[this.arguments.size - 1] = continuation
                 this.proceed()
             }
+        }
+    }
+
+    private class SpanMethodFactory {
+        companion object {
+            fun create(method: Method, type: Class<*>): SpanMethod {
+                val defaultName = getMethodSignature(method, type)
+                return when {
+                    method.isAnnotationPresent(CaptureSpan::class.java) -> {
+                        createSpan(method, defaultName)
+                    }
+                    method.isAnnotationPresent(CaptureTransaction::class.java) -> {
+                        createTransaction(method, defaultName)
+                    }
+                    else -> NonSpanMethod
+                }
+            }
+
+            fun createSpan(method: Method, defaultName: String): SpanMethod {
+                val spanInfo = method.getAnnotation(CaptureSpan::class.java).let { annotation ->
+                    SpanInfo(
+                        name = annotation.value.ifNotBlank() ?: defaultName,
+                        type = annotation.type.ifNotBlank(),
+                        subType = annotation.subtype.ifNotBlank(),
+                        action = annotation.action.ifNotBlank(),
+                        labels = emptyList()
+                    )
+                }
+                return when (getMethodType(method)) {
+                    MethodType.SUSPEND -> AbstractSpanMethod.SuspendSpanMethod(spanInfo)
+                    MethodType.MONO -> AbstractSpanMethod.MonoSpanMethod(spanInfo)
+                    MethodType.FLUX -> TODO()
+                    MethodType.NORMAL -> TODO()
+                }
+            }
+
+            fun createTransaction(method: Method, defaultName: String): SpanMethod {
+                val spanInfo = method.getAnnotation(CaptureTransaction::class.java).let { annotation ->
+                    SpanInfo(
+                        name = annotation.value.ifNotBlank() ?: defaultName
+                    )
+                }
+                return when (getMethodType(method)) {
+                    MethodType.SUSPEND -> AbstractSpanMethod.SuspendTransactionMethod(spanInfo)
+                    MethodType.MONO -> AbstractSpanMethod.MonoTransactionMethod(spanInfo)
+                    MethodType.FLUX -> TODO()
+                    MethodType.NORMAL -> TODO()
+                }
+            }
+
+            private fun getMethodType(method: Method): MethodType {
+                return when {
+                    method.returnType == Mono::class.java -> MethodType.MONO
+                    method.returnType == Flux::class.java -> MethodType.FLUX
+                    method.parameterCount > 0 && method.parameterTypes.last() == Continuation::class.java -> MethodType.SUSPEND
+                    else -> MethodType.NORMAL
+                }
+            }
+
+            enum class MethodType {
+                MONO,
+                FLUX,
+                SUSPEND,
+                NORMAL
+            }
+
+            private fun String.ifNotBlank(): String? = ifBlank { null }
+
+            private fun getMethodSignature(method: Method, type: Class<*>): MethodSignature = "${type.name}#${method.name}"
         }
     }
 }
