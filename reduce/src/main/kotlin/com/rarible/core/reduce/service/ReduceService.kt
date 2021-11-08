@@ -3,7 +3,6 @@ package com.rarible.core.reduce.service
 import com.rarible.core.common.retryOptimisticLock
 import com.rarible.core.reduce.model.ReduceEvent
 import com.rarible.core.reduce.model.ReduceSnapshot
-import com.rarible.core.reduce.repository.DataRepository
 import com.rarible.core.reduce.repository.ReduceEventRepository
 import com.rarible.core.reduce.repository.SnapshotRepository
 import kotlinx.coroutines.flow.fold
@@ -27,7 +26,7 @@ class ReduceService<
     private val reducer: Reducer<Event, Snapshot, Mark, Data, Key>,
     private val eventRepository: ReduceEventRepository<Event, Mark, Key>,
     private val snapshotRepository: SnapshotRepository<Snapshot, Data, Mark, Key>,
-    private val dataRepository: DataRepository<Data>,
+    private val updateService: UpdateService<Data>,
     private val snapshotStrategy: SnapshotStrategy<Snapshot, Mark>
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -90,8 +89,8 @@ class ReduceService<
             }
 
         if (reducedSnapshot != initialSnapshot) {
-            dataRepository.saveReduceResult(reducedSnapshot.data)
-            logger.info("Save new reduce data for {}: {}", key, reducedSnapshot.data)
+            updateService.update(reducedSnapshot.data)
+            logger.info("Update new reduce data for {}: {}", key, reducedSnapshot.data)
 
             if (context.needSave()) {
                 snapshotRepository.save(context.next())
