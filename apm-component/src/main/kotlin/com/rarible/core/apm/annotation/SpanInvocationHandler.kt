@@ -6,6 +6,7 @@ import org.aopalliance.intercept.MethodInterceptor
 import org.aopalliance.intercept.MethodInvocation
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import java.lang.reflect.AnnotatedElement
 import java.lang.reflect.Method
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.Continuation
@@ -56,7 +57,7 @@ class MonoSpanInvocationHandler(
             }
         }
 
-        data class MonoTransactionMethod(
+        class MonoTransactionMethod(
             override val info: SpanInfo
         ) : AbstractSpanMethod() {
 
@@ -69,7 +70,7 @@ class MonoSpanInvocationHandler(
             }
         }
 
-        data class SuspendSpanMethod(
+        class SuspendSpanMethod(
            override val info: SpanInfo
         ) : AbstractSpanMethod() {
 
@@ -83,7 +84,7 @@ class MonoSpanInvocationHandler(
             }
         }
 
-        data class SuspendTransactionMethod(
+        class SuspendTransactionMethod(
             override val info: SpanInfo
         ) : AbstractSpanMethod() {
 
@@ -115,28 +116,18 @@ class MonoSpanInvocationHandler(
     private class SpanMethodFactory {
         companion object {
             fun create(method: Method, type: Class<*>): SpanMethod {
-                val defaultName = getMethodSignature(method, type)
                 return when {
-                    method.isAnnotationPresent(CaptureSpan::class.java) -> {
-                        createSpan(method, defaultName)
+                    hasCaptureSpanAnnotations(method) || hasCaptureSpanAnnotations(type) -> {
+                        createSpan(method, getSpanInfo(method, type))
                     }
-                    method.isAnnotationPresent(CaptureTransaction::class.java) -> {
-                        createTransaction(method, defaultName)
+                    hasCaptureTransactionAnnotations(method) || hasCaptureTransactionAnnotations(type) -> {
+                        createTransaction(method, getSpanInfo(method, type))
                     }
                     else -> NonSpanMethod
                 }
             }
 
-            fun createSpan(method: Method, defaultName: String): SpanMethod {
-                val spanInfo = method.getAnnotation(CaptureSpan::class.java).let { annotation ->
-                    SpanInfo(
-                        name = annotation.value.ifNotBlank() ?: defaultName,
-                        type = annotation.type.ifNotBlank(),
-                        subType = annotation.subtype.ifNotBlank(),
-                        action = annotation.action.ifNotBlank(),
-                        labels = emptyList()
-                    )
-                }
+            fun createSpan(method: Method, spanInfo: SpanInfo): SpanMethod {
                 return when (getMethodType(method)) {
                     MethodType.SUSPEND -> AbstractSpanMethod.SuspendSpanMethod(spanInfo)
                     MethodType.MONO -> AbstractSpanMethod.MonoSpanMethod(spanInfo)
@@ -145,12 +136,7 @@ class MonoSpanInvocationHandler(
                 }
             }
 
-            fun createTransaction(method: Method, defaultName: String): SpanMethod {
-                val spanInfo = method.getAnnotation(CaptureTransaction::class.java).let { annotation ->
-                    SpanInfo(
-                        name = annotation.value.ifNotBlank() ?: defaultName
-                    )
-                }
+            fun createTransaction(method: Method, spanInfo: SpanInfo): SpanMethod {
                 return when (getMethodType(method)) {
                     MethodType.SUSPEND -> AbstractSpanMethod.SuspendTransactionMethod(spanInfo)
                     MethodType.MONO -> AbstractSpanMethod.MonoTransactionMethod(spanInfo)
@@ -168,6 +154,43 @@ class MonoSpanInvocationHandler(
                 }
             }
 
+            private fun getSpanInfo(method: Method, type: Class<*>): SpanInfo {
+                val methodSpanInfo = fetchSpanInfo(method)
+                val typeSpanInfo = fetchSpanInfo(type)
+                return SpanInfo(
+                    name = methodSpanInfo.name.ifNotBlank() ?: typeSpanInfo.name.ifNotBlank() ?: getMethodSignature(method, type),
+                    type = methodSpanInfo.type?.ifNotBlank() ?: typeSpanInfo.type?.ifNotBlank(),
+                    subType = methodSpanInfo.subType?.ifNotBlank() ?: typeSpanInfo.subType?.ifNotBlank(),
+                    action = methodSpanInfo.action?.ifNotBlank() ?: typeSpanInfo.action?.ifNotBlank(),
+                    labels = methodSpanInfo.labels + typeSpanInfo.labels
+                )
+            }
+
+            private fun fetchSpanInfo(element: AnnotatedElement): SpanInfo {
+                return when {
+                    hasCaptureSpanAnnotations(element) -> {
+                        element.getAnnotation(CaptureSpan::class.java).let { annotation ->
+                            SpanInfo(
+                                name = annotation.value,
+                                type = annotation.type.ifNotBlank(),
+                                subType = annotation.subtype.ifNotBlank(),
+                                action = annotation.action.ifNotBlank()
+                            )
+                        }
+                    }
+                    hasCaptureTransactionAnnotations(element) -> {
+                        element.getAnnotation(CaptureTransaction::class.java).let { annotation ->
+                            SpanInfo(
+                                name = annotation.value
+                            )
+                        }
+                    }
+                    else -> {
+                        EMPTY_SPAN_INFO
+                    }
+                }
+            }
+
             enum class MethodType {
                 MONO,
                 FLUX,
@@ -175,9 +198,25 @@ class MonoSpanInvocationHandler(
                 NORMAL
             }
 
+            val hasCaptureSpanAnnotations: (AnnotatedElement) -> Boolean = { element ->
+                element.isAnnotationPresent(CaptureSpan::class.java)
+            }
+
+            val hasCaptureTransactionAnnotations: (AnnotatedElement) -> Boolean = { element ->
+                element.isAnnotationPresent(CaptureTransaction::class.java)
+            }
+
             private fun String.ifNotBlank(): String? = ifBlank { null }
 
             private fun getMethodSignature(method: Method, type: Class<*>): MethodSignature = "${type.name}#${method.name}"
+
+            private val EMPTY_SPAN_INFO = SpanInfo(
+                name = "",
+                type = null,
+                subType = null,
+                action = null,
+                labels = emptyList()
+            )
         }
     }
 }

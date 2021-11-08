@@ -3,9 +3,9 @@ package com.rarible.core.apm.annotation
 import co.elastic.apm.api.ElasticApm
 import co.elastic.apm.api.Span
 import co.elastic.apm.api.Transaction
+import com.rarible.core.apm.ApmContext
 import com.rarible.core.apm.CaptureSpan
 import com.rarible.core.apm.CaptureTransaction
-import com.rarible.core.apm.Spanable
 import com.rarible.core.apm.getApmContext
 import com.rarible.core.application.ApplicationEnvironmentInfo
 import com.rarible.core.application.ApplicationInfo
@@ -13,8 +13,11 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.verify
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.reactor.ReactorContext
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -25,6 +28,7 @@ import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
 import reactor.core.publisher.Mono
+import reactor.util.context.Context
 
 @SpringBootTest(
     properties = [
@@ -33,10 +37,14 @@ import reactor.core.publisher.Mono
 )
 @SpringBootConfiguration
 @EnableAutoConfiguration
+@ExperimentalCoroutinesApi
 @Import(SpanAnnotationPostProcessorTest.Configuration::class)
 class SpanAnnotationPostProcessorTest {
     @Autowired
     private lateinit var transactionClass: TransactionClass
+
+    @Autowired
+    private lateinit var spanClassAnnotated: SpanClassAnnotated
 
     @Test
     fun `should handle mono transaction annotation`() {
@@ -120,6 +128,50 @@ class SpanAnnotationPostProcessorTest {
         verify(exactly = 1) { span.end() }
     }
 
+    @Test
+    fun `should handle class annotated span capture method with no extra annotation`() = runBlocking<Unit> {
+        mockkStatic(ElasticApm::class)
+        val transaction = mockk<Transaction>()
+        val span = mockk<Span>()
+
+        every { transaction.startSpan(null, null, null) } returns span
+
+        every { span.setName("db") } returns span
+        every { span.end() } returns Unit
+
+        withContext(
+            ReactorContext(Context.empty().put(ApmContext.Key, ApmContext(transaction)))
+        ) {
+            spanClassAnnotated.methodWithoutAnnotation()
+        }
+
+        verify(exactly = 1) { transaction.startSpan(null, null, null) }
+        verify(exactly = 1) { span.setName("db") }
+        verify(exactly = 1) { span.end() }
+    }
+
+    @Test
+    fun `should handle class annotated span capture method with extra annotation`() = runBlocking<Unit> {
+        mockkStatic(ElasticApm::class)
+        val transaction = mockk<Transaction>()
+        val span = mockk<Span>()
+
+        every { transaction.startSpan("testType", "testSubType", "testAction") } returns span
+
+        every { span.setName("db") } returns span
+        every { span.end() } returns Unit
+
+        withContext(
+            ReactorContext(Context.empty().put(ApmContext.Key, ApmContext(transaction)))
+        ) {
+            spanClassAnnotated.methodWithAnnotation()
+        }
+
+        verify(exactly = 1) { transaction.startSpan("testType", "testSubType", "testAction") }
+        verify(exactly = 1) { span.setName("db") }
+        verify(exactly = 1) { span.end() }
+    }
+
     @TestConfiguration
     internal class Configuration {
         @Bean
@@ -133,6 +185,11 @@ class SpanAnnotationPostProcessorTest {
         }
 
         @Bean
+        fun spanClassAnnotated(): SpanClassAnnotated {
+            return SpanClassAnnotated()
+        }
+
+        @Bean
         fun applicationEnvironmentInfo(): ApplicationEnvironmentInfo {
             return ApplicationEnvironmentInfo("test", "test.com")
         }
@@ -143,7 +200,6 @@ class SpanAnnotationPostProcessorTest {
         }
     }
 
-    @Spanable
     open class TransactionClass(
         private val spanClass: SpanClass
     ) {
@@ -173,7 +229,6 @@ class SpanAnnotationPostProcessorTest {
         }
     }
 
-    @Spanable
     open class SpanClass {
         @CaptureSpan(value = "testName", type = "testType", subtype = "testSubType", action = "testAction")
         open fun openMonoSpan(): Mono<String> {
@@ -186,5 +241,13 @@ class SpanAnnotationPostProcessorTest {
             assertThat(getApmContext()).isNotNull
             return "Open Span"
         }
+    }
+
+    @CaptureSpan(value = "db")
+    open class SpanClassAnnotated {
+        open suspend fun methodWithoutAnnotation() { }
+
+        @CaptureSpan(type = "testType", subtype = "testSubType", action = "testAction")
+        open suspend fun methodWithAnnotation() { }
     }
 }
