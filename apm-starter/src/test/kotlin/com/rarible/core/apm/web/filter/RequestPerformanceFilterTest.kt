@@ -1,7 +1,6 @@
-package com.rarible.core.apm.web.filter.autoconfigure
+package com.rarible.core.apm.web.filter
 
 import com.rarible.core.apm.*
-import com.rarible.core.apm.web.filter.RequestPerformanceFilter
 import com.rarible.core.application.ApplicationEnvironmentInfo
 import com.rarible.core.application.ApplicationInfo
 import org.assertj.core.api.Assertions.assertThat
