@@ -21,7 +21,7 @@ import org.springframework.web.client.getForObject
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = [
-        "rarible.core.filter.apm.enabled=true"
+        "rarible.core.apm.filter.web.enabled=true"
     ]
 )
 @SpringBootConfiguration
