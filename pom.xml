@@ -9,34 +9,39 @@
 
     <repositories>
         <repository>
-            <id>nexus-maven-public</id>
+            <id>nexus-maven-internal</id>
+            <name>nexus-maven-internal</name>
             <url>http://nexus.rarible.int/repository/maven-public/</url>
+        </repository>
+        <repository>
+            <id>nexus-maven-public</id>
+            <name>nexus-maven-public</name>
+            <url>http://nexus-ext.rarible.int/repository/maven-public/</url>
         </repository>
     </repositories>
 
     <distributionManagement>
         <snapshotRepository>
             <id>nexus-snapshots</id>
-            <url>http://nexus.rarible.int/repository/maven-snapshots/</url>
+            <url>http://nexus-ext.rarible.int/repository/maven-snapshots/</url>
         </snapshotRepository>
         <repository>
             <id>nexus-releases</id>
-            <url>http://nexus.rarible.int/repository/maven-releases/</url>
+            <url>http://nexus-ext.rarible.int/repository/maven-releases/</url>
         </repository>
     </distributionManagement>
 
     <parent>
         <groupId>com.rarible</groupId>
         <artifactId>rarible-parent-pom</artifactId>
-        <version>1.1-SNAPSHOT</version>
+        <version>1.1.0</version>
     </parent>
 
     <properties>
-        <revision>1.3.20</revision>
+        <revision>1.4.0</revision>
         <logstash-encoder.version>6.6</logstash-encoder.version>
         <testcontainers.version>1.15.2</testcontainers.version>
         <springfox.version>3.0.0</springfox.version>
-        <nexus.maven.public>http://nexus.rarible.int/repository/maven-public/</nexus.maven.public>
         <springmockk.version>2.0.3</springmockk.version>
         <elastic-apm.version>1.26.0</elastic-apm.version>
     </properties>
