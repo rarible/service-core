@@ -1,0 +1,3 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.rarible.core.apm.web.filter.autoconfigure.RequestPerformanceFilterConfiguration,\
+com.rarible.core.apm.annotation.autoconfigure.ApmAnnotationPostProcessorConfiguration

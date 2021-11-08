@@ -36,9 +36,12 @@
             <groupId>org.jetbrains.kotlinx</groupId>
             <artifactId>kotlinx-coroutines-reactive</artifactId>
         </dependency>
+
+        <!-- ================== Test ===================== -->
         <dependency>
             <groupId>com.rarible.core</groupId>
             <artifactId>rarible-core-test-common</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>

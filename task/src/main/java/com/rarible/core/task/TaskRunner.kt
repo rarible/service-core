@@ -24,10 +24,13 @@ class TaskRunner(
     @ExperimentalCoroutinesApi
     @Suppress("UNCHECKED_CAST")
     suspend fun <T : Any> runLongTask(param: String, handler: TaskHandler<T>, sample: Long? = Task.DEFAULT_SAMPLE) {
-        logger.info("running ${handler.type} with param=$param")
-        val task = findAndMarkRunning(handler.isAbleToRun(param), handler.type, param, sample)
+        val canRun = handler.isAbleToRun(param)
+        val task = findAndMarkRunning(canRun, handler.type, param, sample)
         if (task != null) {
+            logger.info("running ${handler.type} with param=$param")
             runAndSaveTask(task, handler)
+        } else if (!canRun) {
+            logger.info("task is not ready to run ${handler.type} with param=$param")
         }
     }
 

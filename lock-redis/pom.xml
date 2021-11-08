@@ -25,11 +25,13 @@
         </dependency>
         <dependency>
             <groupId>com.rarible.core</groupId>
-            <artifactId>rarible-core-test-common</artifactId>
+            <artifactId>rarible-core-logging</artifactId>
         </dependency>
+
         <dependency>
             <groupId>com.rarible.core</groupId>
-            <artifactId>rarible-core-logging</artifactId>
+            <artifactId>rarible-core-test-common</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

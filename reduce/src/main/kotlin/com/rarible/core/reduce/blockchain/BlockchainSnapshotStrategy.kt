@@ -1,6 +1,5 @@
 package com.rarible.core.reduce.blockchain
 
-import com.rarible.core.reduce.model.DataKey
 import com.rarible.core.reduce.model.ReduceSnapshot
 import com.rarible.core.reduce.service.SnapshotStrategy
 import com.rarible.core.reduce.service.SnapshotStrategy.Context
@@ -11,7 +10,7 @@ import java.util.concurrent.atomic.AtomicReference
 open class BlockchainSnapshotStrategy<
         Snapshot : ReduceSnapshot<Data, Long, Key>,
         Data,
-        Key : DataKey>(
+        Key>(
     private val numberOfBlockConfirmations: Int
 ) : SnapshotStrategy<Snapshot, Long> {
 
