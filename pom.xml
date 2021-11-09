@@ -38,7 +38,7 @@
     </parent>
 
     <properties>
-        <revision>1.4.1</revision>
+        <revision>1.4.2</revision>
         <logstash-encoder.version>6.6</logstash-encoder.version>
         <testcontainers.version>1.15.2</testcontainers.version>
         <springfox.version>3.0.0</springfox.version>
