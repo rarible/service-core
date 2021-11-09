@@ -7,6 +7,9 @@ import co.elastic.apm.api.HeaderExtractor
 import co.elastic.apm.api.HeadersExtractor
 import co.elastic.apm.api.Span
 import co.elastic.apm.api.Transaction
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.reactor.ReactorContext
 import kotlinx.coroutines.withContext
 import reactor.core.publisher.Flux
@@ -91,6 +94,47 @@ private val apmContext: Mono<ApmContext> =
             }
         }
 
+fun <T> Flow<T>.withSpan(
+    name: String,
+    type: String? = null,
+    subType: String? = null,
+    action: String? = null,
+    labels: List<Pair<String, Any>> = emptyList()
+): Flow<T> {
+    val f = this
+    return flow {
+        withSpan(
+            name = name,
+            type = type,
+            subType = subType,
+            action = action,
+            labels = labels
+        ) {
+            emitAll(f)
+        }
+    }
+}
+
+fun <T> Flow<T>.withTransaction(
+    name: String,
+    labels: List<Pair<String, Any>> = emptyList(),
+    headerExtractor: HeaderExtractor? = null,
+    headersExtractor: HeadersExtractor? = null
+): Flow<T> {
+    val f = this
+    return flow {
+        withTransaction(
+            name = name,
+            labels = labels,
+            headerExtractor = headerExtractor,
+            headersExtractor = headersExtractor
+        ) {
+            emitAll(f)
+        }
+    }
+}
+
+
 fun <T> Flux<T>.withSpan(
     name: String,
     type: String? = null,
@@ -100,6 +144,17 @@ fun <T> Flux<T>.withSpan(
 ): Flux<T> {
     return apmContext
         .map { it.span.createSpan(name, type, subType, action, labels) }
+        .usingFlux(this)
+}
+
+fun <T> Flux<T>.withTransaction(
+    name: String,
+    labels: List<Pair<String, Any>> = emptyList(),
+    headerExtractor: HeaderExtractor? = null,
+    headersExtractor: HeadersExtractor? = null
+): Flux<T> {
+    return Mono
+        .defer { Mono.just(createTransaction(name, labels, headerExtractor, headersExtractor)) }
         .usingFlux(this)
 }
 
