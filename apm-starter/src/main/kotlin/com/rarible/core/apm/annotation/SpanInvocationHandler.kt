@@ -131,8 +131,8 @@ class MonoSpanInvocationHandler(
                 return when (getMethodType(method)) {
                     MethodType.SUSPEND -> AbstractSpanMethod.SuspendSpanMethod(spanInfo)
                     MethodType.MONO -> AbstractSpanMethod.MonoSpanMethod(spanInfo)
-                    MethodType.FLUX -> TODO()
-                    MethodType.NORMAL -> TODO()
+                    MethodType.FLUX -> NonSpanMethod // TODO Need implement
+                    MethodType.NORMAL -> NonSpanMethod // TODO Need implement
                 }
             }
 
@@ -140,8 +140,8 @@ class MonoSpanInvocationHandler(
                 return when (getMethodType(method)) {
                     MethodType.SUSPEND -> AbstractSpanMethod.SuspendTransactionMethod(spanInfo)
                     MethodType.MONO -> AbstractSpanMethod.MonoTransactionMethod(spanInfo)
-                    MethodType.FLUX -> TODO()
-                    MethodType.NORMAL -> TODO()
+                    MethodType.FLUX -> NonSpanMethod // TODO Need implement
+                    MethodType.NORMAL -> NonSpanMethod // TODO Need implement
                 }
             }
 
