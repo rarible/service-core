@@ -1,7 +1,10 @@
 package com.rarible.core.apm
 
 @Retention(AnnotationRetention.RUNTIME)
-@Target(AnnotationTarget.FUNCTION, AnnotationTarget.PROPERTY_GETTER, AnnotationTarget.PROPERTY_SETTER)
+@Target(
+    AnnotationTarget.FUNCTION,
+    AnnotationTarget.CLASS
+)
 annotation class CaptureSpan(
     /**
      * The name of the [Span].

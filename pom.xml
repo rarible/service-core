@@ -190,11 +190,6 @@
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
-                <artifactId>rarible-core-apm-component</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-apm-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -236,7 +231,6 @@
         <module>test-coverage</module>
         <module>api</module>
         <module>apm</module>
-        <module>apm-component</module>
         <module>apm-starter</module>
     </modules>
 

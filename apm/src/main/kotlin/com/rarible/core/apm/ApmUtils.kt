@@ -22,7 +22,7 @@ suspend fun <T> withSpan(
     return withSpan(
         type = info.type,
         subType = info.subType,
-        action = info.subType,
+        action = info.action,
         name = info.name,
         labels = info.labels,
         body = body
