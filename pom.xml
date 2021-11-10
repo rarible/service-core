@@ -11,7 +11,7 @@
         <repository>
             <id>nexus-ext-maven-public</id>
             <name>nexus-ext-maven-public</name>
-            <url>http://repo.rarible.org/repository/maven-public/</url>
+            <url>https://repo.rarible.org/repository/maven-public/</url>
         </repository>
     </repositories>
 
