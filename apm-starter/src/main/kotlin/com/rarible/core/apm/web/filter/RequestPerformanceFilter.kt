@@ -28,7 +28,7 @@ class RequestPerformanceFilter(
 
         return chain.filter(exchange)
             .withTransaction(
-                "$service#$method#$path",
+                "$method#$path",
                 headerExtractor = HeaderExtractor { header -> headers.getFirst(header) },
                 headersExtractor = HeadersExtractor { header -> headers[header] }
             )
