@@ -38,10 +38,9 @@ class RequestPerformanceFilter(
                 } else {
                     defaultName to emptyList()
                 }
-                println("name=$name label=${labels}")
                 chain.filter(exchange)
                     .withTransaction(
-                        "$method#$path",
+                        name = name,
                         labels = labels,
                         headerExtractor = HeaderExtractor { header -> headers.getFirst(header) },
                         headersExtractor = HeadersExtractor { header -> headers[header] }
