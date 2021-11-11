@@ -208,7 +208,7 @@ class MonoSpanInvocationHandler(
 
             private fun String.ifNotBlank(): String? = ifBlank { null }
 
-            private fun getMethodSignature(method: Method, type: Class<*>): MethodSignature = "${type.name}#${method.name}"
+            private fun getMethodSignature(method: Method, type: Class<*>): MethodSignature = "${type.simpleName}#${method.name}"
 
             private val EMPTY_SPAN_INFO = SpanInfo(
                 name = "",
