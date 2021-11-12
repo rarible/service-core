@@ -8,6 +8,7 @@ import com.rarible.core.apm.withTransaction
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.aopalliance.intercept.MethodInterceptor
 import org.aopalliance.intercept.MethodInvocation
+import org.springframework.util.ClassUtils
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import java.lang.reflect.AnnotatedElement
@@ -75,7 +76,7 @@ class MonoSpanInvocationHandler(
         }
 
         class SuspendSpanMethod(
-           override val info: SpanInfo
+            override val info: SpanInfo
         ) : AbstractSpanMethod() {
 
             @ExperimentalCoroutinesApi
@@ -119,15 +120,35 @@ class MonoSpanInvocationHandler(
 
     private class SpanMethodFactory {
         companion object {
+
             fun createWithInheritance(method: Method, type: Class<*>): SpanMethod {
-                val overriddenSpan = try {
-                    val overriddenMethod = type.getMethod(method.name, *method.parameterTypes)
-                    // Could not work well if class annotated with CaptureSpan together with method
-                    create(overriddenMethod, type)
-                } catch (e: Exception) {
-                    NonSpanMethod
+                var current: Class<*>? = type
+                while (current != null) {
+                    // Checking base/parent class for annotations first
+                    val classMethodSpan = tryCreateSpan(method, current)
+                    if (classMethodSpan != NonSpanMethod) {
+                        return classMethodSpan
+                    }
+                    // If base/parent class doesn't have annotation, checking interfaces (declared for this class only)
+                    for (implInterface in current.interfaces) {
+                        val interfaceMethodSpan = tryCreateSpan(method, implInterface)
+                        if (interfaceMethodSpan != NonSpanMethod) {
+                            return interfaceMethodSpan
+                        }
+                    }
+                    // If nothing found - going deeper
+                    current = current.superclass
                 }
-                return if (overriddenSpan == NonSpanMethod) create(method, type) else overriddenSpan
+                return NonSpanMethod
+            }
+
+            private fun tryCreateSpan(method: Method, type: Class<*>): SpanMethod {
+                val existingMethod = ClassUtils.getMethodIfAvailable(type, method.name, *method.parameterTypes)
+                if (existingMethod != null) {
+                    return create(existingMethod, type)
+                } else {
+                    return NonSpanMethod
+                }
             }
 
             private fun create(method: Method, type: Class<*>): SpanMethod {
@@ -173,7 +194,10 @@ class MonoSpanInvocationHandler(
                 val methodSpanInfo = fetchSpanInfo(method)
                 val typeSpanInfo = fetchSpanInfo(type)
                 return SpanInfo(
-                    name = methodSpanInfo.name.ifNotBlank() ?: typeSpanInfo.name.ifNotBlank() ?: getMethodSignature(method, type),
+                    name = methodSpanInfo.name.ifNotBlank() ?: typeSpanInfo.name.ifNotBlank() ?: getMethodSignature(
+                        method,
+                        type
+                    ),
                     type = methodSpanInfo.type?.ifNotBlank() ?: typeSpanInfo.type?.ifNotBlank(),
                     subType = methodSpanInfo.subType?.ifNotBlank() ?: typeSpanInfo.subType?.ifNotBlank(),
                     action = methodSpanInfo.action?.ifNotBlank() ?: typeSpanInfo.action?.ifNotBlank(),
@@ -223,7 +247,8 @@ class MonoSpanInvocationHandler(
 
             private fun String.ifNotBlank(): String? = ifBlank { null }
 
-            private fun getMethodSignature(method: Method, type: Class<*>): MethodSignature = "${type.simpleName}#${method.name}"
+            private fun getMethodSignature(method: Method, type: Class<*>): MethodSignature =
+                "${type.simpleName}#${method.name}"
 
             private val EMPTY_SPAN_INFO = SpanInfo(
                 name = "",

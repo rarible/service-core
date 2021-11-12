@@ -28,6 +28,7 @@ class SpanAnnotationPostProcessor : BeanPostProcessor {
         val type = spanClasses[beanName] ?: return bean
 
         val factory = ProxyFactory(bean)
+        factory.isProxyTargetClass = true
         factory.addAdvice(MonoSpanInvocationHandler(type))
         return factory.proxy
     }
