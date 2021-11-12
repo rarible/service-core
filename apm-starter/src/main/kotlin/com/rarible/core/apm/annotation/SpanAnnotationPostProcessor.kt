@@ -18,7 +18,7 @@ class SpanAnnotationPostProcessor : BeanPostProcessor {
         if (hasTargetAnnotations(type)) {
             spanClasses[beanName] = type
         }
-        if (type.methods.any(hasTargetAnnotations)) {
+        if (type.methods.any(hasTargetAnnotations) || type.declaredMethods.any(hasTargetAnnotations)) {
             spanClasses[beanName] = type
         }
         return bean
@@ -28,6 +28,7 @@ class SpanAnnotationPostProcessor : BeanPostProcessor {
         val type = spanClasses[beanName] ?: return bean
 
         val factory = ProxyFactory(bean)
+        factory.isProxyTargetClass = true
         factory.addAdvice(MonoSpanInvocationHandler(type))
         return factory.proxy
     }
