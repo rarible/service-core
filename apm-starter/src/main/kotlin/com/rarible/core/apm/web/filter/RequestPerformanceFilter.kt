@@ -20,7 +20,8 @@ class RequestPerformanceFilter(
 
     companion object {
         val pathExclusions = setOf(
-            "/_status/ping"
+            "/_status/ping",
+            "/_status/prometheus"
         )
     }
 
