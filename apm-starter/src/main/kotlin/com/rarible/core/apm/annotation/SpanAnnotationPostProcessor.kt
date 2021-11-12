@@ -18,7 +18,7 @@ class SpanAnnotationPostProcessor : BeanPostProcessor {
         if (hasTargetAnnotations(type)) {
             spanClasses[beanName] = type
         }
-        if (type.methods.any(hasTargetAnnotations)) {
+        if (type.methods.any(hasTargetAnnotations) || type.declaredMethods.any(hasTargetAnnotations)) {
             spanClasses[beanName] = type
         }
         return bean

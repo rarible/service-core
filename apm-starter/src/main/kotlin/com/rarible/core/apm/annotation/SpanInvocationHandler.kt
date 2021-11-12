@@ -1,6 +1,10 @@
 package com.rarible.core.apm.annotation
 
-import com.rarible.core.apm.*
+import com.rarible.core.apm.CaptureSpan
+import com.rarible.core.apm.CaptureTransaction
+import com.rarible.core.apm.SpanInfo
+import com.rarible.core.apm.withSpan
+import com.rarible.core.apm.withTransaction
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.aopalliance.intercept.MethodInterceptor
 import org.aopalliance.intercept.MethodInvocation
@@ -24,7 +28,7 @@ class MonoSpanInvocationHandler(
 
     override fun invoke(invocation: MethodInvocation): Any? {
         return spanMethodCache
-            .computeIfAbsent(invocation.method) { method -> SpanMethodFactory.create(method, type) }
+            .computeIfAbsent(invocation.method) { method -> SpanMethodFactory.createWithInheritance(method, type) }
             .invoke(invocation)
     }
 
@@ -115,7 +119,18 @@ class MonoSpanInvocationHandler(
 
     private class SpanMethodFactory {
         companion object {
-            fun create(method: Method, type: Class<*>): SpanMethod {
+            fun createWithInheritance(method: Method, type: Class<*>): SpanMethod {
+                val overriddenSpan = try {
+                    val overriddenMethod = type.getMethod(method.name, *method.parameterTypes)
+                    // Could not work well if class annotated with CaptureSpan together with method
+                    create(overriddenMethod, type)
+                } catch (e: Exception) {
+                    NonSpanMethod
+                }
+                return if (overriddenSpan == NonSpanMethod) create(method, type) else overriddenSpan
+            }
+
+            private fun create(method: Method, type: Class<*>): SpanMethod {
                 return when {
                     hasCaptureSpanAnnotations(method) || hasCaptureSpanAnnotations(type) -> {
                         createSpan(method, getSpanInfo(method, type))
