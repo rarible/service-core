@@ -18,15 +18,24 @@ class RequestPerformanceFilter(
     private val dispatcherHandler: DispatcherHandler
 ) : WebFilter, Ordered {
 
+    companion object {
+        val pathExclusions = setOf(
+            "/_status/ping"
+        )
+    }
+
     override fun getOrder() = Ordered.LOWEST_PRECEDENCE
 
-    override fun filter(exchange: ServerWebExchange , chain: WebFilterChain): Mono<Void> {
+    override fun filter(exchange: ServerWebExchange, chain: WebFilterChain): Mono<Void> {
         val request = exchange.request
-
-        val headers = request.headers
-
         val path = request.path.pathWithinApplication().value()
+
+        if (pathExclusions.contains("path")) {
+            return chain.filter(exchange)
+        }
+
         val method = request.methodValue
+        val headers = request.headers
 
         return Flux.fromIterable(dispatcherHandler.handlerMappings)
             .flatMap { it.getHandler(exchange) }.next().toOptional()
