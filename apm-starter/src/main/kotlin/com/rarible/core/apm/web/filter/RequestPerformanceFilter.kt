@@ -30,7 +30,7 @@ class RequestPerformanceFilter(
         val request = exchange.request
         val path = request.path.pathWithinApplication().value()
 
-        if (pathExclusions.contains("path")) {
+        if (pathExclusions.contains(path)) {
             return chain.filter(exchange)
         }
 
