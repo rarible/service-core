@@ -25,6 +25,12 @@
             <artifactId>kotlinx-coroutines-reactor</artifactId>
         </dependency>
 
+        <!-- ================== Logging ===================== -->
+        <dependency>
+            <groupId>com.rarible.core</groupId>
+            <artifactId>rarible-core-logging</artifactId>
+        </dependency>
+
         <!-- ================== Test ===================== -->
         <dependency>
             <groupId>com.rarible.core</groupId>

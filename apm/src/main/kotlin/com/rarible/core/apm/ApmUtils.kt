@@ -7,6 +7,7 @@ import co.elastic.apm.api.HeaderExtractor
 import co.elastic.apm.api.HeadersExtractor
 import co.elastic.apm.api.Span
 import co.elastic.apm.api.Transaction
+import com.rarible.core.logging.loggerContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
@@ -193,9 +194,9 @@ private fun <T> Mono<out Span>.using(mono: Mono<T>): Mono<T> {
                         it.isOnError -> span.captureException(it.throwable)
                         it.isOnComplete -> span.end()
                     }
-                }.subscriberContext {
-                    it.put(ApmContext.Key, ApmContext(span))
                 }
+                    .subscriberContext { it.put(ApmContext.Key, ApmContext(span)) }
+                    .loggerContext("trace.id", span.traceId)
             } else {
                 mono
             }
@@ -213,6 +214,7 @@ private fun <T> Mono<out Span>.usingFlux(flux: Flux<T>): Flux<T> {
                     .doOnError { span.captureException(it.cause) }
                     .doOnComplete { span.end() }
                     .subscriberContext { it.put(ApmContext.Key, ApmContext(span)) }
+                    .loggerContext("trace.id", span.traceId)
             } else {
                 flux
             }
