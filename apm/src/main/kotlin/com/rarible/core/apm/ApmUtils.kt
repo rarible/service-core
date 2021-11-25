@@ -7,6 +7,10 @@ import co.elastic.apm.api.HeaderExtractor
 import co.elastic.apm.api.HeadersExtractor
 import co.elastic.apm.api.Span
 import co.elastic.apm.api.Transaction
+import com.rarible.core.logging.loggerContext
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.reactor.ReactorContext
 import kotlinx.coroutines.withContext
 import reactor.core.publisher.Flux
@@ -22,7 +26,7 @@ suspend fun <T> withSpan(
     return withSpan(
         type = info.type,
         subType = info.subType,
-        action = info.subType,
+        action = info.action,
         name = info.name,
         labels = info.labels,
         body = body
@@ -91,6 +95,47 @@ private val apmContext: Mono<ApmContext> =
             }
         }
 
+fun <T> Flow<T>.withSpan(
+    name: String,
+    type: String? = null,
+    subType: String? = null,
+    action: String? = null,
+    labels: List<Pair<String, Any>> = emptyList()
+): Flow<T> {
+    val f = this
+    return flow {
+        withSpan(
+            name = name,
+            type = type,
+            subType = subType,
+            action = action,
+            labels = labels
+        ) {
+            emitAll(f)
+        }
+    }
+}
+
+fun <T> Flow<T>.withTransaction(
+    name: String,
+    labels: List<Pair<String, Any>> = emptyList(),
+    headerExtractor: HeaderExtractor? = null,
+    headersExtractor: HeadersExtractor? = null
+): Flow<T> {
+    val f = this
+    return flow {
+        withTransaction(
+            name = name,
+            labels = labels,
+            headerExtractor = headerExtractor,
+            headersExtractor = headersExtractor
+        ) {
+            emitAll(f)
+        }
+    }
+}
+
+
 fun <T> Flux<T>.withSpan(
     name: String,
     type: String? = null,
@@ -100,6 +145,17 @@ fun <T> Flux<T>.withSpan(
 ): Flux<T> {
     return apmContext
         .map { it.span.createSpan(name, type, subType, action, labels) }
+        .usingFlux(this)
+}
+
+fun <T> Flux<T>.withTransaction(
+    name: String,
+    labels: List<Pair<String, Any>> = emptyList(),
+    headerExtractor: HeaderExtractor? = null,
+    headersExtractor: HeadersExtractor? = null
+): Flux<T> {
+    return Mono
+        .defer { Mono.just(createTransaction(name, labels, headerExtractor, headersExtractor)) }
         .usingFlux(this)
 }
 
@@ -138,9 +194,9 @@ private fun <T> Mono<out Span>.using(mono: Mono<T>): Mono<T> {
                         it.isOnError -> span.captureException(it.throwable)
                         it.isOnComplete -> span.end()
                     }
-                }.subscriberContext {
-                    it.put(ApmContext.Key, ApmContext(span))
                 }
+                    .subscriberContext { it.put(ApmContext.Key, ApmContext(span)) }
+                    .loggerContext("trace.id", span.traceId)
             } else {
                 mono
             }
@@ -158,6 +214,7 @@ private fun <T> Mono<out Span>.usingFlux(flux: Flux<T>): Flux<T> {
                     .doOnError { span.captureException(it.cause) }
                     .doOnComplete { span.end() }
                     .subscriberContext { it.put(ApmContext.Key, ApmContext(span)) }
+                    .loggerContext("trace.id", span.traceId)
             } else {
                 flux
             }

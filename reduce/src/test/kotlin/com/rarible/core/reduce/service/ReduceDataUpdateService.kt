@@ -1,13 +1,13 @@
-package com.rarible.core.reduce.service.repository
+package com.rarible.core.reduce.service
 
-import com.rarible.core.reduce.repository.DataRepository
 import com.rarible.core.reduce.service.model.AccountBalance
+import com.rarible.core.reduce.service.repository.AccountBalanceRepository
 
-class ReduceDataRepository(
+class ReduceDataUpdateService(
     private val delegate: AccountBalanceRepository
-) : DataRepository<AccountBalance> {
+) : UpdateService<AccountBalance> {
 
-    override suspend fun saveReduceResult(data: AccountBalance) {
+    override suspend fun update(data: AccountBalance) {
         val currentBalance = delegate.get(data.id)
         delegate.save(currentBalance?.withBalance(data.balance) ?: data)
     }

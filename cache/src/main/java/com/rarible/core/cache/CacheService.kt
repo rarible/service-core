@@ -29,7 +29,7 @@ class CacheService(
     fun <T: Any> getCached(
         id: String,
         d: CacheDescriptor<T>,
-        immediatelyIfCached: Boolean = false
+        immediatelyIfCached: Boolean = true
     ): Mono<T> {
         return LoggingUtils.withMarker { marker ->
             mongo.findById<Cache>(id, d.collection)
@@ -40,11 +40,16 @@ class CacheService(
                         value == null -> getCachedInternalSync(marker, id, d, "initial load")
                         value.canBeUsed(d.getMaxAge(value.data as T?)) -> value.data.justOrEmpty()
                         value.data != null -> {
-                            getCachedInternalSync(marker, id, d, "refreshing cache").subscribe(
-                                {},
-                                { ex -> logger.error("Unable to refresh cache for $id in ${d.collection}", ex) }
-                            )
-                            value.data.justOrEmpty()
+                            val updated = getCachedInternalSync(marker, id, d, "refreshing cache")
+                            if (immediatelyIfCached) {
+                                updated.subscribe(
+                                    {},
+                                    { ex -> logger.error("Unable to refresh cache for $id in ${d.collection}", ex) }
+                                )
+                                value.data.justOrEmpty()
+                            } else {
+                                updated
+                            }
                         }
                         else -> getCachedInternalSync(marker, id, d, "cache is empty")
                     }
@@ -129,4 +134,3 @@ class CacheService(
 fun <T: Any> CacheService?.get(id: String, d: CacheDescriptor<T>, immediatelyIfCached: Boolean = false): Mono<T> {
     return this?.getCached(id, d, immediatelyIfCached) ?: d.get(id)
 }
-

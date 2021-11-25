@@ -13,7 +13,6 @@ import com.rarible.core.reduce.service.reducer.AccountBalanceReducer
 import com.rarible.core.reduce.service.repository.AccountBalanceRepository
 import com.rarible.core.reduce.service.repository.AccountBalanceSnapshotRepository
 import com.rarible.core.reduce.service.repository.AccountReduceEventRepository
-import com.rarible.core.reduce.service.repository.ReduceDataRepository
 import kotlinx.coroutines.reactive.awaitFirst
 import kotlinx.coroutines.reactor.asFlux
 import kotlinx.coroutines.runBlocking
@@ -26,13 +25,13 @@ internal class ReduceServiceTest : AbstractIntegrationTest() {
     private val snapshotRepository = AccountBalanceSnapshotRepository(template)
     private val snapshotStrategy = BlockchainSnapshotStrategy<AccountReduceSnapshot, AccountBalance, AccountId>(4)
     private val eventRepository = AccountReduceEventRepository(template)
-    private val dataRepository = ReduceDataRepository(balanceRepository)
+    private val updateService = ReduceDataUpdateService(balanceRepository)
     private val reducer = AccountBalanceReducer(balanceRepository)
 
     private val service = ReduceService(
         reducer = reducer,
         eventRepository = eventRepository,
-        dataRepository = dataRepository,
+        updateService = updateService,
         snapshotRepository = snapshotRepository,
         snapshotStrategy = snapshotStrategy
     )

@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration
 import reactor.core.publisher.Mono
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.random.Random
 
 @EnableAutoConfiguration
@@ -43,6 +44,23 @@ class CacheServiceTest : AbstractIntegrationTest() {
     }
 
     @Test
+    fun `return refreshed value if immediatelyIfCached = false`() {
+        val counter = AtomicInteger()
+        val descriptor = object : CacheDescriptor<SaveObject> {
+            override val collection: String = "test"
+            override fun getMaxAge(value: SaveObject?): Long = 100
+            override fun get(id: String): Mono<SaveObject> =
+                Mono.just(SaveObject(id, counter.incrementAndGet()))
+        }
+        val first = cacheService.getCached("id", descriptor).block()
+        assertEquals(SaveObject("id", 1), first)
+
+        Thread.sleep(101)
+        val refreshed = cacheService.getCached("id", descriptor, immediatelyIfCached = false).block()
+        assertEquals(SaveObject("id", 2), refreshed)
+    }
+
+    @Test
     fun cachedJson() {
         val descriptor = object : CacheDescriptor<JsonObject> {
             override val collection: String = "json"
@@ -73,12 +91,12 @@ class CacheServiceTest : AbstractIntegrationTest() {
     }
 
     private data class SaveObject(
-        val filed1: String,
-        val filed2: Int
+        val field1: String,
+        val field2: Int
     )
 
     private data class JsonObject(
-        val filed1: String,
-        val filed2: String
+        val field1: String,
+        val field2: String
     )
 }

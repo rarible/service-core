@@ -17,6 +17,10 @@
             <artifactId>rarible-core-apm</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.rarible.core</groupId>
+            <artifactId>rarible-core-common</artifactId>
+        </dependency>
+        <dependency>
             <groupId>co.elastic.apm</groupId>
             <artifactId>apm-agent-attach</artifactId>
         </dependency>
