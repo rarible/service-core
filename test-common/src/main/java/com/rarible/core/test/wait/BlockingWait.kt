@@ -23,12 +23,11 @@ object BlockingWait {
 
     @Throws(Exception::class)
     @JvmStatic
-    fun waitAssert(timeout: Long = 5000, runnable: () -> Unit) {
+    fun <T> waitAssert(timeout: Long = 5000, runnable: () -> T): T {
         val maxTime = System.currentTimeMillis() + timeout
         while (true) {
             try {
-                runnable.invoke()
-                return
+                return runnable()
             } catch (e: Throwable) {
                 when (e) {
                     is AssertionFailedError, is KotlinNullPointerException, is AssertionError, is NullPointerException -> {
