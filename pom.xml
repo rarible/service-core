@@ -4,7 +4,7 @@
     <parent>
         <groupId>com.rarible</groupId>
         <artifactId>rarible-parent-pom</artifactId>
-        <version>2.0.0</version>
+        <version>2.0.1</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -33,12 +33,12 @@
     </distributionManagement>
 
     <properties>
-        <revision>2.0.0</revision>
-        <logstash-encoder.version>6.6</logstash-encoder.version>
-        <testcontainers.version>1.15.2</testcontainers.version>
+        <revision>2.0.1</revision>
+        <logstash-encoder.version>7.0.1</logstash-encoder.version>
+        <testcontainers.version>1.16.2</testcontainers.version>
         <springfox.version>3.0.0</springfox.version>
         <nexus.maven.public>http://nexus.rarible.int/repository/maven-public/</nexus.maven.public>
-        <springmockk.version>2.0.3</springmockk.version>
+        <springmockk.version>3.0.1</springmockk.version>
         <elastic-apm.version>1.26.0</elastic-apm.version>
     </properties>
 
@@ -47,7 +47,7 @@
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
-                <version>2020.0.4</version>
+                <version>${spring-cloud.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
