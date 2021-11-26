@@ -52,9 +52,11 @@ class SpanAnnotationPostProcessorTest {
     @Test
     fun `should handle mono transaction annotation`() {
         mockkStatic(ElasticApm::class)
-        val transaction = mockk<Transaction>()
-        every { transaction.setName("testTransaction") } returns transaction
-        every { transaction.end() } returns Unit
+        val transaction = mockk<Transaction>() {
+            every { traceId } returns "trace-id"
+            every { setName("testTransaction") } returns this
+            every { end() } returns Unit
+        }
 
         every { ElasticApm.startTransaction() } returns transaction
 
@@ -68,15 +70,18 @@ class SpanAnnotationPostProcessorTest {
     @Test
     fun `should handle mono transaction and span annotation`() {
         mockkStatic(ElasticApm::class)
-        val transaction = mockk<Transaction>()
-        val span = mockk<Span>()
+        val span = mockk<Span>() {
+            every { traceId } returns "trace-id"
+            every { setName("testName") } returns this
+            every { end() } returns Unit
+        }
 
-        every { transaction.setName("testTransaction") } returns transaction
-        every { transaction.end() } returns Unit
-        every { transaction.startSpan("testType", "testSubType", "testAction") } returns span
-
-        every { span.setName("testName") } returns span
-        every { span.end() } returns Unit
+        val transaction = mockk<Transaction>() {
+            every { traceId } returns "trace-id"
+            every { setName("testTransaction") } returns this
+            every { end() } returns Unit
+            every { startSpan("testType", "testSubType", "testAction") } returns span
+        }
 
         every { ElasticApm.startTransaction() } returns transaction
 

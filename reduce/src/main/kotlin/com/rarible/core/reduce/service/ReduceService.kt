@@ -34,7 +34,7 @@ class ReduceService<
     suspend fun onEvents(events: List<Event>) {
         if (events.isEmpty()) return
 
-        val minMark: Mark = events.minBy { it.mark }?.mark ?: error("Events array can't be empty")
+        val minMark: Mark = events.minByOrNull { it.mark }?.mark ?: error("Events array can't be empty")
 
         events.toFlux()
             .map { event -> reducer.getDataKeyFromEvent(event) }

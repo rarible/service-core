@@ -10,6 +10,10 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>rarible-core-test-common</artifactId>
 
+    <properties>
+        <io.mock.version>1.10.6</io.mock.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -113,6 +117,7 @@
         <dependency>
             <groupId>io.mockk</groupId>
             <artifactId>mockk</artifactId>
+            <version>${io.mock.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
