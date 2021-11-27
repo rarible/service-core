@@ -1,7 +1,12 @@
 spring:
   jmx:
     enabled: false
+  config:
+    use-legacy-processing: true
+    import: "consul:"
   cloud:
+    bootstrap:
+      enabled: true
     service-registry:
       auto-registration:
         enabled: true
