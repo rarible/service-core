@@ -62,12 +62,41 @@ class MonoSpanInvocationHandler(
             }
         }
 
+        class FluxSpanMethod(
+            override val info: SpanInfo
+        ) : AbstractSpanMethod() {
+
+            override fun invoke(invocation: MethodInvocation): Any {
+                val result = invocation.proceed() as Flux<*>
+                return result.withSpan(
+                    name = info.name,
+                    type = info.type,
+                    subType = info.subType,
+                    action = info.action,
+                    labels = info.labels
+                )
+            }
+        }
+
         class MonoTransactionMethod(
             override val info: SpanInfo
         ) : AbstractSpanMethod() {
 
             override fun invoke(invocation: MethodInvocation): Any {
                 val result = invocation.proceed() as Mono<*>
+                return result.withTransaction(
+                    name = info.name,
+                    labels = info.labels
+                )
+            }
+        }
+
+        class FluxTransactionMethod(
+            override val info: SpanInfo
+        ) : AbstractSpanMethod() {
+
+            override fun invoke(invocation: MethodInvocation): Any {
+                val result = invocation.proceed() as Flux<*>
                 return result.withTransaction(
                     name = info.name,
                     labels = info.labels
@@ -167,7 +196,7 @@ class MonoSpanInvocationHandler(
                 return when (getMethodType(method)) {
                     MethodType.SUSPEND -> AbstractSpanMethod.SuspendSpanMethod(spanInfo)
                     MethodType.MONO -> AbstractSpanMethod.MonoSpanMethod(spanInfo)
-                    MethodType.FLUX -> NonSpanMethod // TODO Need implement
+                    MethodType.FLUX -> AbstractSpanMethod.FluxSpanMethod(spanInfo)
                     MethodType.NORMAL -> NonSpanMethod // TODO Need implement
                 }
             }
@@ -176,7 +205,7 @@ class MonoSpanInvocationHandler(
                 return when (getMethodType(method)) {
                     MethodType.SUSPEND -> AbstractSpanMethod.SuspendTransactionMethod(spanInfo)
                     MethodType.MONO -> AbstractSpanMethod.MonoTransactionMethod(spanInfo)
-                    MethodType.FLUX -> NonSpanMethod // TODO Need implement
+                    MethodType.FLUX -> AbstractSpanMethod.FluxTransactionMethod(spanInfo)
                     MethodType.NORMAL -> NonSpanMethod // TODO Need implement
                 }
             }

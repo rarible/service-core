@@ -27,6 +27,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.util.context.Context
 
@@ -55,10 +56,28 @@ class SpanAnnotationPostProcessorTest {
         val transaction = mockk<Transaction>()
         every { transaction.setName("testTransaction") } returns transaction
         every { transaction.end() } returns Unit
+        every { transaction.traceId } returns "test"
 
         every { ElasticApm.startTransaction() } returns transaction
 
         transactionClass.openMonoTransaction().block()
+
+        verify(exactly = 1) { ElasticApm.startTransaction() }
+        verify(exactly = 1) { transaction.setName("testTransaction") }
+        verify(exactly = 1) { transaction.end() }
+    }
+
+    @Test
+    fun `should handle flux transaction annotation`() {
+        mockkStatic(ElasticApm::class)
+        val transaction = mockk<Transaction>()
+        every { transaction.setName("testTransaction") } returns transaction
+        every { transaction.end() } returns Unit
+        every { transaction.traceId } returns "test"
+
+        every { ElasticApm.startTransaction() } returns transaction
+
+        transactionClass.openFluxTransaction().collectList().block()
 
         verify(exactly = 1) { ElasticApm.startTransaction() }
         verify(exactly = 1) { transaction.setName("testTransaction") }
@@ -74,13 +93,42 @@ class SpanAnnotationPostProcessorTest {
         every { transaction.setName("testTransaction") } returns transaction
         every { transaction.end() } returns Unit
         every { transaction.startSpan("testType", "testSubType", "testAction") } returns span
+        every { transaction.traceId } returns "test"
 
         every { span.setName("testName") } returns span
         every { span.end() } returns Unit
+        every { span.traceId } returns "test"
 
         every { ElasticApm.startTransaction() } returns transaction
 
         transactionClass.openMonoTransactionAndSpan().block()
+
+        verify(exactly = 1) { ElasticApm.startTransaction() }
+        verify(exactly = 1) { transaction.setName("testTransaction") }
+        verify(exactly = 1) { transaction.startSpan("testType", "testSubType", "testAction") }
+        verify(exactly = 1) { transaction.end() }
+        verify(exactly = 1) { span.setName("testName") }
+        verify(exactly = 1) { span.end() }
+    }
+
+    @Test
+    fun `should handle flux transaction and span annotation`() {
+        mockkStatic(ElasticApm::class)
+        val transaction = mockk<Transaction>()
+        val span = mockk<Span>()
+
+        every { transaction.setName("testTransaction") } returns transaction
+        every { transaction.end() } returns Unit
+        every { transaction.startSpan("testType", "testSubType", "testAction") } returns span
+        every { transaction.traceId } returns "test"
+
+        every { span.setName("testName") } returns span
+        every { span.end() } returns Unit
+        every { span.traceId } returns "test"
+
+        every { ElasticApm.startTransaction() } returns transaction
+
+        transactionClass.openFluxTransactionAndSpan().collectList().block()
 
         verify(exactly = 1) { ElasticApm.startTransaction() }
         verify(exactly = 1) { transaction.setName("testTransaction") }
@@ -306,10 +354,22 @@ class SpanAnnotationPostProcessorTest {
         }
 
         @CaptureTransaction("testTransaction")
+        open fun openFluxTransaction(): Flux<String> {
+            return Flux.just("t1", "t2", "t3")
+        }
+
+        @CaptureTransaction("testTransaction")
         open fun openMonoTransactionAndSpan(): Mono<String> {
             return Mono
                 .just("Open Transaction")
                 .then(spanClass.openMonoSpan())
+        }
+
+        @CaptureTransaction("testTransaction")
+        open fun openFluxTransactionAndSpan(): Flux<String> {
+            return Flux
+                .just("Open Transaction")
+                .thenMany(spanClass.openFluxSpan())
         }
 
         @CaptureTransaction("testTransaction")
@@ -330,6 +390,11 @@ class SpanAnnotationPostProcessorTest {
         @CaptureSpan(value = "testName", type = "testType", subtype = "testSubType", action = "testAction")
         open fun openMonoSpan(): Mono<String> {
             return Mono.just("Open Span")
+        }
+
+        @CaptureSpan(value = "testName", type = "testType", subtype = "testSubType", action = "testAction")
+        open fun openFluxSpan(): Flux<String> {
+            return Flux.just("s1", "s2", "s3")
         }
 
         @CaptureSpan(value = "testName", type = "testType", subtype = "testSubType", action = "testAction")
