@@ -33,7 +33,7 @@
     </distributionManagement>
 
     <properties>
-        <revision>2.0.4</revision>
+        <revision>2.0-SNAPSHOT</revision>
         <logstash-encoder.version>7.0.1</logstash-encoder.version>
         <testcontainers.version>1.16.2</testcontainers.version>
         <springfox.version>3.0.0</springfox.version>
@@ -188,6 +188,11 @@
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
+                <artifactId>rarible-core-entity-reducer</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-apm</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -240,6 +245,7 @@
         <module>daemon</module>
         <module>client</module>
         <module>reduce</module>
+        <module>entity-reducer</module>
         <module>test-coverage</module>
         <module>api</module>
         <module>apm</module>
