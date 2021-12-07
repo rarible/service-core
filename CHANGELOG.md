@@ -3,24 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## [v2.0.4](https://github.com/rarible/service-core/releases/tag/v2.0.4) (2021-12-02)
-
-### Features
-
-- Support of batch consuming for Kafka worker (
-  #17) ([92ddb0e0ee7c3fc](https://github.com/rarible/service-core/commit/92ddb0e0ee7c3fca8e8308296c4e6be38e567b7f))
-
 ## [v2.0.3](https://github.com/rarible/service-core/releases/tag/v2.0.3) (2021-12-01)
 
 ### Features
 
-- Add flux apm method
-  support ([afed7c5683aa431](https://github.com/rarible/service-core/commit/afed7c5683aa4314112cb8aeaf072beb4b510ebd))
+ -  Add flux apm method support ([afed7c5683aa431](https://github.com/rarible/service-core/commit/afed7c5683aa4314112cb8aeaf072beb4b510ebd))
 
 ### Bug Fixes
 
-- APM filter transaction
-  name ([08f3fce1dc1fbd2](https://github.com/rarible/service-core/commit/08f3fce1dc1fbd2a1069f2c638b51358b1b0eb98))
+ -  APM filter transaction name ([08f3fce1dc1fbd2](https://github.com/rarible/service-core/commit/08f3fce1dc1fbd2a1069f2c638b51358b1b0eb98))
  -  improve apm filter ([8011d5576a410a8](https://github.com/rarible/service-core/commit/8011d5576a410a8c7f6bd584b531594f719d89f5))
  -  added support for Flow in ApmUtils ([7f928410e777bf9](https://github.com/rarible/service-core/commit/7f928410e777bf99e4247fd9305f1d2b56a48846))
  -  correct default apm address ([c5293c7d6766868](https://github.com/rarible/service-core/commit/c5293c7d6766868293cdd0f68e0af69d2cacdd75))
