@@ -51,14 +51,14 @@ internal class RevertableEntityReversedReducerTest {
     }
 
     @Test
-    fun `should throw exception as we try to revert event with empty list`() = runBlocking<Unit> {
+    fun `should not apply event if empty list`() = runBlocking<Unit> {
         val entity = TestEntity(events = emptyList())
         val revertEvent = EntityEvent(block = 1)
 
-        assertThrows<ReduceException> {
-            runBlocking {
-                revertableEntityReducer.reduce(entity, revertEvent)
-            }
-        }
+        revertableEntityReducer.reduce(entity, revertEvent)
+        coEvery { reversedReducer.reduce(entity, revertEvent) } returns entity
+
+        val updatedEntity = revertableEntityReducer.reduce(entity, revertEvent)
+        Assertions.assertThat(updatedEntity.events).isEqualTo(emptyList<EntityEvent>())
     }
 }

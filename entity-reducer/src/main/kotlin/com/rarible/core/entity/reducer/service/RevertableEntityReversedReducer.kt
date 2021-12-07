@@ -13,11 +13,10 @@ class RevertableEntityReversedReducer<Id, Event : Comparable<Event>, E : Reverta
             reversedReducer.reduce(entity, event).withEvents(entity.events - event)
         } else {
             val firstEvent = entity.events.firstOrNull()
-
-            if (firstEvent == null || firstEvent > event) {
-                throw ReduceException("Unable to revert $event from $entity")
-            } else {
-                entity
+            when {
+                firstEvent == null -> entity
+                firstEvent > event -> throw ReduceException("Unable to revert $event from $entity")
+                else -> entity
             }
         }
     }
