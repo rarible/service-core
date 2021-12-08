@@ -7,7 +7,7 @@ import com.rarible.core.entity.reducer.model.Identifiable
  * Service to handle small amount of events for one entity
  * It takes a batch of events, loads entity, applies these events and saves entity to the database
  */
-class EventReduceService<Id, Event : Comparable<Event>, E : Identifiable<Id>>(
+open class EventReduceService<Id, Event : Comparable<Event>, E : Identifiable<Id>>(
     private val entityService: EntityService<Id, E>,
     private val entityEventService: EntityEventService<Event, Id>,
     private val templateProvider: EntityTemplateProvider<Id, E>,
