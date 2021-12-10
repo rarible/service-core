@@ -1,0 +1,15 @@
+package com.rarible.core.entity.reducer.chain
+
+import com.rarible.core.entity.reducer.service.Reducer
+
+open class ReducersChain<Event, Entity>(
+    private val reducers: List<Reducer<Event, Entity>>
+) : Reducer<Event, Entity> {
+
+    override suspend fun reduce(entity: Entity, event: Event): Entity {
+        return reducers.fold(entity) { state, reducer ->
+            return reducer.reduce(state, event)
+        }
+    }
+}
+
