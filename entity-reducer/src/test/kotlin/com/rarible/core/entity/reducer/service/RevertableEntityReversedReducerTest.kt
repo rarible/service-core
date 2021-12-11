@@ -1,64 +1,45 @@
 package com.rarible.core.entity.reducer.service
 
-import com.rarible.core.entity.reducer.exception.ReduceException
-import com.rarible.core.entity.reducer.service.model.EntityEvent
-import com.rarible.core.entity.reducer.service.model.TestEntity
+import com.rarible.core.entity.reducer.service.model.Erc20BalanceEvent
+import com.rarible.core.entity.reducer.service.model.Erc20Balance
 import io.mockk.*
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 
 internal class RevertableEntityReversedReducerTest {
-    private val reversedReducer = mockk<ReversedReducer<EntityEvent, TestEntity>>()
-    private val revertableEntityReducer = RevertableEntityReversedReducer(reversedReducer)
+    private val eventRevertPolicy = mockk<EventRevertPolicy<Erc20BalanceEvent>>()
+    private val reversedReducer = mockk<Reducer<Erc20BalanceEvent, Erc20Balance>>()
+    private val revertableEntityReducer = RevertableEntityReducer(eventRevertPolicy, reversedReducer)
 
     @Test
     fun `should apply event`() = runBlocking<Unit> {
-        val events = listOf(EntityEvent(block = 1), EntityEvent(block = 2))
-        val entity = TestEntity(events = events)
-        val revertEvent = EntityEvent(block = 2)
+        val events = listOf(Erc20BalanceEvent(block = 1), Erc20BalanceEvent(block = 2))
+        val entity = Erc20Balance(id = 0, balance = 1, revertableEvents = events)
+        val revertEvent = Erc20BalanceEvent(block = 2)
 
+        every { eventRevertPolicy.wasApplied(revertEvent,  events) } returns true
+        every { eventRevertPolicy.remove(revertEvent, events) } returns events - revertEvent
         coEvery { reversedReducer.reduce(entity, revertEvent) } returns entity
 
         val updatedEntity = revertableEntityReducer.reduce(entity, revertEvent)
-        Assertions.assertThat(updatedEntity.events).isEqualTo(listOf(EntityEvent(block = 1)))
+        Assertions.assertThat(updatedEntity.revertableEvents).isEqualTo(listOf(Erc20BalanceEvent(block = 1)))
+
+        coVerify { reversedReducer.reduce(entity, revertEvent) }
     }
 
     @Test
     fun `should not apply event`() = runBlocking<Unit> {
-        val events = listOf(EntityEvent(block = 1), EntityEvent(block = 2))
-        val entity = TestEntity(events = events)
-        val revertEvent = EntityEvent(block = 3)
+        val events = listOf(Erc20BalanceEvent(block = 1), Erc20BalanceEvent(block = 2))
+        val entity = Erc20Balance(id = 0, balance = 1, revertableEvents = events)
+        val revertEvent = Erc20BalanceEvent(block = 3)
 
+        every { eventRevertPolicy.wasApplied(revertEvent,  events) } returns false
         coEvery { reversedReducer.reduce(entity, revertEvent) } returns entity
 
         val updatedEntity = revertableEntityReducer.reduce(entity, revertEvent)
-        Assertions.assertThat(updatedEntity.events).isEqualTo(events)
-    }
+        Assertions.assertThat(updatedEntity.revertableEvents).isEqualTo(events)
 
-    @Test
-    fun `should throw exception as we try to revert too old event`() = runBlocking<Unit> {
-        val events = listOf(EntityEvent(block = 1), EntityEvent(block = 2))
-        val entity = TestEntity(events = events)
-        val revertEvent = EntityEvent(block = 0)
-
-        assertThrows<ReduceException> {
-            runBlocking {
-                revertableEntityReducer.reduce(entity, revertEvent)
-            }
-        }
-    }
-
-    @Test
-    fun `should not apply event if empty list`() = runBlocking<Unit> {
-        val entity = TestEntity(events = emptyList())
-        val revertEvent = EntityEvent(block = 1)
-
-        revertableEntityReducer.reduce(entity, revertEvent)
-        coEvery { reversedReducer.reduce(entity, revertEvent) } returns entity
-
-        val updatedEntity = revertableEntityReducer.reduce(entity, revertEvent)
-        Assertions.assertThat(updatedEntity.events).isEqualTo(emptyList<EntityEvent>())
+        coVerify(exactly = 0) { reversedReducer.reduce(any(), any()) }
     }
 }

@@ -1,9 +1,10 @@
 package com.rarible.core.entity.reducer.service
 
-import com.rarible.core.entity.reducer.service.model.EntityEvent
-import com.rarible.core.entity.reducer.service.model.TestEntity
-import com.rarible.core.entity.reducer.service.service.TestEntityReducer
-import io.mockk.*
+import com.rarible.core.entity.reducer.service.model.Erc20BalanceEvent
+import com.rarible.core.entity.reducer.service.model.Erc20Balance
+import com.rarible.core.entity.reducer.service.service.*
+import com.rarible.core.test.data.randomInt
+import com.rarible.core.test.data.randomLong
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.runBlocking
@@ -11,103 +12,87 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
 internal class TaskReduceServiceTest {
-    private val entityService = mockk<EntityService<Long, TestEntity>>()
-    private val entityEventService = mockk<EntityEventService<EntityEvent, Long>>()
-    private val templateProvider = mockk<EntityTemplateProvider<Long, TestEntity>>()
-    private val reducer = TestEntityReducer()
-
-    private val taskReduceService = TaskReduceService(
-        entityService,
-        entityEventService,
-        templateProvider,
-        reducer
-    )
-
     @Test
     fun `should make full reduce of single entity`() = runBlocking<Unit> {
-        val entityId = 1L
+        val entityService = Erc20BalanceService()
+        val task = createTaskService(entityService)
+
+        val entityId = randomLong()
         val events = listOf(
-            EntityEvent(
+            Erc20BalanceEvent(
                 block = 1,
-                intValue = 1,
+                value = 1,
                 entityId = entityId
             ),
-            EntityEvent(
-                block = 1,
-                intValue = 2,
+            Erc20BalanceEvent(
+                block = 2,
+                value = 2,
                 entityId = entityId
             ),
-            EntityEvent(
-                block = 1,
-                intValue = 3,
+            Erc20BalanceEvent(
+                block = 3,
+                value = 3,
                 entityId = entityId
             )
         )
-        every { entityEventService.getEntityId(any()) } answers {
-            (args.single() as EntityEvent).entityId
-        }
-        every { templateProvider.getEntityTemplate(entityId) } returns TestEntity(
-            events = emptyList(),
-            id = entityId
-        )
-        coEvery { entityService.update(any()) } answers {
-            args.first() as TestEntity
-        }
-        val updatedEntity = mutableListOf<TestEntity>()
+        val updatedEntity = mutableListOf<Erc20Balance>()
 
-        taskReduceService.reduce(events.asFlow()).collect { entity ->
-            assertThat(entity.intValue).isEqualTo(6)
-
+        task.reduce(events.asFlow()).collect { entity ->
+            assertThat(entity.id).isEqualTo(entityId)
+            assertThat(entity.balance).isEqualTo(6)
+            assertThat(entity.revertableEvents).isEqualTo(events)
             updatedEntity.add(entity)
         }
         assertThat(updatedEntity).hasSize(1)
-        coVerify(exactly = 1) { entityService.update(updatedEntity.single()) }
-        coVerify(exactly = 1) { templateProvider.getEntityTemplate(entityId) }
+        assertThat(entityService.getUpdateCount()).isEqualTo(1)
     }
 
 
     @Test
     fun `should make full reduce of many entities`() = runBlocking<Unit> {
-        val entityId1 = 1L
-        val events1 = listOf(
-            EntityEvent(
-                block = 1,
-                intValue = 1,
-                entityId = entityId1
-            )
-        )
+        val entityService = Erc20BalanceService()
+        val task = createTaskService(entityService)
 
-        val entityId2 = 2L
-        val events2 = listOf(
-            EntityEvent(
-                block = 1,
-                intValue = 1,
-                entityId = entityId2
-            )
-        )
+        val events = (1..100).map {
+            val entityId = randomLong()
+            val values = (1..(10..20).random()).map { randomInt() }
 
-        every { entityEventService.getEntityId(any()) } answers {
-            (args.single() as EntityEvent).entityId
-        }
+            var block = 0L
+            val events = values.map { value ->
+                Erc20BalanceEvent(
+                    block = block++,
+                    value = value,
+                    entityId = entityId
+                )
+            }
+            entityId to events
+        }.toMap()
 
-        every { templateProvider.getEntityTemplate(any()) } answers {
-            TestEntity(
-                events = emptyList(),
-                id = args.single() as Long
-            )
-        }
-        coEvery { entityService.update(any()) } answers {
-            args.first() as TestEntity
-        }
+        val updatedEntity = mutableListOf<Erc20Balance>()
 
-        val updatedEntity = mutableListOf<TestEntity>()
+        task.reduce(events.values.flatten().asFlow()).collect { entity ->
+            val expectedEvents = events[entity.id]
+            val expectedBalance = expectedEvents?.sumOf { it.value }
 
-        taskReduceService.reduce((events1 + events2).asFlow()).collect { entity ->
-            assertThat(entity.intValue).isEqualTo(1)
+            assertThat(entity.balance).isEqualTo(expectedBalance)
+            assertThat(entity.revertableEvents).isEqualTo(expectedEvents)
             updatedEntity.add(entity)
         }
-        assertThat(updatedEntity).hasSize(2)
-        coVerify(exactly = 1) { entityService.update(updatedEntity[0]) }
-        coVerify(exactly = 1) { entityService.update(updatedEntity[1]) }
+        assertThat(updatedEntity.map { it.id }).containsExactly(*events.keys.toTypedArray())
+        assertThat(entityService.getUpdateCount()).isEqualTo(events.keys.size.toLong())
+    }
+
+    private fun createTaskService(entityService: Erc20BalanceService): TaskReduceService<Long, Erc20BalanceEvent, Erc20Balance> {
+        val entityEventService = Erc20BalanceEntityEventService()
+        val templateProvider = Erc20BalanceTemplateProvider()
+        val eventRevertPolicy = Erc20BalanceEventRevertPolicy()
+        val reducer = EntityReducer(eventRevertPolicy, Erc20BalanceReducer())
+
+        return TaskReduceService(
+            entityService,
+            entityEventService,
+            templateProvider,
+            reducer
+        )
     }
 }
