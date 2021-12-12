@@ -2,7 +2,7 @@ package com.rarible.core.entity.reducer.service
 
 import com.rarible.core.entity.reducer.service.model.Erc20BalanceEvent
 import com.rarible.core.entity.reducer.service.model.Erc20Balance
-import com.rarible.core.entity.reducer.service.service.Erc20BalanceEntityEventService
+import com.rarible.core.entity.reducer.service.service.Erc20BalanceEntityIdService
 import com.rarible.core.entity.reducer.service.service.Erc20BalanceReducer
 import com.rarible.core.entity.reducer.service.service.Erc20BalanceService
 import com.rarible.core.entity.reducer.service.service.Erc20BalanceTemplateProvider
@@ -13,13 +13,13 @@ import org.junit.jupiter.api.Test
 
 internal class EventReduceServiceTest {
     private val entityService = Erc20BalanceService()
-    private val entityEventService = Erc20BalanceEntityEventService()
+    private val entityIdService = Erc20BalanceEntityIdService()
     private val templateProvider = Erc20BalanceTemplateProvider()
     private val reducer = Erc20BalanceReducer()
 
     private val eventReduceService = EventReduceService(
         entityService,
-        entityEventService,
+        entityIdService,
         templateProvider,
         reducer
     )

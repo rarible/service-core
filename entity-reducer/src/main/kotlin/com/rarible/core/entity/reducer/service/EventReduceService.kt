@@ -9,7 +9,7 @@ import com.rarible.core.entity.reducer.model.Identifiable
  */
 class EventReduceService<Id, Event, E : Identifiable<Id>>(
     private val entityService: EntityService<Id, E>,
-    private val entityEventService: EntityIdService<Event, Id>,
+    private val entityIdService: EntityIdService<Event, Id>,
     private val templateProvider: EntityTemplateProvider<Id, E>,
     private val reducer: Reducer<Event, E>
 ) {
@@ -19,7 +19,7 @@ class EventReduceService<Id, Event, E : Identifiable<Id>>(
      */
     suspend fun reduceAll(event: List<Event>) {
         event
-            .groupBy { entityEventService.getEntityId(it) }
+            .groupBy { entityIdService.getEntityId(it) }
             .forEach { (id, events) ->
                 reduce(id, events)
             }

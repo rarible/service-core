@@ -15,7 +15,7 @@ internal class StreamFullReduceServiceTest {
     @Test
     fun `should make full reduce of single entity`() = runBlocking<Unit> {
         val entityService = Erc20BalanceService()
-        val task = createTaskService(entityService)
+        val task = createStreamReduceService(entityService)
 
         val entityId = randomLong()
         val events = listOf(
@@ -51,7 +51,7 @@ internal class StreamFullReduceServiceTest {
     @Test
     fun `should make full reduce of many entities`() = runBlocking<Unit> {
         val entityService = Erc20BalanceService()
-        val task = createTaskService(entityService)
+        val task = createStreamReduceService(entityService)
 
         val events = (1..100).map {
             val entityId = randomLong()
@@ -82,15 +82,15 @@ internal class StreamFullReduceServiceTest {
         assertThat(entityService.getUpdateCount()).isEqualTo(events.keys.size.toLong())
     }
 
-    private fun createTaskService(entityService: Erc20BalanceService): StreamFullReduceService<Long, Erc20BalanceEvent, Erc20Balance> {
-        val entityEventService = Erc20BalanceEntityEventService()
+    private fun createStreamReduceService(entityService: Erc20BalanceService): StreamFullReduceService<Long, Erc20BalanceEvent, Erc20Balance> {
+        val entityIdService = Erc20BalanceEntityIdService()
         val templateProvider = Erc20BalanceTemplateProvider()
-        val eventRevertPolicy = Erc20BalanceForwardEventRevertPolicy()
+        val eventRevertPolicy = Erc20BalanceForwardEventApplyPolicy()
         val reducer = EntityReducer(eventRevertPolicy, Erc20BalanceReducer())
 
         return StreamFullReduceService(
             entityService,
-            entityEventService,
+            entityIdService,
             templateProvider,
             reducer
         )

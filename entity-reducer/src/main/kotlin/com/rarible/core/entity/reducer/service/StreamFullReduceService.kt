@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.flow
  */
 open class StreamFullReduceService<Id, Event, E : Identifiable<Id>>(
     private val entityService: EntityService<Id, E>,
-    private val entityEventService: EntityIdService<Event, Id>,
+    private val entityIdService: EntityIdService<Event, Id>,
     private val templateProvider: EntityTemplateProvider<Id, E>,
     private val reducer: Reducer<Event, E>
 ) : ReduceService<Id, Event, E> {
@@ -20,7 +20,7 @@ open class StreamFullReduceService<Id, Event, E : Identifiable<Id>>(
     override suspend fun reduce(events: Flow<Event>): Flow<E> = flow {
         var entity: E? = null
         events.collect { event ->
-            val id = entityEventService.getEntityId(event)
+            val id = entityIdService.getEntityId(event)
             val prevEntity = entity
             val currentEntity = if (prevEntity == null || prevEntity.id != id) {
                 if (prevEntity != null) {
