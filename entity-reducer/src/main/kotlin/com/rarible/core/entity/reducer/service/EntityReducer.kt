@@ -8,10 +8,10 @@ class EntityReducer<Id, Event, E : RevertableEntity<Id, Event, E>>(
 ) : Reducer<Event, E> {
 
     override suspend fun reduce(entity: E, event: Event): E {
-        return if (eventRevertPolicy.wasApplied(event, entity.revertableEvents)) {
+        return if (eventRevertPolicy.wasApplied(entity.revertableEvents, event)) {
             entity
         } else {
-            val newEvents = eventRevertPolicy.add(event, entity.revertableEvents)
+            val newEvents = eventRevertPolicy.reduce(entity.revertableEvents, event)
             reducer.reduce(entity, event).withRevertableEvents(newEvents)
         }
     }

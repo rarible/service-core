@@ -85,7 +85,7 @@ internal class TaskReduceServiceTest {
     private fun createTaskService(entityService: Erc20BalanceService): TaskReduceService<Long, Erc20BalanceEvent, Erc20Balance> {
         val entityEventService = Erc20BalanceEntityEventService()
         val templateProvider = Erc20BalanceTemplateProvider()
-        val eventRevertPolicy = Erc20BalanceEventRevertPolicy()
+        val eventRevertPolicy = Erc20BalanceForwardEventRevertPolicy()
         val reducer = EntityReducer(eventRevertPolicy, Erc20BalanceReducer())
 
         return TaskReduceService(

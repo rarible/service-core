@@ -8,9 +8,8 @@ class RevertableEntityReducer<Id, Event, E : RevertableEntity<Id, Event, E>>(
 ) : Reducer<Event, E> {
 
     override suspend fun reduce(entity: E, event: Event): E {
-        // We can revert any income event witch in entity event list
-        return if (eventRevertPolicy.wasApplied(event, entity.revertableEvents)) {
-            val newEvents = eventRevertPolicy.remove(event, entity.revertableEvents)
+        return if (eventRevertPolicy.wasApplied(entity.revertableEvents, event)) {
+            val newEvents = eventRevertPolicy.reduce(entity.revertableEvents, event)
             reversedReducer.reduce(entity, event).withRevertableEvents(newEvents)
         } else {
             entity

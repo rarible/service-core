@@ -18,8 +18,8 @@ internal class RevertableEntityReducerTest {
         val entity = Erc20Balance(id = 0, balance = 1, revertableEvents = events)
         val newEvent = Erc20BalanceEvent(block = 3)
 
-        every { eventRevertPolicy.add(newEvent, events) } returns events + newEvent
-        every { eventRevertPolicy.wasApplied(newEvent,  events) } returns false
+        coEvery { eventRevertPolicy.reduce(events, newEvent) } returns events + newEvent
+        every { eventRevertPolicy.wasApplied(events, newEvent) } returns false
         coEvery { reducer.reduce(entity, newEvent) } returns entity
 
         val updatedEntity = revertableEntityReducer.reduce(entity, newEvent)
@@ -32,12 +32,12 @@ internal class RevertableEntityReducerTest {
         val entity = Erc20Balance(id = 0, balance = 1, revertableEvents = events)
         val newEvent = Erc20BalanceEvent(block = 2)
 
-        coEvery { eventRevertPolicy.wasApplied(newEvent,  events) } returns true
+        coEvery { eventRevertPolicy.wasApplied(events, newEvent) } returns true
 
         val updatedEntity = revertableEntityReducer.reduce(entity, newEvent)
         assertThat(updatedEntity.revertableEvents).isEqualTo(events)
 
-        coVerify(exactly = 0) { eventRevertPolicy.add(any(), any()) }
+        coVerify(exactly = 0) { eventRevertPolicy.reduce(any(), any()) }
         coVerify(exactly = 0) { reducer.reduce(any(), any()) }
     }
 }
