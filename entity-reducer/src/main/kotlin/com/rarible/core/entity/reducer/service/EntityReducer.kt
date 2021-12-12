@@ -1,8 +1,8 @@
 package com.rarible.core.entity.reducer.service
 
-import com.rarible.core.entity.reducer.model.RevertableEntity
+import com.rarible.core.entity.reducer.model.Entity
 
-class EntityReducer<Id, Event, E : RevertableEntity<Id, Event, E>>(
+class EntityReducer<Id, Event, E : Entity<Id, Event, E>>(
     private val eventApplyPolicy: EventApplyPolicy<Event>,
     private val reducer: Reducer<Event, E>
 ) : Reducer<Event, E> {

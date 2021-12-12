@@ -7,7 +7,7 @@ import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 
-internal class RevertableEntityReversedReducerTest {
+internal class EntityReversedReducerTest {
     private val eventRevertPolicy = mockk<EventApplyPolicy<Erc20BalanceEvent>>()
     private val reversedReducer = mockk<Reducer<Erc20BalanceEvent, Erc20Balance>>()
     private val revertableEntityReducer = RevertedEntityReducer(eventRevertPolicy, reversedReducer)
