@@ -9,7 +9,7 @@ import com.rarible.core.entity.reducer.model.Identifiable
  */
 class EventReduceService<Id, Event, E : Identifiable<Id>>(
     private val entityService: EntityService<Id, E>,
-    private val entityEventService: EntityEventService<Event, Id>,
+    private val entityEventService: EntityIdService<Event, Id>,
     private val templateProvider: EntityTemplateProvider<Id, E>,
     private val reducer: Reducer<Event, E>
 ) {

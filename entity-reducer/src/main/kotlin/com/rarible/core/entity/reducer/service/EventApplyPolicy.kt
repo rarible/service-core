@@ -1,6 +1,6 @@
 package com.rarible.core.entity.reducer.service
 
-interface EventRevertPolicy<Event> {
+interface EventApplyPolicy<Event> {
     /**
      * Reduce a new income event with list of applied events
      */

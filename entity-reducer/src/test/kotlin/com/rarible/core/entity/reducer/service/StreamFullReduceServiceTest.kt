@@ -11,7 +11,7 @@ import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
-internal class TaskReduceServiceTest {
+internal class StreamFullReduceServiceTest {
     @Test
     fun `should make full reduce of single entity`() = runBlocking<Unit> {
         val entityService = Erc20BalanceService()
@@ -82,13 +82,13 @@ internal class TaskReduceServiceTest {
         assertThat(entityService.getUpdateCount()).isEqualTo(events.keys.size.toLong())
     }
 
-    private fun createTaskService(entityService: Erc20BalanceService): TaskReduceService<Long, Erc20BalanceEvent, Erc20Balance> {
+    private fun createTaskService(entityService: Erc20BalanceService): StreamFullReduceService<Long, Erc20BalanceEvent, Erc20Balance> {
         val entityEventService = Erc20BalanceEntityEventService()
         val templateProvider = Erc20BalanceTemplateProvider()
         val eventRevertPolicy = Erc20BalanceForwardEventRevertPolicy()
         val reducer = EntityReducer(eventRevertPolicy, Erc20BalanceReducer())
 
-        return TaskReduceService(
+        return StreamFullReduceService(
             entityService,
             entityEventService,
             templateProvider,

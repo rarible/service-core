@@ -10,9 +10,9 @@ import kotlinx.coroutines.flow.flow
  * Events should be ordered by entity id (so events for one entity are collected together)
  * Service should be used in the long-running Task which updates state of entities
  */
-open class TaskReduceService<Id, Event, E : Identifiable<Id>>(
+open class StreamFullReduceService<Id, Event, E : Identifiable<Id>>(
     private val entityService: EntityService<Id, E>,
-    private val entityEventService: EntityEventService<Event, Id>,
+    private val entityEventService: EntityIdService<Event, Id>,
     private val templateProvider: EntityTemplateProvider<Id, E>,
     private val reducer: Reducer<Event, E>
 ) : ReduceService<Id, Event, E> {

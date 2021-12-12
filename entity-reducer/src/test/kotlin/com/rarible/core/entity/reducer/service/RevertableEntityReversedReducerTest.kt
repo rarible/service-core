@@ -8,9 +8,9 @@ import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 
 internal class RevertableEntityReversedReducerTest {
-    private val eventRevertPolicy = mockk<EventRevertPolicy<Erc20BalanceEvent>>()
+    private val eventRevertPolicy = mockk<EventApplyPolicy<Erc20BalanceEvent>>()
     private val reversedReducer = mockk<Reducer<Erc20BalanceEvent, Erc20Balance>>()
-    private val revertableEntityReducer = RevertableEntityReducer(eventRevertPolicy, reversedReducer)
+    private val revertableEntityReducer = RevertedEntityReducer(eventRevertPolicy, reversedReducer)
 
     @Test
     fun `should apply event`() = runBlocking<Unit> {
