@@ -25,7 +25,7 @@ abstract class AbstractConsumerWorker<T, E>(
     workerName: String,
     private val properties: DaemonWorkerProperties = DaemonWorkerProperties(),
     private val retryProperties: RetryProperties = RetryProperties(),
-    protected val meterRegistry: MeterRegistry = SimpleMeterRegistry()
+    meterRegistry: MeterRegistry = SimpleMeterRegistry()
 ) : SequentialDaemonWorker(meterRegistry, properties, workerName) {
 
     protected val backPressureSize = properties.backpressureSize
@@ -36,12 +36,9 @@ abstract class AbstractConsumerWorker<T, E>(
     override suspend fun handle() {
         try {
             getEventFlow(consumer)
-                .onStart {
-                    healthCheck.up()
-                }
-                .onCompletion {
-                    logger.info("Flux was completed")
-                }.let {
+                .onStart { healthCheck.up() }
+                .onCompletion { logger.info("Consumer worker has been completed $workerName") }
+                .let {
                     if (properties.buffer) {
                         it.buffer(backPressureSize)
                     } else {
@@ -54,7 +51,6 @@ abstract class AbstractConsumerWorker<T, E>(
                     onEventHandled(event)
                 }
             delay(properties.pollingPeriod)
-        } catch (ignored: AbortFlowException) {
         } catch (ignored: ClosedChannelException) {
             logger.warn("Channel was closed", ignored)
             meterRegistry.increment(DaemonClosedChannelEvent(workerName))
@@ -77,18 +73,22 @@ abstract class AbstractConsumerWorker<T, E>(
             try {
                 handle(event)
                 return
-            } catch (ex: Exception) {
-                logger.error("Can't process event $event", ex)
+            } catch (e: Exception) {
+                logger.error(
+                    buildString {
+                        append("Failed to process consumer worker event by $workerName: $event.")
+                        if (i < retryProperties.attempts) {
+                            append(" Will retry #${i + 1}/${retryProperties.attempts} in ${retryProperties.delay.seconds} s")
+                        }
+                    }, e
+                )
                 meterRegistry.increment(DaemonProcessingError(workerName))
                 if (i < retryProperties.attempts) {
-                    logger.info("Retrying in ${retryProperties.delay}. Attempt #${i + 1}")
                     delay(retryProperties.delay)
                 }
             }
         }
     }
-
-    private class AbortFlowException : Exception()
 
     private companion object {
         val WORKER_DOWN_TIME: Duration = Duration.ofSeconds(30)
