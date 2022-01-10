@@ -32,6 +32,11 @@
             <artifactId>rarible-core-kafka</artifactId>
             <optional>true</optional>
         </dependency>
+        <dependency>
+            <groupId>com.rarible.core</groupId>
+            <artifactId>rarible-core-test-common</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
 </project>

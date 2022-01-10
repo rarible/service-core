@@ -7,6 +7,7 @@ import com.rarible.core.daemon.DaemonWorkerProperties
 import com.rarible.core.telemetry.metrics.increment
 import io.micrometer.core.instrument.MeterRegistry
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.time.delay
@@ -15,8 +16,9 @@ import kotlin.coroutines.coroutineContext
 abstract class SequentialDaemonWorker(
     meterRegistry: MeterRegistry,
     properties: DaemonWorkerProperties,
-    workerName: String? = null
-) : AbstractDaemonWorker(meterRegistry, properties, workerName) {
+    workerName: String? = null,
+    completionHandler: CompletionHandler? = null
+) : AbstractDaemonWorker(meterRegistry, properties, workerName, completionHandler) {
 
     protected abstract suspend fun handle()
 

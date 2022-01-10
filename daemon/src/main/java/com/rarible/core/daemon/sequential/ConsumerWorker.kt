@@ -8,6 +8,7 @@ import com.rarible.core.kafka.KafkaMessage
 import com.rarible.core.telemetry.metrics.increment
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
+import kotlinx.coroutines.CompletionHandler
 import kotlinx.coroutines.flow.Flow
 
 class ConsumerWorker<T>(
@@ -16,13 +17,15 @@ class ConsumerWorker<T>(
     workerName: String,
     properties: DaemonWorkerProperties = DaemonWorkerProperties(),
     retryProperties: RetryProperties = RetryProperties(),
-    meterRegistry: MeterRegistry = SimpleMeterRegistry()
+    meterRegistry: MeterRegistry = SimpleMeterRegistry(),
+    completionHandler: CompletionHandler? = null
 ) : AbstractConsumerWorker<T, KafkaMessage<T>>(
-    consumer,
-    workerName,
-    properties,
-    retryProperties,
-    meterRegistry
+    consumer = consumer,
+    workerName = workerName,
+    properties = properties,
+    retryProperties = retryProperties,
+    meterRegistry = meterRegistry,
+    completionHandler = completionHandler
 ) {
 
     override fun getEventFlow(consumer: KafkaConsumer<T>): Flow<KafkaMessage<T>> {

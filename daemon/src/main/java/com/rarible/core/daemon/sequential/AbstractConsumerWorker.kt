@@ -9,6 +9,7 @@ import com.rarible.core.kafka.KafkaConsumer
 import com.rarible.core.telemetry.metrics.increment
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
+import kotlinx.coroutines.CompletionHandler
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
@@ -25,8 +26,9 @@ abstract class AbstractConsumerWorker<T, E>(
     workerName: String,
     private val properties: DaemonWorkerProperties = DaemonWorkerProperties(),
     private val retryProperties: RetryProperties = RetryProperties(),
-    meterRegistry: MeterRegistry = SimpleMeterRegistry()
-) : SequentialDaemonWorker(meterRegistry, properties, workerName) {
+    meterRegistry: MeterRegistry = SimpleMeterRegistry(),
+    completionHandler: CompletionHandler? = null
+) : SequentialDaemonWorker(meterRegistry, properties, workerName, completionHandler) {
 
     protected val backPressureSize = properties.backpressureSize
     protected val downtimeLiveness = DowntimeLivenessHealthIndicator(errorDelay + WORKER_DOWN_TIME)
@@ -37,7 +39,13 @@ abstract class AbstractConsumerWorker<T, E>(
         try {
             getEventFlow(consumer)
                 .onStart { healthCheck.up() }
-                .onCompletion { logger.info("Consumer worker has been completed $workerName") }
+                .onCompletion { e ->
+                    if (e != null) {
+                        logger.error("Consumer worker has failed $workerName", e)
+                    } else {
+                        logger.info("Consumer worker has been completed $workerName")
+                    }
+                }
                 .let {
                     if (properties.buffer) {
                         it.buffer(backPressureSize)

@@ -17,12 +17,12 @@ import org.springframework.boot.actuate.health.HealthIndicator
 import java.time.Duration
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicLong
-import kotlin.system.exitProcess
 
 abstract class AbstractDaemonWorker(
     protected val meterRegistry: MeterRegistry,
     properties: DaemonWorkerProperties,
-    workerName: String? = null
+    workerName: String? = null,
+    private val completionHandler: CompletionHandler? = null
 ) : AutoCloseable, HealthIndicator {
 
     protected val logger: Logger = LoggerFactory.getLogger(this::class.java)
@@ -34,22 +34,6 @@ abstract class AbstractDaemonWorker(
     protected open val healthCheck: LivenessHealthIndicator = TouchLivenessHealthIndicator(
         maxOf(errorDelay, pollingPeriod) + Duration.ofMinutes(3)
     )
-
-    protected open val completionHandler: CompletionHandler = { error ->
-        when (error) {
-            is CancellationException -> logger.info("Daemon worker cancelled $workerName")
-
-            null -> {
-                logger.warn("Daemon worker finished $workerName, terminating the process with status 0")
-                exitProcess(0)
-            }
-
-            else -> {
-                logger.error("Daemon worker failed $workerName, terminating the process with status 1", error)
-                exitProcess(1)
-            }
-        }
-    }
 
     private val daemonDispatcher = Executors
         .newSingleThreadExecutor { r ->
@@ -70,8 +54,15 @@ abstract class AbstractDaemonWorker(
     fun start() {
         logger.info("Starting daemon worker $workerName")
 
-        job.start()
-        job.invokeOnCompletion(completionHandler)
+        check(job.start()) { "Daemon worker was already started $workerName" }
+        job.invokeOnCompletion { error ->
+            when (error) {
+                is CancellationException -> logger.info("Daemon worker cancelled $workerName")
+                null -> logger.warn("Daemon worker finished $workerName")
+                else -> logger.error("Daemon worker failed $workerName", error)
+            }
+            completionHandler?.invoke(error)
+        }
     }
 
     override fun close() {
