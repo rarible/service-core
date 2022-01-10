@@ -28,6 +28,8 @@ class RaribleKafkaConsumer<V>(
     bootstrapServers: String,
     offsetResetStrategy: OffsetResetStrategy = OffsetResetStrategy.LATEST,
     valueClass: Class<V>? = null,
+    maxPollRecords: Int? = null,
+    allowAutoCreateTopics: Boolean? = null,
     properties: Map<String, String> = emptyMap()
 ) : KafkaConsumer<V> {
     private val receiverOptions: ReceiverOptions<String, V>
@@ -41,8 +43,11 @@ class RaribleKafkaConsumer<V>(
             RARIBLE_KAFKA_CLASS_PARAM to valueClass,
             ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG to bootstrapServers,
             ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to offsetResetStrategy.name.toLowerCase()
-        ) + properties
-        receiverOptions = ReceiverOptions.create<String, V>(receiverProperties)
+        ) + mapOf(
+            ConsumerConfig.MAX_POLL_RECORDS_CONFIG to maxPollRecords,
+            ConsumerConfig.ALLOW_AUTO_CREATE_TOPICS_CONFIG to allowAutoCreateTopics
+        ).filterValues { it != null } + properties
+        receiverOptions = ReceiverOptions.create(receiverProperties)
     }
 
     override fun receiveBatch(topic: String): Flow<Flow<KafkaMessage<V>>> {
