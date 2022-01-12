@@ -10,7 +10,6 @@ import com.rarible.core.kafka.json.JsonSerializer
 import com.rarible.core.test.containers.KafkaTestContainer
 import com.rarible.core.test.data.randomString
 import com.rarible.core.test.wait.BlockingWait
-import com.rarible.core.test.wait.Wait
 import io.mockk.Answer
 import io.mockk.ManyAnswersAnswer
 import io.mockk.ThrowingAnswer
@@ -18,12 +17,11 @@ import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coJustRun
 import io.mockk.coVerify
-import io.mockk.every
-import io.mockk.just
 import io.mockk.justRun
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.CompletionHandler
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
@@ -193,6 +191,44 @@ class ConsumerWorkerIt {
             coVerify(exactly = 6) { eventHandler.handle(testObjects) }
         }
         consumerWorker.close()
+    }
+
+    @Test
+    fun `batch fatal exception - do not acknowledge elements`() {
+        val eventHandler = mockk<ConsumerBatchEventHandler<TestObject>>()
+        val error = OutOfMemoryError("test")
+        coEvery { eventHandler.handle(any()) } throws error
+        val completionHandler = mockk<CompletionHandler>()
+        justRun { completionHandler.invoke(error) }
+        val consumerBatchWorker = ConsumerBatchWorker(
+            consumer = consumer,
+            eventHandler = eventHandler,
+            workerName = "worker",
+            completionHandler = completionHandler
+        )
+        val testObjects = (1..100).map { TestObject(randomString(), 1) }
+        runBlocking {
+            producer.send(testObjects.map { KafkaMessage(it.field1, it) }).collect()
+        }
+        consumerBatchWorker.start()
+        BlockingWait.waitAssert {
+            verify(exactly = 1) { completionHandler.invoke(error) }
+        }
+        consumerBatchWorker.close()
+
+        // The events must be processed the next time.
+        val anotherBatchWorker = ConsumerBatchWorker(
+            consumer = consumer,
+            eventHandler = eventHandler,
+            workerName = "anotherWorker",
+        )
+        clearMocks(eventHandler)
+        coJustRun { eventHandler.handle(testObjects) }
+        anotherBatchWorker.start()
+        BlockingWait.waitAssert {
+            coVerify(exactly = 1) { eventHandler.handle(testObjects) }
+        }
+        anotherBatchWorker.close()
     }
 
     @Suppress("SameParameterValue")
