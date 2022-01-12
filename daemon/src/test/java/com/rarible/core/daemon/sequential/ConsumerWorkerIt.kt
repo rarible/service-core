@@ -20,6 +20,7 @@ import io.mockk.coVerify
 import io.mockk.justRun
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletionHandler
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
@@ -141,6 +142,62 @@ class ConsumerWorkerIt {
             coVerify(exactly = 1) { eventHandler.handle(testObject) }
         }
         anotherWorker.close()
+    }
+
+    @Test
+    fun `on worker cancellation or server restart silently close resources`() {
+        val eventHandler = object : ConsumerEventHandler<TestObject> {
+            override suspend fun handle(event: TestObject) {
+                // On worker cancellation will throw CancellationException
+                delay(10000)
+            }
+        }
+        val completionHandler = mockk<CompletionHandler>()
+        justRun { completionHandler.invoke(any()) }
+        val consumerWorker = ConsumerWorker(
+            consumer = consumer,
+            eventHandler = eventHandler,
+            workerName = "worker",
+            completionHandler = completionHandler
+        )
+        val testObject = TestObject(randomString(), 1)
+        runBlocking {
+            producer.send(KafkaMessage(testObject.field1, testObject))
+        }
+        consumerWorker.start()
+        Thread.sleep(1000)
+        consumerWorker.close()
+        BlockingWait.waitAssert {
+            verify(exactly = 1) {
+                completionHandler.invoke(match { it is CancellationException })
+            }
+        }
+    }
+
+    @Test
+    fun `cancellation exception thrown from the handler does not stop the worker`() {
+        val eventHandler = mockk<ConsumerEventHandler<TestObject>>()
+        coEvery { eventHandler.handle(any()) } throws CancellationException()
+        val completionHandler = mockk<CompletionHandler>()
+        justRun { completionHandler.invoke(any()) }
+        val consumerWorker = ConsumerWorker(
+            consumer = consumer,
+            eventHandler = eventHandler,
+            workerName = "worker",
+            completionHandler = completionHandler,
+            retryProperties = RetryProperties(attempts = 3)
+        )
+        val testObject = TestObject(randomString(), 1)
+        runBlocking {
+            producer.send(KafkaMessage(testObject.field1, testObject))
+        }
+        consumerWorker.start()
+        BlockingWait.waitAssert {
+            coVerify(exactly = 3) {
+                eventHandler.handle(testObject)
+            }
+        }
+        consumerWorker.close()
     }
 
     @Test

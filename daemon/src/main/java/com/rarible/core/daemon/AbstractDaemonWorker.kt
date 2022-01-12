@@ -46,6 +46,8 @@ abstract class AbstractDaemonWorker(
 
     private val job = scope.launch(start = CoroutineStart.LAZY) { run(this) }
 
+    protected val isCancelled: Boolean get() = job.isCancelled
+
     /**
      * Daemon worker logic to be implemented.
      */

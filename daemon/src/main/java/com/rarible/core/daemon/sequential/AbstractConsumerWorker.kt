@@ -9,6 +9,7 @@ import com.rarible.core.kafka.KafkaConsumer
 import com.rarible.core.telemetry.metrics.increment
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletionHandler
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -81,6 +82,12 @@ abstract class AbstractConsumerWorker<T, E>(
             try {
                 handle(event)
                 return
+            } catch (e: CancellationException) {
+                if (isCancelled) {
+                    logger.info("Consumer worker $workerName has been stopped")
+                    throw e
+                }
+                logger.warn("Consumer worker $workerName failed with CancellationException", e)
             } catch (e: Exception) {
                 logger.error(
                     buildString {
