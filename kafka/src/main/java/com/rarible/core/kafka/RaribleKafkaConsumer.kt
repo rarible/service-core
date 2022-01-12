@@ -1,9 +1,11 @@
 package com.rarible.core.kafka
 
 import com.rarible.core.kafka.json.RARIBLE_KAFKA_CLASS_PARAM
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.transform
+import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.reactive.asFlow
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.OffsetResetStrategy
@@ -13,6 +15,8 @@ import org.apache.kafka.common.serialization.StringDeserializer
 import reactor.kafka.receiver.KafkaReceiver
 import reactor.kafka.receiver.ReceiverOptions
 import java.nio.charset.StandardCharsets
+import java.util.*
+import kotlin.collections.HashMap
 
 class RaribleKafkaConsumer<V>(
     /**
@@ -42,22 +46,12 @@ class RaribleKafkaConsumer<V>(
             ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG to valueDeserializerClass,
             RARIBLE_KAFKA_CLASS_PARAM to valueClass,
             ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG to bootstrapServers,
-            ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to offsetResetStrategy.name.toLowerCase()
+            ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to offsetResetStrategy.name.lowercase(Locale.getDefault())
         ) + mapOf(
             ConsumerConfig.MAX_POLL_RECORDS_CONFIG to maxPollRecords,
             ConsumerConfig.ALLOW_AUTO_CREATE_TOPICS_CONFIG to allowAutoCreateTopics
         ).filterValues { it != null } + properties
         receiverOptions = ReceiverOptions.create(receiverProperties)
-    }
-
-    override fun receiveBatch(topic: String): Flow<Flow<KafkaMessage<V>>> {
-        return KafkaReceiver.create(receiverOptions.subscription(listOf(topic)))
-            .receiveAutoAck()
-            .map { batch ->
-                batch.map {
-                    KafkaMessage(it.key(), it.value(), headers = it.headers().toMap())
-                }.asFlow()
-            }.asFlow()
     }
 
     override fun receiveManualAcknowledge(): Flow<KafkaMessage<V>> {
@@ -68,15 +62,12 @@ class RaribleKafkaConsumer<V>(
             }.asFlow()
     }
 
-    override fun receiveBatch(): Flow<Flow<KafkaMessage<V>>> = receiveBatch(defaultTopic)
-
-    @FlowPreview
-    override fun receive(topic: String): Flow<KafkaMessage<V>> {
-        return receiveBatch(topic).flatMapConcat { it }
+    override fun receive(): Flow<KafkaMessage<V>> {
+        return receiveManualAcknowledge().transform { message ->
+            emit(message)
+            message.receiverRecord?.receiverOffset()?.acknowledge()
+        }
     }
-
-    @FlowPreview
-    override fun receive(): Flow<KafkaMessage<V>> = receive(defaultTopic)
 
     private fun Headers.toMap(): Map<String, String> {
         val headers = HashMap<String, String>()

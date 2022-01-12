@@ -8,12 +8,9 @@ import com.rarible.core.test.data.randomString
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.count
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.time.withTimeout
-import kotlinx.coroutines.withTimeout
 import org.apache.kafka.clients.consumer.OffsetResetStrategy
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Disabled
@@ -53,7 +50,7 @@ internal class RaribleKafkaConsumerTest {
         assertThat(sendResult.isSuccess).isEqualTo(true)
 
         val received = withTimeout(Duration.ofSeconds(5)) {
-            consumer.receive("test-topic").first()
+            consumer.receive().first()
         }
 
         assertThat(received.key).isEqualTo("key")
