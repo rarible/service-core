@@ -24,13 +24,13 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletionHandler
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.apache.kafka.clients.consumer.OffsetResetStrategy
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.Duration
+import java.util.concurrent.atomic.AtomicInteger
 
 data class TestObject(val field1: String, val field2: Int)
 
@@ -85,7 +85,7 @@ class ConsumerWorkerIt {
     fun `handle exception - fail 5 out of 6 times - but then handle success`() {
         val eventHandler = mockk<ConsumerEventHandler<TestObject>>()
         val exception = RuntimeException()
-        coEvery { eventHandler.handle(any()) } answers(repeatAnswer(5, ThrowingAnswer(exception) )) andThen Unit
+        coEvery { eventHandler.handle(any()) } answers (repeatAnswer(5, ThrowingAnswer(exception))) andThen Unit
         val consumerWorker = ConsumerWorker(
             consumer = consumer,
             eventHandler = eventHandler,
@@ -198,6 +198,108 @@ class ConsumerWorkerIt {
             }
         }
         consumerWorker.close()
+    }
+
+    @Test
+    fun `handle batch events`() {
+        val handled = arrayListOf<TestObject>()
+        val eventHandler = object : ConsumerBatchEventHandler<TestObject> {
+            override suspend fun handle(event: List<TestObject>) {
+                handled += event
+            }
+        }
+        val consumerWorker = ConsumerBatchWorker(
+            consumer = consumer,
+            eventHandler = eventHandler,
+            workerName = "worker",
+            properties = DaemonWorkerProperties(),
+        )
+        val testObjects = (1..100).map { TestObject(randomString(), 1) }
+        runBlocking {
+            producer.send(testObjects.map { KafkaMessage(it.field1, it) }).collect()
+        }
+        consumerWorker.start()
+        BlockingWait.waitAssert {
+            assertThat(handled).isEqualTo(testObjects)
+        }
+        consumerWorker.close()
+    }
+
+    @Test
+    fun `handle batch exception - fail 5 out of 6 times - but then handle success`() {
+        val eventHandler = mockk<ConsumerBatchEventHandler<TestObject>>()
+        val exception = RuntimeException()
+        val thrownExceptions = AtomicInteger()
+        val handled = arrayListOf<TestObject>()
+        coEvery { eventHandler.handle(any()) } answers {
+            if (thrownExceptions.get() < 5) {
+                thrownExceptions.incrementAndGet()
+                throw exception
+            }
+            handled += firstArg<List<TestObject>>()
+        }
+        val consumerWorker = ConsumerBatchWorker(
+            consumer = consumer,
+            eventHandler = eventHandler,
+            workerName = "worker",
+            properties = DaemonWorkerProperties(
+                errorDelay = Duration.ZERO, // Retry to handle events immediately.
+            ),
+            retryProperties = RetryProperties(attempts = 6)
+        )
+        val testObjects = (1..100).map { TestObject(randomString(), it) }
+        runBlocking {
+            producer.send(testObjects.map { KafkaMessage(it.field1, it) }).collect()
+        }
+        consumerWorker.start()
+        BlockingWait.waitAssert {
+            assertThat(thrownExceptions.get()).isEqualTo(5)
+            assertThat(handled).isEqualTo(testObjects)
+        }
+        consumerWorker.close()
+    }
+
+    @Test
+    fun `batch fatal exception - do not acknowledge elements`() {
+        val eventHandler = mockk<ConsumerBatchEventHandler<TestObject>>()
+        val error = OutOfMemoryError("test")
+        coEvery { eventHandler.handle(any()) } throws error
+        val completionHandler = mockk<CompletionHandler>()
+        justRun { completionHandler.invoke(any()) }
+        justRun { completionHandler.invoke(error) }
+        val consumerBatchWorker = ConsumerBatchWorker(
+            consumer = consumer,
+            eventHandler = eventHandler,
+            workerName = "worker",
+            completionHandler = completionHandler
+        )
+        val testObjects = (1..100).map { TestObject(randomString(), it) }
+        runBlocking {
+            producer.send(testObjects.map { KafkaMessage(it.field1, it) }).collect()
+        }
+        consumerBatchWorker.start()
+        BlockingWait.waitAssert {
+            verify(exactly = 1) {
+                completionHandler.invoke(match {
+                    it is OutOfMemoryError
+                })
+            }
+        }
+        consumerBatchWorker.close()
+
+        // The events must be processed the next time (maybe after restart).
+        val anotherBatchWorker = ConsumerBatchWorker(
+            consumer = consumer,
+            eventHandler = eventHandler,
+            workerName = "anotherWorker",
+        )
+        clearMocks(eventHandler)
+        coJustRun { eventHandler.handle(testObjects) }
+        anotherBatchWorker.start()
+        BlockingWait.waitAssert {
+            coVerify(exactly = 1) { eventHandler.handle(testObjects) }
+        }
+        anotherBatchWorker.close()
     }
 
     @Suppress("SameParameterValue")

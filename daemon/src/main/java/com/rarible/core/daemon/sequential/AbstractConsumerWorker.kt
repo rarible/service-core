@@ -14,7 +14,6 @@ import kotlinx.coroutines.CompletionHandler
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
@@ -31,8 +30,7 @@ abstract class AbstractConsumerWorker<T, E>(
     completionHandler: CompletionHandler? = null
 ) : SequentialDaemonWorker(meterRegistry, properties, workerName, completionHandler) {
 
-    protected val backPressureSize = properties.backpressureSize
-    protected val downtimeLiveness = DowntimeLivenessHealthIndicator(errorDelay + WORKER_DOWN_TIME)
+    private val downtimeLiveness = DowntimeLivenessHealthIndicator(errorDelay + WORKER_DOWN_TIME)
 
     @FlowPreview
     @ExperimentalCoroutinesApi
@@ -41,17 +39,9 @@ abstract class AbstractConsumerWorker<T, E>(
             getEventFlow(consumer)
                 .onStart { healthCheck.up() }
                 .onCompletion { e ->
-                    if (e != null) {
-                        logger.error("Consumer worker has failed $workerName", e)
-                    } else {
-                        logger.info("Consumer worker has been completed $workerName")
-                    }
-                }
-                .let {
-                    if (properties.buffer) {
-                        it.buffer(backPressureSize)
-                    } else {
-                        it
+                    when {
+                        e != null && e !is CancellationException -> logger.error("Consumer worker fail $workerName", e)
+                        else -> logger.info("Consumer worker has been completed $workerName")
                     }
                 }
                 .collect { event ->
