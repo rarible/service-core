@@ -1,0 +1,214 @@
+package com.rarible.core.loader.configuration
+
+import com.rarible.core.daemon.DaemonWorkerProperties
+import com.rarible.core.daemon.RetryProperties
+import com.rarible.core.daemon.sequential.ConsumerWorkerHolder
+import com.rarible.core.daemon.sequential.ConsumerBatchEventHandler
+import com.rarible.core.daemon.sequential.ConsumerBatchWorker
+import com.rarible.core.daemon.sequential.ConsumerEventHandler
+import com.rarible.core.daemon.sequential.ConsumerWorker
+import com.rarible.core.kafka.RaribleKafkaConsumer
+import com.rarible.core.kafka.RaribleKafkaProducer
+import com.rarible.core.kafka.json.JsonDeserializer
+import com.rarible.core.kafka.json.JsonSerializer
+import com.rarible.core.loader.LoadNotification
+import com.rarible.core.loader.LoadService
+import com.rarible.core.loader.internal.KafkaLoadTaskId
+import com.rarible.core.loader.LoadType
+import com.rarible.core.loader.Loader
+import com.rarible.core.loader.internal.LoadNotificationKafkaSender
+import com.rarible.core.loader.internal.LoadNotificationListenersCaller
+import com.rarible.core.loader.internal.LoadRunner
+import com.rarible.core.loader.internal.LoadRunnerParalleller
+import com.rarible.core.loader.internal.LoadTaskKafkaSender
+import com.rarible.core.loader.internal.getLoadNotificationsTopic
+import com.rarible.core.loader.internal.getLoadTasksTopic
+import kotlinx.coroutines.CancellationException
+import org.apache.kafka.clients.consumer.OffsetResetStrategy
+import org.slf4j.LoggerFactory
+import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.ComponentScan
+import org.springframework.context.annotation.Configuration
+import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories
+import org.springframework.scheduling.annotation.EnableScheduling
+import java.time.Clock
+import java.time.Duration
+import java.util.concurrent.TimeUnit
+
+@Configuration
+@EnableScheduling
+@EnableReactiveMongoRepositories(basePackageClasses = [LoadService::class])
+@ComponentScan(basePackageClasses = [LoadService::class])
+@EnableConfigurationProperties(LoadProperties::class)
+class LoaderConfiguration {
+
+    private companion object {
+        private val logger = LoggerFactory.getLogger(LoaderConfiguration::class.java)
+
+        const val CONSUMER_BATCH_SIZE = 500
+        // TODO[loader]: add a test case for long processing. What will happen if 500 load tasks are not processing in 10 minutes?
+        val CONSUMER_BATCH_MAX_PROCESSING_MS = TimeUnit.MINUTES.toMillis(10).toInt()
+    }
+
+    @Bean
+    fun clock(): Clock = Clock.systemUTC()
+
+    @Bean
+    fun loadTaskKafkaSender(
+        loaders: List<Loader>,
+        loadProperties: LoadProperties
+    ): LoadTaskKafkaSender {
+        val kafkaSenders = loaders.map { it.type }.associateWith { type ->
+            createProducerForLoadTasks(loadProperties.brokerReplicaSet, type)
+        }
+        return LoadTaskKafkaSender(kafkaSenders)
+    }
+
+    @Bean
+    fun loadNotificationKafkaSender(
+        loaders: List<Loader>,
+        loadProperties: LoadProperties
+    ): LoadNotificationKafkaSender {
+        val kafkaSenders = loaders.map { it.type }.associateWith { type ->
+            createProducerForLoadNotifications(loadProperties.brokerReplicaSet, type)
+        }
+        return LoadNotificationKafkaSender(kafkaSenders)
+    }
+
+    @Bean
+    fun loadWorkers(
+        loaders: List<Loader>,
+        loadProperties: LoadProperties,
+        loadRunner: LoadRunner,
+        loadRunnerParalleller: LoadRunnerParalleller
+    ): ConsumerWorkerHolder<KafkaLoadTaskId> = ConsumerWorkerHolder(
+        loaders.flatMap { loader -> loadWorkers(loader.type, loadProperties, loadRunnerParalleller) }
+    )
+
+    @Bean
+    fun notificationListenersWorkers(
+        loaders: List<Loader>,
+        loadProperties: LoadProperties,
+        loadNotificationListenersCaller: LoadNotificationListenersCaller
+    ): ConsumerWorkerHolder<LoadNotification> = ConsumerWorkerHolder(
+        loaders.flatMap { loader ->
+            notificationListenersWorkers(
+                type = loader.type,
+                loadProperties = loadProperties,
+                loadNotificationListenersCaller = loadNotificationListenersCaller
+            )
+        }
+    )
+
+    private fun loadWorkers(
+        type: LoadType,
+        loadProperties: LoadProperties,
+        loadRunnerParalleller: LoadRunnerParalleller
+    ): List<ConsumerBatchWorker<KafkaLoadTaskId>> {
+        return (0 until loadProperties.loadTasksTopicPartitions).map { id ->
+            val consumer = createConsumerForLoadTasks(loadProperties.brokerReplicaSet, type, id)
+            val workerName = "load-worker-$type-$id"
+            logger.info("Creating load worker $workerName")
+            ConsumerBatchWorker(
+                consumer = consumer,
+                eventHandler = object : ConsumerBatchEventHandler<KafkaLoadTaskId> {
+                    override suspend fun handle(event: List<KafkaLoadTaskId>) {
+                        loadRunnerParalleller.load(event)
+                    }
+                },
+                workerName = workerName,
+                properties = DaemonWorkerProperties(consumerBatchSize = CONSUMER_BATCH_SIZE),
+                retryProperties = RetryProperties(attempts = 1, delay = Duration.ZERO),
+                completionHandler = {
+                    if (it != null && it !is CancellationException) {
+                        logger.error("Loading worker $workerName aborted because of a fatal error", it)
+                    }
+                }
+            )
+        }
+    }
+
+    private fun notificationListenersWorkers(
+        type: LoadType,
+        loadProperties: LoadProperties,
+        loadNotificationListenersCaller: LoadNotificationListenersCaller
+    ): List<ConsumerWorker<LoadNotification>> {
+        return (0 until loadProperties.loadNotificationsTopicPartitions).map { id ->
+            val consumer = createConsumerForLoadNotifications(loadProperties.brokerReplicaSet, type, id)
+            val notificationsLogger = LoggerFactory.getLogger("loading-notifications-$type")
+            val workerName = "loader-notification-consumer-$type-$id"
+            logger.info("Creating notification listener worker $workerName")
+            ConsumerWorker(
+                consumer = consumer,
+                eventHandler = object : ConsumerEventHandler<LoadNotification> {
+                    override suspend fun handle(event: LoadNotification) {
+                        notificationsLogger.info("Received load notification $event")
+                        loadNotificationListenersCaller.notifyListeners(event)
+                    }
+                },
+                workerName = workerName,
+                retryProperties = RetryProperties(attempts = 1, delay = Duration.ZERO),
+                completionHandler = {
+                    if (it != null && it !is CancellationException) {
+                        logger.error("Notifications listener $workerName aborted because of a fatal error", it)
+                    }
+                }
+            )
+        }
+    }
+
+    private fun createConsumerForLoadTasks(
+        bootstrapServers: String,
+        type: LoadType,
+        id: Int
+    ): RaribleKafkaConsumer<KafkaLoadTaskId> = RaribleKafkaConsumer(
+        clientId = "loader-tasks-consumer-$type-$id",
+        consumerGroup = "loader-tasks-group-$type",
+        valueDeserializerClass = JsonDeserializer::class.java,
+        defaultTopic = getLoadTasksTopic(type),
+        bootstrapServers = bootstrapServers,
+        offsetResetStrategy = OffsetResetStrategy.EARLIEST,
+        valueClass = KafkaLoadTaskId::class.java,
+        autoCreateTopic = false,
+        maxPollIntervalMs = CONSUMER_BATCH_MAX_PROCESSING_MS
+    )
+
+    private fun createConsumerForLoadNotifications(
+        bootstrapServers: String,
+        type: LoadType,
+        id: Int
+    ): RaribleKafkaConsumer<LoadNotification> = RaribleKafkaConsumer(
+        clientId = "loader-notifications-consumer-$type-$id",
+        consumerGroup = "loader-notifications-$type",
+        valueDeserializerClass = JsonDeserializer::class.java,
+        defaultTopic = getLoadNotificationsTopic(type),
+        bootstrapServers = bootstrapServers,
+        offsetResetStrategy = OffsetResetStrategy.EARLIEST,
+        valueClass = LoadNotification::class.java,
+        autoCreateTopic = false
+    )
+
+    private fun createProducerForLoadTasks(
+        bootstrapServers: String,
+        type: LoadType
+    ): RaribleKafkaProducer<KafkaLoadTaskId> = RaribleKafkaProducer(
+        clientId = "loader-task-client-$type",
+        valueSerializerClass = JsonSerializer::class.java,
+        defaultTopic = getLoadTasksTopic(type),
+        bootstrapServers = bootstrapServers,
+        valueClass = KafkaLoadTaskId::class.java
+    )
+
+    private fun createProducerForLoadNotifications(
+        bootstrapServers: String,
+        type: LoadType
+    ): RaribleKafkaProducer<LoadNotification> = RaribleKafkaProducer(
+        clientId = "loader-notification-client-$type",
+        valueSerializerClass = JsonSerializer::class.java,
+        defaultTopic = getLoadNotificationsTopic(type),
+        bootstrapServers = bootstrapServers,
+        valueClass = LoadNotification::class.java
+    )
+
+}

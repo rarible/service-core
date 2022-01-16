@@ -163,6 +163,16 @@
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
+                <artifactId>rarible-core-loader</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.rarible.core</groupId>
+                <artifactId>rarible-core-loader-cache</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-task</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -236,6 +246,8 @@
         <module>common</module>
         <module>lock-redis</module>
         <module>cache</module>
+        <module>loader</module>
+        <module>loader-cache</module>
         <module>task</module>
         <module>kafka</module>
         <module>application</module>
