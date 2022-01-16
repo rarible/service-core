@@ -70,7 +70,6 @@ class RaribleKafkaConsumer<V>(
 
     override fun receiveBatchManualAck(maxBatchSize: Int): Flow<KafkaMessageBatch<V>> {
         val flow = receiveManualAcknowledge()
-        // TODO[loader]: probably, 1000ms here is too much, or we need another implementation of chunked.
         return flow.chunked(minOf(maxBatchSize, MAX_BATCH_SIZE), 1000).map { KafkaMessageBatch(it) }
     }
 
