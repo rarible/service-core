@@ -9,6 +9,8 @@ import java.lang.annotation.Target;
 
 /**
  * Enable auto-configuration for the loader infrastructure.
+ *
+ * Clients need to configure {@link LoadProperties}.
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)

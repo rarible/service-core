@@ -5,6 +5,14 @@ import org.springframework.boot.context.properties.ConstructorBinding
 import java.time.Duration
 import java.util.concurrent.TimeUnit
 
+/**
+ * Configuration properties of the loader infrastructure.
+ * - [brokerReplicaSet] - the Kafka cluster's address.
+ * - [loadTasksTopicPartitions] and [loadNotificationsTopicPartitions] - configure
+ * the internal Kafka queues used by workers and notifiers, these options affect performance.
+ * - [workers] - the number of worker threads that execute the loading tasks
+ * - [retry] - retry policy
+ */
 @ConfigurationProperties("rarible.loader")
 @ConstructorBinding
 data class LoadProperties(
@@ -15,6 +23,10 @@ data class LoadProperties(
     val retry: RetryProperties = RetryProperties()
 )
 
+/**
+ * Retry policy applied when tasks fail.
+ * Tasks will be retried after increasing delays configured by [backoffDelaysMillis].
+ */
 data class RetryProperties(
     val backoffDelaysMillis: List<Long> = listOf(
         TimeUnit.MINUTES.toMillis(1),
