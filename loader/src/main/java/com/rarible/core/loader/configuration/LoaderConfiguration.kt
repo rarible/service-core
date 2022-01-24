@@ -36,6 +36,11 @@ import java.time.Clock
 import java.time.Duration
 import java.util.concurrent.TimeUnit
 
+/**
+ * Auto-configuration of the loader infrastructure.
+ *
+ * It defines the main worker beans used for loading tasks and notifying listeners.
+ */
 @Configuration
 @EnableScheduling
 @EnableReactiveMongoRepositories(basePackageClasses = [LoadService::class])
@@ -47,7 +52,7 @@ class LoaderConfiguration {
         private val logger = LoggerFactory.getLogger(LoaderConfiguration::class.java)
 
         const val CONSUMER_BATCH_SIZE = 500
-        // TODO[loader]: add a test case for long processing. What will happen if 500 load tasks are not processing in 10 minutes?
+
         val CONSUMER_BATCH_MAX_PROCESSING_MS = TimeUnit.MINUTES.toMillis(10).toInt()
     }
 

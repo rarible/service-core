@@ -20,6 +20,9 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories
 import java.time.Clock
 
+/**
+ * Auto-configuration of the cache loader infrastructure.
+ */
 @Configuration
 @EnableRaribleLoader
 @EnableReactiveMongoRepositories(basePackageClasses = [CacheLoaderService::class])

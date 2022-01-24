@@ -9,6 +9,8 @@ import java.lang.annotation.Target;
 
 /**
  * Enable auto-configuration for the loader cache infrastructure.
+ *
+ * Note! Clients need to configure {@link com.rarible.core.loader.configuration.LoadProperties}.
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)

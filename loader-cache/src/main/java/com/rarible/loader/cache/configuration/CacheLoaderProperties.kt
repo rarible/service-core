@@ -8,5 +8,3 @@ import java.util.concurrent.TimeUnit
 @ConfigurationProperties("cache-loader")
 @ConstructorBinding
 class CacheLoaderProperties
-
-// For now, it is empty, but may be used.
