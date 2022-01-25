@@ -39,7 +39,7 @@
         <springfox.version>3.0.0</springfox.version>
         <nexus.maven.public>http://nexus.rarible.int/repository/maven-public/</nexus.maven.public>
         <springmockk.version>3.0.1</springmockk.version>
-        <elastic-apm.version>1.26.0</elastic-apm.version>
+        <elastic-apm.version>1.28.4</elastic-apm.version>
     </properties>
 
     <dependencyManagement>
