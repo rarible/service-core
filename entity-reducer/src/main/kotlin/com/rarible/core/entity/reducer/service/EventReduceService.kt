@@ -1,5 +1,6 @@
 package com.rarible.core.entity.reducer.service
 
+import com.rarible.core.apm.withSpan
 import com.rarible.core.common.optimisticLock
 import com.rarible.core.entity.reducer.model.Identifiable
 
@@ -21,7 +22,9 @@ class EventReduceService<Id, Event, E : Identifiable<Id>>(
         event
             .groupBy { entityIdService.getEntityId(it) }
             .forEach { (id, events) ->
-                reduce(id, events)
+                withSpan(name = "reduceEntity", labels = listOf("entityId" to id.toString(), "size" to events.size)) {
+                    reduce(id, events)
+                }
             }
     }
 
@@ -31,11 +34,13 @@ class EventReduceService<Id, Event, E : Identifiable<Id>>(
      */
     private suspend fun reduce(id: Id, events: List<Event>): E {
         return optimisticLock {
-            val entity = entityService.get(id) ?: templateProvider.getEntityTemplate(id)
-            val result = events.fold(entity) { e, event ->
-                reducer.reduce(e, event)
+            val entity = withSpan(name = "get") { entityService.get(id) ?: templateProvider.getEntityTemplate(id) }
+            val result = withSpan(name = "reduce") {
+                events.fold(entity) { e, event ->
+                    reducer.reduce(e, event)
+                }
             }
-            entityService.update(result)
+            withSpan(name = "save") { entityService.update(result) }
             result
         }
     }
