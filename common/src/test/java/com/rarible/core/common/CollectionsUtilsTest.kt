@@ -14,7 +14,7 @@ class CollectionsUtilsTest {
     fun `should map over iterable concurrently`() = runBlockingTest {
         val iterable = (1..10000).toList()
         val started = this.currentTime
-        val parResult = iterable.pmap {
+        val parResult = iterable.mapAsync {
             delay(1000)
             it.toString()
         }
@@ -29,7 +29,7 @@ class CollectionsUtilsTest {
     fun `should flatMap over iterable concurrently`() = runBlockingTest {
         val iterable = (1..1000).toList()
         val started = this.currentTime
-        val parResult = iterable.pflatMap {
+        val parResult = iterable.flatMapAsync {
             delay(1000)
             (it..it+10).toList()
         }
@@ -44,7 +44,7 @@ class CollectionsUtilsTest {
     fun `should map over Map concurrently`() = runBlockingTest {
         val map = (1..10000).associateWith { "Value: $it" }
         val started = this.currentTime
-        val parResult = map.pmap { (key, value) ->
+        val parResult = map.mapAsync { (key, value) ->
             delay(1000)
             "$key=$value"
         }
@@ -59,7 +59,7 @@ class CollectionsUtilsTest {
     fun `should flatMap over Map concurrently`() = runBlockingTest {
         val map = (1..10000).associateWith { "Value: $it" }
         val started = this.currentTime
-        val parResult = map.pflatMap { (key, value) ->
+        val parResult = map.flatMapAsync { (key, value) ->
             delay(1000)
             listOf("$key=$value")
         }
