@@ -13,11 +13,14 @@ import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.reactor.ReactorContext
 import kotlinx.coroutines.withContext
+import org.slf4j.LoggerFactory
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.util.context.Context
 import java.util.Optional
 import kotlin.coroutines.coroutineContext
+
+private val logger = LoggerFactory.getLogger(ApmContext::class.java)
 
 suspend fun <T> withSpan(
     info: SpanInfo,
@@ -59,19 +62,28 @@ suspend fun <T> withTransaction(
     body: suspend () -> T
 ): T {
     return createTransaction(name, labels, headerExtractor, headersExtractor)
-        .using(body)
+        .using(body, name)
 }
 
-suspend fun <T> Span.using(body: suspend () -> T): T {
+suspend fun <T> Span.using(body: suspend () -> T, name: String? = null): T {
     return try {
+        if (name != null && logger.isDebugEnabled) {
+            logger.debug("Starting tx {} id = {}", name, this.id)
+        }
         val current = coroutineContext[ReactorContext.Key]?.context ?: Context.empty()
         withContext(ReactorContext(current.put(ApmContext.Key, ApmContext(this)))) {
             body()
         }
     } catch (e: Throwable) {
+        if (name != null && logger.isDebugEnabled) {
+            logger.debug("Capturing ex for tx {} id = {}", name, this.id)
+        }
         captureException(e)
         throw e
     } finally {
+        if (name != null && logger.isDebugEnabled) {
+            logger.debug("Ending tx {} id = {}", name, this.id)
+        }
         end()
     }
 }
@@ -89,7 +101,7 @@ private val apmContext: Mono<ApmContext> =
     Mono.subscriberContext()
         .flatMap {
             if (it.hasKey(ApmContext.Key)) {
-                Mono.just(it.get<ApmContext>(ApmContext.Key))
+                Mono.just(it.get(ApmContext.Key))
             } else {
                 Mono.empty()
             }
