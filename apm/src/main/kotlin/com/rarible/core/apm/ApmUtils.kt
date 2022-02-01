@@ -98,14 +98,13 @@ suspend fun getApmContext(): ApmContext? {
 }
 
 private val apmContext: Mono<ApmContext> =
-    Mono.subscriberContext()
-        .flatMap {
-            if (it.hasKey(ApmContext.Key)) {
-                Mono.just(it.get(ApmContext.Key))
-            } else {
-                Mono.empty()
-            }
+    Mono.deferContextual {
+        if (it.hasKey(ApmContext.Key)) {
+            Mono.just(it.get(ApmContext.Key))
+        } else {
+            Mono.empty()
         }
+    }
 
 fun <T> Flow<T>.withSpan(
     name: String,
@@ -207,7 +206,7 @@ private fun <T> Mono<out Span>.using(mono: Mono<T>): Mono<T> {
                         it.isOnComplete -> span.end()
                     }
                 }
-                    .subscriberContext { it.put(ApmContext.Key, ApmContext(span)) }
+                    .contextWrite { it.put(ApmContext.Key, ApmContext(span)) }
                     .loggerContext("trace.id", span.traceId)
             } else {
                 mono
@@ -225,7 +224,7 @@ private fun <T> Mono<out Span>.usingFlux(flux: Flux<T>): Flux<T> {
                 flux
                     .doOnError { span.captureException(it.cause) }
                     .doOnComplete { span.end() }
-                    .subscriberContext { it.put(ApmContext.Key, ApmContext(span)) }
+                    .contextWrite { it.put(ApmContext.Key, ApmContext(span)) }
                     .loggerContext("trace.id", span.traceId)
             } else {
                 flux
