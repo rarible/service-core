@@ -32,18 +32,6 @@ class CacheLoaderIt : AbstractIntegrationTest() {
             )
         )
         assertThat(imageLoadService.get(key)).isEqualTo(initialLoadScheduledCacheEntry)
-        Wait.waitAssert {
-            assertThat(cacheEvents).isEqualTo(
-                listOf(
-                    CacheLoaderEvent(
-                        type = testCacheType,
-                        key = key,
-                        cacheEntry = initialLoadScheduledCacheEntry
-                    )
-                )
-            )
-        }
-        cacheEvents.clear()
 
         // Trigger the loader.
         val loadedAt = scheduledAt.plusSeconds(1)
@@ -109,15 +97,6 @@ class CacheLoaderIt : AbstractIntegrationTest() {
             )
             assertThat(imageLoadService.get(key)).isEqualTo(loadedAndUpdateScheduled)
             assertThat(imageLoadService.getAvailable(key)).isEqualTo(testImage)
-            assertThat(cacheEvents).isEqualTo(
-                listOf(
-                    CacheLoaderEvent(
-                        type = testCacheType,
-                        key = key,
-                        cacheEntry = loadedAndUpdateScheduled
-                    )
-                )
-            )
         }
 
         // Trigger the update.
@@ -196,12 +175,7 @@ class CacheLoaderIt : AbstractIntegrationTest() {
         every { clock.instant() } returns scheduledAt
         imageLoadService.update(key)
 
-        Wait.waitAssert {
-            assertThat(cacheEvents).hasSize(1)
-        }
-
         // Trigger the loader with exception.
-        cacheEvents.clear()
         val exceptionAt = scheduledAt.plusSeconds(1)
         every { clock.instant() } returns exceptionAt
         val error = RuntimeException("error")
@@ -219,15 +193,6 @@ class CacheLoaderIt : AbstractIntegrationTest() {
                 loadStatus = waitsForRetry
             )
             assertThat(imageLoadService.get(key)).isEqualTo(initialLoadScheduled)
-            assertThat(cacheEvents).isEqualTo(
-                listOf(
-                    CacheLoaderEvent(
-                        type = testCacheType,
-                        key = key,
-                        cacheEntry = initialLoadScheduled
-                    )
-                )
-            )
         }
 
         val retryScheduleTime = exceptionAt.plusSeconds(1)
