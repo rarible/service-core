@@ -11,6 +11,8 @@ import com.rarible.loader.cache.configuration.EnableRaribleCacheLoader
 import com.rarible.loader.cache.test.TestImage
 import com.rarible.loader.cache.test.cacheEvents
 import com.rarible.loader.cache.test.testCacheType
+import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -95,4 +97,7 @@ class TestContext {
     fun testClock(): Clock = mockk {
         every { instant() } answers { nowMillis() }
     }
+
+    @Bean
+    fun testMeterRegistry(): MeterRegistry = SimpleMeterRegistry()
 }
