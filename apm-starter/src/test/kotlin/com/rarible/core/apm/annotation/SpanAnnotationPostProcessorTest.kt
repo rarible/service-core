@@ -147,6 +147,7 @@ class SpanAnnotationPostProcessorTest {
         val transaction = mockk<Transaction>()
         every { transaction.setName("testTransaction") } returns transaction
         every { transaction.end() } returns Unit
+        every { transaction.id } returns "id"
 
         every { ElasticApm.startTransaction() } returns transaction
 
@@ -166,6 +167,7 @@ class SpanAnnotationPostProcessorTest {
         every { transaction.setName("testTransaction") } returns transaction
         every { transaction.end() } returns Unit
         every { transaction.startSpan("testType", "testSubType", "testAction") } returns span
+        every { transaction.id } returns "id"
 
         every { span.setName("testName") } returns span
         every { span.end() } returns Unit
