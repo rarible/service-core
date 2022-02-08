@@ -17,6 +17,7 @@ import java.util.concurrent.TimeUnit
 @ConstructorBinding
 data class LoadProperties(
     val brokerReplicaSet: String,
+    val topicsPrefix: String = "loader", // TODO: remove the default value after all clients specify it.
     val loadTasksTopicPartitions: Int = 10,
     val loadNotificationsTopicPartitions: Int = 10,
     val workers: Int = 1,

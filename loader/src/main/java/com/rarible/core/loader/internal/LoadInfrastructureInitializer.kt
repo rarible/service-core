@@ -15,20 +15,18 @@ import org.springframework.stereotype.Component
 
 @Component
 class LoadInfrastructureInitializer(
-    private val loadProperties: LoadProperties,
     private val mongo: ReactiveMongoOperations,
 
+    private val loadKafkaTopicsRegistry: LoadKafkaTopicsRegistry,
     private val loaders: List<Loader>,
     private val loadWorkers: ConsumerWorkerHolder<KafkaLoadTaskId>,
     private val loadNotificationListenersWorkers: ConsumerWorkerHolder<LoadNotification>
 ) {
 
-    private val infraLogger = LoggerFactory.getLogger(LoadInfrastructureInitializer::class.java)
-
     @EventListener(ApplicationReadyEvent::class)
     fun startInfrastructure() {
         val loadTypes = loaders.map { it.type }
-        createTopics(loadTypes)
+        loadKafkaTopicsRegistry.createTopics(loadTypes)
         createMongoIndexes()
         loadWorkers.start()
         loadNotificationListenersWorkers.start()
@@ -40,23 +38,4 @@ class LoadInfrastructureInitializer(
         }
     }
 
-    private fun createTopics(loadTypes: List<LoadType>) {
-        for (type in loadTypes) {
-            val loadTasksTopic = getLoadTasksTopic(type)
-            infraLogger.info("Creating topic (if necessary) $loadTasksTopic with ${loadProperties.loadTasksTopicPartitions} partitions")
-            RaribleKafkaTopics.createTopic(
-                brokerReplicaSet = loadProperties.brokerReplicaSet,
-                topic = loadTasksTopic,
-                partitions = loadProperties.loadTasksTopicPartitions
-            )
-
-            val notificationsTopic = getLoadNotificationsTopic(type)
-            infraLogger.info("Creating topic (if necessary) $notificationsTopic with ${loadProperties.loadNotificationsTopicPartitions} partitions")
-            RaribleKafkaTopics.createTopic(
-                brokerReplicaSet = loadProperties.brokerReplicaSet,
-                topic = notificationsTopic,
-                partitions = loadProperties.loadNotificationsTopicPartitions
-            )
-        }
-    }
 }
