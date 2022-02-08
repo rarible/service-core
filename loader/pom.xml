@@ -36,6 +36,10 @@
             <artifactId>spring-data-mongodb</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.rarible.core</groupId>
             <artifactId>rarible-core-logging</artifactId>
         </dependency>

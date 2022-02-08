@@ -5,18 +5,19 @@ import com.rarible.core.loader.internal.common.KafkaLoadTaskId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.test.context.ActiveProfiles
 
-class LoadContextIt : AbstractIntegrationTest() {
-
-    @Autowired
-    lateinit var loadWorkers: ConsumerWorkerHolder<KafkaLoadTaskId>
+@ActiveProfiles("disable-workers", inheritProfiles = false)
+class LoadContextDisableWorkersIt : AbstractIntegrationTest() {
+    @Autowired(required = false)
+    var loadWorkers: ConsumerWorkerHolder<KafkaLoadTaskId>? = null
 
     @Autowired
     lateinit var loadNotificationListenersWorkers: ConsumerWorkerHolder<LoadNotification>
 
     @Test
-    fun `all workers are started`() {
-        assertThat(loadWorkers.isActive).isTrue
+    fun `notification listeners but not loading workers are initialized`() {
+        assertThat(loadWorkers).isNull()
         assertThat(loadNotificationListenersWorkers.isActive).isTrue
     }
 }

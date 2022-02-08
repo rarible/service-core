@@ -1,5 +1,6 @@
-package com.rarible.core.loader.internal
+package com.rarible.core.loader.internal.runner
 
+import com.rarible.core.loader.internal.common.KafkaLoadTaskId
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher

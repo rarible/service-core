@@ -2,8 +2,7 @@ package com.rarible.loader.cache
 
 import com.rarible.core.common.nowMillis
 import com.rarible.core.loader.configuration.LoadProperties
-import com.rarible.core.loader.internal.RetryTasksService
-import com.rarible.core.mongo.configuration.IncludePersistProperties
+import com.rarible.core.loader.internal.runner.RetryTasksService
 import com.rarible.core.test.containers.KafkaTestContainer
 import com.rarible.core.test.ext.MongoCleanup
 import com.rarible.core.test.ext.MongoTest
@@ -22,7 +21,6 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 import org.springframework.data.mongodb.core.ReactiveMongoOperations
 import org.springframework.test.context.ContextConfiguration
@@ -74,17 +72,14 @@ abstract class AbstractIntegrationTest {
     }
 }
 
-@Configuration
 @EnableAutoConfiguration
 @EnableRaribleCacheLoader
-@IncludePersistProperties
 class TestContext {
     @Bean
     @Qualifier("test.loader")
     fun testLoader(): CacheLoader<TestImage> = mockk {
         every { type } returns testCacheType
     }
-
 
     @Bean
     @Qualifier("test.loader.service")

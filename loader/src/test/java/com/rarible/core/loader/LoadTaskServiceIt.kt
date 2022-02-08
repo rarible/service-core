@@ -1,13 +1,9 @@
 package com.rarible.core.loader
 
 import com.rarible.core.common.nowMillis
-import com.rarible.core.loader.internal.LoadTask
-import com.rarible.core.loader.internal.MongoLoadTaskRepository
-import com.rarible.core.loader.internal.generateLoadTaskId
+import com.rarible.core.loader.internal.common.LoadTask
+import com.rarible.core.loader.internal.common.MongoLoadTaskRepository
 import com.rarible.core.test.data.randomBoolean
-import com.rarible.core.test.data.randomInt
-import com.rarible.core.test.data.randomLong
-import com.rarible.core.test.data.randomString
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.flow.toSet
 import kotlinx.coroutines.reactive.asFlow
@@ -16,9 +12,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.dao.OptimisticLockingFailureException
-import java.time.Instant
-import java.util.concurrent.TimeUnit
-import kotlin.math.exp
 
 class LoadTaskServiceIt : AbstractIntegrationTest() {
     @Test

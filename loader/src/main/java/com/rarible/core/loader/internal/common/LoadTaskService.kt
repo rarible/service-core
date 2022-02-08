@@ -1,4 +1,4 @@
-package com.rarible.core.loader.internal
+package com.rarible.core.loader.internal.common
 
 import kotlinx.coroutines.flow.Flow
 import org.springframework.dao.OptimisticLockingFailureException

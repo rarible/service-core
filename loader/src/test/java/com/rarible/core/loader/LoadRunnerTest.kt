@@ -3,14 +3,14 @@ package com.rarible.core.loader
 import com.rarible.core.common.nowMillis
 import com.rarible.core.loader.configuration.LoadProperties
 import com.rarible.core.loader.configuration.RetryProperties
-import com.rarible.core.loader.internal.LoadFatalError
-import com.rarible.core.loader.internal.LoadMetrics
-import com.rarible.core.loader.internal.LoadNotificationKafkaSender
-import com.rarible.core.loader.internal.LoadRunner
-import com.rarible.core.loader.internal.LoadTask
-import com.rarible.core.loader.internal.LoadTaskService
-import com.rarible.core.loader.internal.LoaderCriticalCodeExecutor
-import com.rarible.core.loader.internal.toApiStatus
+import com.rarible.core.loader.internal.runner.LoadFatalError
+import com.rarible.core.loader.internal.common.LoadMetrics
+import com.rarible.core.loader.internal.common.LoadNotificationKafkaSender
+import com.rarible.core.loader.internal.runner.LoadRunner
+import com.rarible.core.loader.internal.common.LoadTask
+import com.rarible.core.loader.internal.common.LoadTaskService
+import com.rarible.core.loader.internal.runner.LoadCriticalCodeExecutor
+import com.rarible.core.loader.internal.common.toApiStatus
 import com.rarible.core.loader.test.testLoaderType
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import io.mockk.coEvery
@@ -37,6 +37,7 @@ class LoadRunnerTest {
     private val clock = mockk<Clock>()
     private val loadProperties = LoadProperties(
         brokerReplicaSet = "not used in the test",
+        topicsPrefix = "loader-test",
         retry = RetryProperties(
             backoffDelaysMillis = listOf(1000, 2000) // 2 attempts to load after 1000 and 2000 ms.
         )
@@ -49,7 +50,7 @@ class LoadRunnerTest {
         loadNotificationKafkaSender = loadNotificationKafkaSender,
         loadTaskService = loadTaskService,
         clock = clock,
-        loaderCriticalCodeExecutor = LoaderCriticalCodeExecutor(
+        loadCriticalCodeExecutor = LoadCriticalCodeExecutor(
             retryAttempts = 5,
             backoffBaseDelay = 1
         ),

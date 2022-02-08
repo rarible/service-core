@@ -1,4 +1,4 @@
-package com.rarible.core.loader.internal
+package com.rarible.core.loader.internal.common
 
 import kotlinx.coroutines.reactive.awaitFirst
 import org.slf4j.LoggerFactory

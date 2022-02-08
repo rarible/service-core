@@ -1,9 +1,9 @@
 package com.rarible.core.loader
 
-import com.rarible.core.loader.internal.KafkaLoadTaskId
-import com.rarible.core.loader.internal.LoadRunner
-import com.rarible.core.loader.internal.LoadRunnerParalleller
-import com.rarible.core.loader.internal.generateLoadTaskId
+import com.rarible.core.loader.internal.common.KafkaLoadTaskId
+import com.rarible.core.loader.internal.runner.LoadRunner
+import com.rarible.core.loader.internal.runner.LoadRunnerParalleller
+import com.rarible.core.loader.internal.common.generateLoadTaskId
 import io.mockk.coEvery
 import io.mockk.coJustRun
 import io.mockk.coVerify
@@ -14,7 +14,6 @@ import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 
 class LoadRunnerParallellerTest {
 

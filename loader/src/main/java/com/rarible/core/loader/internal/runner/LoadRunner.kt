@@ -1,8 +1,15 @@
-package com.rarible.core.loader.internal
+package com.rarible.core.loader.internal.runner
 
 import com.rarible.core.loader.LoadNotification
 import com.rarible.core.loader.Loader
 import com.rarible.core.loader.configuration.LoadProperties
+import com.rarible.core.loader.internal.common.LoadMetrics
+import com.rarible.core.loader.internal.common.LoadNotificationKafkaSender
+import com.rarible.core.loader.internal.common.LoadTask
+import com.rarible.core.loader.internal.common.LoadTaskId
+import com.rarible.core.loader.internal.common.LoadTaskService
+import com.rarible.core.loader.internal.common.nowMillis
+import com.rarible.core.loader.internal.common.toApiStatus
 import org.slf4j.LoggerFactory
 import org.springframework.dao.OptimisticLockingFailureException
 import org.springframework.stereotype.Component
@@ -16,7 +23,7 @@ class LoadRunner(
     private val loadNotificationKafkaSender: LoadNotificationKafkaSender,
     private val loadTaskService: LoadTaskService,
     private val clock: Clock,
-    private val loaderCriticalCodeExecutor: LoaderCriticalCodeExecutor,
+    private val loadCriticalCodeExecutor: LoadCriticalCodeExecutor,
     private val loadMetrics: LoadMetrics
 ) {
     private val logger = LoggerFactory.getLogger(LoadRunner::class.java)
@@ -60,7 +67,7 @@ class LoadRunner(
         val newLoadTask = saveNewTaskOrTerminate(loadTask, newStatus)
             ?: return // Terminate, if we have failed to update the status.
 
-        loaderCriticalCodeExecutor.retryOrFatal("Send notification for $newLoadTask") {
+        loadCriticalCodeExecutor.retryOrFatal("Send notification for $newLoadTask") {
             loadNotificationKafkaSender.send(
                 LoadNotification(
                     taskId = taskId,

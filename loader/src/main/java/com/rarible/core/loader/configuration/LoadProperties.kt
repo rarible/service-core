@@ -5,22 +5,46 @@ import org.springframework.boot.context.properties.ConstructorBinding
 import java.time.Duration
 import java.util.concurrent.TimeUnit
 
+const val LOADER_PROPERTIES_PREFIX = "rarible.loader"
+
 /**
  * Configuration properties of the loader infrastructure.
- * - [brokerReplicaSet] - the Kafka cluster's address.
- * - [loadTasksTopicPartitions] and [loadNotificationsTopicPartitions] - configure
- * the internal Kafka queues used by workers and notifiers, these options affect performance.
- * - [workers] - the number of worker threads that execute the loading tasks
- * - [retry] - retry policy
+ *
+ * By default, the current application can both schedule loading tasks for execution and be the worker to execute them.
+ * To disable the worker functionality, set `rarible.loader.enableWorkers = false` in the application yaml.
  */
-@ConfigurationProperties("rarible.loader")
+@ConfigurationProperties(LOADER_PROPERTIES_PREFIX)
 @ConstructorBinding
 data class LoadProperties(
+    /**
+     * Kafka cluster where loading tasks and notifications are sent to and read from.
+     */
     val brokerReplicaSet: String,
-    val topicsPrefix: String = "loader", // TODO: remove the default value after all clients specify it.
+    /**
+     * The prefix used for naming loader infrastructure topics.
+     *
+     * For example, if the [topicsPrefix] is equal to `my-service`,
+     * the loader will use topics `my-service.loader-tasks-<type>` and `my-service.loader-notifications-<type>`
+     * for storing tasks and notifications.
+     */
+    val topicsPrefix: String,
+    /**
+     * The number of partitions to use for the tasks topics. May be used to tune performance.
+     */
     val loadTasksTopicPartitions: Int = 10,
+    /**
+     * The number of partitions to use for loading notifications' topics. May be used to tune performance.
+     */
     val loadNotificationsTopicPartitions: Int = 10,
+    /**
+     * The number of worker threads that execute the loading tasks.
+     *
+     * This field is only applicable if the [enableWorkers] is true.
+     */
     val workers: Int = 1,
+    /**
+     * Retry policy for failed tasks.
+     */
     val retry: RetryProperties = RetryProperties()
 )
 

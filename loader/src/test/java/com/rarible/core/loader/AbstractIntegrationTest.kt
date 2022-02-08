@@ -3,10 +3,10 @@ package com.rarible.core.loader
 import com.rarible.core.common.nowMillis
 import com.rarible.core.loader.configuration.EnableRaribleLoader
 import com.rarible.core.loader.configuration.LoadProperties
-import com.rarible.core.loader.internal.LoadTaskService
+import com.rarible.core.loader.internal.common.LoadTaskService
+import com.rarible.core.loader.test.TestLoadNotificationListener
 import com.rarible.core.loader.test.testLoaderType
 import com.rarible.core.loader.test.testReceivedNotifications
-import com.rarible.core.mongo.configuration.IncludePersistProperties
 import com.rarible.core.test.containers.KafkaTestContainer
 import com.rarible.core.test.ext.MongoCleanup
 import com.rarible.core.test.ext.MongoTest
@@ -21,9 +21,10 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.Primary
 import org.springframework.data.mongodb.core.ReactiveMongoOperations
+import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import java.time.Clock
 
@@ -33,6 +34,7 @@ import java.time.Clock
     properties = []
 )
 @ContextConfiguration(classes = [TestContext::class])
+@ActiveProfiles("all")
 abstract class AbstractIntegrationTest {
     companion object {
         val kafkaTestContainer = KafkaTestContainer()
@@ -68,10 +70,9 @@ abstract class AbstractIntegrationTest {
     }
 }
 
-@Configuration
 @EnableAutoConfiguration
 @EnableRaribleLoader
-@IncludePersistProperties
+@ComponentScan(basePackageClasses = [TestLoadNotificationListener::class])
 class TestContext {
     @Bean
     @Qualifier("test.loader")

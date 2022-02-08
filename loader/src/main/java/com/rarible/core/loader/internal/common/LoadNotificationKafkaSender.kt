@@ -1,8 +1,9 @@
-package com.rarible.core.loader.internal
+package com.rarible.core.loader.internal.common
 
 import com.rarible.core.kafka.KafkaMessage
 import com.rarible.core.kafka.RaribleKafkaProducer
 import com.rarible.core.loader.LoadNotification
+import com.rarible.core.loader.internal.runner.LoadFatalError
 
 class LoadNotificationKafkaSender(
     private val kafkaSenders: Map<String, RaribleKafkaProducer<LoadNotification>>

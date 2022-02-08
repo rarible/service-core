@@ -1,13 +1,12 @@
 package com.rarible.loader.cache.internal
 
-import com.rarible.core.loader.internal.LoadTaskId
+import com.rarible.core.loader.internal.common.LoadTaskId
 import com.rarible.loader.cache.CacheType
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import org.bson.types.ObjectId
 import org.springframework.data.annotation.Id
 import org.springframework.data.domain.Sort
 import org.springframework.data.mongodb.core.ReactiveMongoOperations
-import org.springframework.data.mongodb.core.find
 import org.springframework.data.mongodb.core.findOne
 import org.springframework.data.mongodb.core.mapping.Document
 import org.springframework.data.mongodb.core.query.Criteria

@@ -1,4 +1,4 @@
-package com.rarible.core.loader.internal
+package com.rarible.core.loader.internal.runner
 
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory

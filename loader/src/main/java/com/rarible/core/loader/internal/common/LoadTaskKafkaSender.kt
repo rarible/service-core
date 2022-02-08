@@ -1,4 +1,4 @@
-package com.rarible.core.loader.internal
+package com.rarible.core.loader.internal.common
 
 import com.rarible.core.kafka.KafkaMessage
 import com.rarible.core.kafka.RaribleKafkaProducer

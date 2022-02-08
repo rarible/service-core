@@ -1,19 +1,21 @@
-package com.rarible.core.loader.configuration;
+package com.rarible.core.loader.configuration
 
-import org.springframework.context.annotation.Import;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import com.rarible.core.loader.internal.common.LoadCommonConfiguration
+import com.rarible.core.loader.internal.runner.LoadRunnerConfiguration
+import org.springframework.context.annotation.Import
 
 /**
  * Enable auto-configuration for the loader infrastructure.
  *
- * Clients need to configure {@link LoadProperties}.
+ * Clients need to configure [LoadProperties].
+ * If the [LoadProperties.enableWorkers] is `true`,
+ * this application will be a runner to execute the scheduled tasks.
+ * Otherwise, this application can only schedule tasks for execution by other runners.
  */
-@Target(ElementType.TYPE)
-@Retention(RetentionPolicy.RUNTIME)
-@Import(LoaderConfiguration.class)
-public @interface EnableRaribleLoader {
-}
+@Target(AnnotationTarget.ANNOTATION_CLASS, AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.RUNTIME)
+@Import(
+    LoadCommonConfiguration::class,
+    LoadRunnerConfiguration::class
+)
+annotation class EnableRaribleLoader

@@ -1,4 +1,4 @@
-package com.rarible.core.loader.internal
+package com.rarible.core.loader.internal.common
 
 import java.time.Clock
 import java.time.Instant

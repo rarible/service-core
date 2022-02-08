@@ -1,7 +1,7 @@
 package com.rarible.loader.cache.internal
 
 import com.rarible.core.loader.Loader
-import com.rarible.core.loader.internal.nowMillis
+import com.rarible.core.loader.internal.common.nowMillis
 import com.rarible.loader.cache.CacheLoader
 import com.rarible.loader.cache.CacheType
 import org.slf4j.LoggerFactory

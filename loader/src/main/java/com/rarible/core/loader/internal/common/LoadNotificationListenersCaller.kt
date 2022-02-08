@@ -1,4 +1,4 @@
-package com.rarible.core.loader.internal
+package com.rarible.core.loader.internal.common
 
 import com.rarible.core.loader.LoadNotification
 import com.rarible.core.loader.LoadNotificationListener

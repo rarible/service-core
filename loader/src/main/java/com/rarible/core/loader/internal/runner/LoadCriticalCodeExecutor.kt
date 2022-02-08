@@ -1,4 +1,4 @@
-package com.rarible.core.loader.internal
+package com.rarible.core.loader.internal.runner
 
 import kotlinx.coroutines.delay
 import org.slf4j.LoggerFactory
@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component
 import kotlin.math.pow
 
 @Component
-class LoaderCriticalCodeExecutor(
+class LoadCriticalCodeExecutor(
     private val retryAttempts: Int = 5,
     private val backoffBaseDelay: Long = 1000
 ) {

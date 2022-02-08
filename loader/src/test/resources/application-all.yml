@@ -1,6 +1,7 @@
 rarible:
   loader:
     broker-replica-set: ${kafka.hosts}
+    topics-prefix: loader-test
     workers: 4
     retry:
       backoffDelaysMillis: [100, 200, 300, 400, 500]

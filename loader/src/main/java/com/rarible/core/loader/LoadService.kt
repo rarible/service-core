@@ -1,10 +1,10 @@
 package com.rarible.core.loader
 
-import com.rarible.core.loader.internal.LoadTaskId
+import com.rarible.core.loader.internal.common.LoadTaskId
 
 /**
- * Entrypoint API to schedule background loaders for execution in background by worker services
- * (currently, the worker and scheduler are the same service, but it may be easily changed soon).
+ * Entrypoint API to schedule background loaders for execution in background by worker services.
+ * Workers may reside in the same application, see `LoadProperties.enableWorkers`.
  *
  * We use Kafka queue of tasks for storing scheduled tasks,
  * so restarts and failures of the workers are handled properly.

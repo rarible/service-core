@@ -1,4 +1,4 @@
-package com.rarible.core.loader.internal
+package com.rarible.core.loader.internal.runner
 
 class LoadFatalError : Error {
     constructor(message: String) : super(message)
