@@ -53,7 +53,6 @@ class LoadIt : AbstractIntegrationTest() {
                 scheduledAt = scheduledAt
             )
         )
-        waitScheduledNotification(loadTaskId, loadKey, scheduledAt)
         Wait.waitAssert {
             coVerify(exactly = 1) { loader.load(loadKey) }
             val status = LoadTaskStatus.Loaded(
@@ -84,7 +83,6 @@ class LoadIt : AbstractIntegrationTest() {
         val failedAt = scheduledAt.plusSeconds(1)
         every { clock.instant() } returnsMany (listOf(scheduledAt, failedAt))
         val loadTaskId = runBlocking { loadService.scheduleLoad(testLoaderType, loadKey) }
-        waitScheduledNotification(loadTaskId, loadKey, scheduledAt)
         Wait.waitAssert {
             coVerify(exactly = 1) { loader.load(loadKey) }
             val retryAt = failedAt + loadProperties.retry.getRetryDelay(0)
@@ -199,7 +197,6 @@ class LoadIt : AbstractIntegrationTest() {
 
         currentTime.set(scheduledAt)
         val loadTaskId = loadService.scheduleLoad(testLoaderType, loadKey)
-        waitScheduledNotification(loadTaskId, loadKey, scheduledAt)
 
         for (retryAttempts in 0 until loadProperties.retry.retryAttempts) {
             testReceivedNotifications.clear()
@@ -223,26 +220,5 @@ class LoadIt : AbstractIntegrationTest() {
             currentTime.set(currentTime.get().plusSeconds(60))
             retryTasksService.scheduleTasksToRetry()
         }
-    }
-
-    private suspend fun waitScheduledNotification(
-        loadTaskId: LoadTaskId,
-        loadKey: String,
-        scheduledAt: Instant
-    ) {
-        Wait.waitAssert {
-            assertThat(testReceivedNotifications).isNotEmpty
-            assertThat(testReceivedNotifications.first()).isEqualTo(
-                LoadNotification(
-                    taskId = loadTaskId,
-                    type = testLoaderType,
-                    key = loadKey,
-                    status = LoadTaskStatus.Scheduled(
-                        scheduledAt = scheduledAt
-                    )
-                )
-            )
-        }
-        testReceivedNotifications.removeAt(0)
     }
 }
