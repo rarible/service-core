@@ -9,16 +9,14 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.time.withTimeout
 import org.apache.kafka.clients.consumer.OffsetResetStrategy
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
@@ -27,7 +25,7 @@ import java.time.Duration
 data class TestObject(val field1: String, val field2: Int)
 
 @FlowPreview
-@Disabled
+//@Disabled
 internal class RaribleKafkaConsumerTest {
     private val kafkaContainer = KafkaTestContainer()
 
@@ -172,10 +170,42 @@ internal class RaribleKafkaConsumerTest {
         }
     }
 
+    @Test
+    fun `clear topic after reading some messages from it`() = runBlocking<Unit> {
+        val topicName = "testTopic-" + System.currentTimeMillis()
+        val countMessages = 100
+        val countPartitions = 5
+        RaribleKafkaTopics.createTopic(kafkaContainer.kafkaBoostrapServers(), topicName, countPartitions)
+        assertThat(RaribleKafkaTopics.getAllTopics(kafkaContainer.kafkaBoostrapServers())).isEqualTo(listOf(topicName))
+
+        val producer = RaribleKafkaProducer(
+            clientId = "test-producer",
+            valueSerializerClass = JsonSerializer::class.java,
+            valueClass = TestObject::class.java,
+            defaultTopic = topicName,
+            bootstrapServers = kafkaContainer.kafkaBoostrapServers()
+        )
+        val testObjects = (0 until countMessages).map { TestObject(field1 = randomString(), field2 = randomInt()) }
+        producer.send(testObjects.map { KafkaMessage(it.field1, it) }, topicName).collect()
+
+        val consumer = RaribleKafkaConsumer(
+            clientId = "test-consumer",
+            consumerGroup = "test-group-for-$topicName",
+            valueDeserializerClass = JsonDeserializer::class.java,
+            valueClass = TestObject::class.java,
+            defaultTopic = topicName,
+            bootstrapServers = kafkaContainer.kafkaBoostrapServers(),
+            offsetResetStrategy = OffsetResetStrategy.EARLIEST
+        )
+        consumer.receiveAutoAck().take(countMessages / 2).collect()
+        RaribleKafkaTopics.removeAllRecordsFromTopic(kafkaContainer.kafkaBoostrapServers(), topicName)
+        assertThat(consumer.receiveAutoAck().receiveAll().toList()).isEmpty()
+    }
+
     private suspend fun <T> Flow<T>.receiveAll(): List<T> {
         val result = arrayListOf<T>()
         try {
-            withTimeout(Duration.ofSeconds(25)) {
+            withTimeout(Duration.ofSeconds(5)) {
                 collect { result += it }
             }
         } catch (ignored: Exception) {
