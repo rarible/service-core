@@ -26,7 +26,7 @@ import java.time.Duration
 data class TestObject(val field1: String, val field2: Int)
 
 @FlowPreview
-//@Disabled
+@Disabled
 internal class RaribleKafkaConsumerTest {
     private val kafkaContainer = KafkaTestContainer()
 
@@ -101,7 +101,6 @@ internal class RaribleKafkaConsumerTest {
     }
 
     @Test
-    @Disabled
     fun `batch consumer`() = runBlocking<Unit> {
         val topicName = "testTopic-" + System.currentTimeMillis()
         val countMessages = 10000
@@ -207,7 +206,7 @@ internal class RaribleKafkaConsumerTest {
     private suspend fun <T> Flow<T>.receiveAll(): List<T> {
         val result = arrayListOf<T>()
         try {
-            withTimeout(Duration.ofSeconds(5)) {
+            withTimeout(Duration.ofSeconds(25)) {
                 collect { result += it }
             }
         } catch (ignored: Exception) {
