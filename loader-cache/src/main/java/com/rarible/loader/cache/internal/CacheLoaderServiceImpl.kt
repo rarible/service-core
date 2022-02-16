@@ -22,7 +22,8 @@ class CacheLoaderServiceImpl<T>(
         cacheLoadTaskIdService.save(type, key, loadTaskId)
         loadService.scheduleLoad(
             loadType = encodeLoadType(type),
-            key = key
+            key = key,
+            loadTaskId = loadTaskId
         )
     }
 
