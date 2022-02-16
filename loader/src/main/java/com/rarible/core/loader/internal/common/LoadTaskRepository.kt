@@ -1,5 +1,6 @@
 package com.rarible.core.loader.internal.common
 
+import com.rarible.core.loader.LoadTaskId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitFirst

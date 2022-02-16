@@ -1,6 +1,6 @@
 package com.rarible.loader.cache.internal
 
-import com.rarible.core.loader.internal.common.LoadTaskId
+import com.rarible.core.loader.LoadTaskId
 import com.rarible.loader.cache.CacheType
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import org.bson.types.ObjectId

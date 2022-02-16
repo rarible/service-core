@@ -2,7 +2,6 @@ package com.rarible.core.loader
 
 import com.rarible.core.common.nowMillis
 import com.rarible.core.loader.internal.common.LoadMetrics
-import com.rarible.core.loader.internal.common.LoadTaskId
 import com.rarible.core.loader.internal.runner.RetryTasksService
 import com.rarible.core.loader.test.testLoaderType
 import com.rarible.core.loader.test.testReceivedNotifications
@@ -19,7 +18,9 @@ import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
+import java.lang.IllegalArgumentException
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicReference
 
@@ -47,7 +48,8 @@ class LoadIt : AbstractIntegrationTest() {
         val scheduledAt = nowMillis()
         val loadedAt = scheduledAt.plusSeconds(1)
         every { clock.instant() } returnsMany (listOf(scheduledAt, loadedAt))
-        val loadTaskId = loadService.scheduleLoad(testLoaderType, loadKey)
+        val loadTaskId = generateLoadTaskId()
+        assertThat(loadService.scheduleLoad(testLoaderType, loadKey, loadTaskId)).isEqualTo(loadTaskId)
         assertThat(loadService.getStatus(loadTaskId)).isEqualTo(
             LoadTaskStatus.Scheduled(
                 scheduledAt = scheduledAt
@@ -72,6 +74,20 @@ class LoadIt : AbstractIntegrationTest() {
         }
         assertThat(loadMetrics.getNumberOfScheduledTasks(testLoaderType, false)).isEqualTo(1)
         assertThat(loadMetrics.getNumberOfFinishedTasks(testLoaderType, true)).isEqualTo(1)
+    }
+
+    @Test
+    fun `do not allow to run two tasks with the same ID`() = runBlocking<Unit> {
+        val loadKey = randomString()
+        coEvery { loader.load(loadKey) } coAnswers {
+            delay(500)
+        }
+        val scheduledAt = nowMillis()
+        val loadedAt = scheduledAt.plusSeconds(1)
+        every { clock.instant() } returnsMany (listOf(scheduledAt, loadedAt))
+        val loadTaskId = generateLoadTaskId()
+        assertThat(loadService.scheduleLoad(testLoaderType, loadKey, loadTaskId)).isEqualTo(loadTaskId)
+        assertThrows<IllegalArgumentException> { loadService.scheduleLoad(testLoaderType, loadKey, loadTaskId) }
     }
 
     @Test

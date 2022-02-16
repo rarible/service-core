@@ -1,5 +1,6 @@
 package com.rarible.core.loader.internal.common
 
+import com.rarible.core.loader.LoadTaskId
 import com.rarible.core.loader.LoadType
 import org.springframework.data.annotation.Id
 import org.springframework.data.annotation.Version

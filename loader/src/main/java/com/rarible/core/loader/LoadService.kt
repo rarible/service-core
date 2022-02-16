@@ -1,7 +1,5 @@
 package com.rarible.core.loader
 
-import com.rarible.core.loader.internal.common.LoadTaskId
-
 /**
  * Entrypoint API to schedule background loaders for execution in background by worker services.
  * Workers may reside in the same application, see `LoadProperties.enableWorkers`.
@@ -20,9 +18,22 @@ import com.rarible.core.loader.internal.common.LoadTaskId
  */
 interface LoadService {
     /**
-     * Schedule execution of a task, see the doc of [LoadService].
+     * Schedule execution of a task with a newly [generated][generateLoadTaskId] task ID.
+     * Returns the task ID to [track][getStatus] the task status.
      */
-    suspend fun scheduleLoad(loadType: LoadType, key: String): LoadTaskId
+    suspend fun scheduleLoad(loadType: LoadType, key: String): LoadTaskId =
+        scheduleLoad(loadType, key, generateLoadTaskId())
+
+    /**
+     * Schedule execution of a task with the specified task ID, see the doc of [LoadService].
+     * Returns the given [loadTaskId].
+     * Note that [loadTaskId] must be a unique task ID, otherwise a [IllegalArgumentException] is thrown.
+     */
+    suspend fun scheduleLoad(
+        loadType: LoadType,
+        key: String,
+        loadTaskId: LoadTaskId
+    ): LoadTaskId
 
     /**
      * Get the current [status][LoadTaskStatus] of the task having ID [taskId]

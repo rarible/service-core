@@ -3,7 +3,6 @@ package com.rarible.core.loader
 import com.rarible.core.loader.internal.common.KafkaLoadTaskId
 import com.rarible.core.loader.internal.runner.LoadRunner
 import com.rarible.core.loader.internal.runner.LoadRunnerParalleller
-import com.rarible.core.loader.internal.common.generateLoadTaskId
 import io.mockk.coEvery
 import io.mockk.coJustRun
 import io.mockk.coVerify

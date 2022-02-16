@@ -2,7 +2,6 @@ package com.rarible.core.loader
 
 import com.rarible.core.common.nowMillis
 import com.rarible.core.loader.internal.common.LoadTask
-import com.rarible.core.loader.internal.common.generateLoadTaskId
 import com.rarible.core.test.data.randomBoolean
 import com.rarible.core.test.data.randomInt
 import com.rarible.core.test.data.randomLong

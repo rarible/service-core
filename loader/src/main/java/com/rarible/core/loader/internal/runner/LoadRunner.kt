@@ -6,7 +6,7 @@ import com.rarible.core.loader.configuration.LoadProperties
 import com.rarible.core.loader.internal.common.LoadMetrics
 import com.rarible.core.loader.internal.common.LoadNotificationKafkaSender
 import com.rarible.core.loader.internal.common.LoadTask
-import com.rarible.core.loader.internal.common.LoadTaskId
+import com.rarible.core.loader.LoadTaskId
 import com.rarible.core.loader.internal.common.LoadTaskService
 import com.rarible.core.loader.internal.common.nowMillis
 import com.rarible.core.loader.internal.common.toApiStatus
