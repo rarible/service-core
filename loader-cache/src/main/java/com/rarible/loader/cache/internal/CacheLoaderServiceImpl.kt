@@ -2,6 +2,7 @@ package com.rarible.loader.cache.internal
 
 import com.rarible.core.loader.LoadService
 import com.rarible.core.loader.LoadTaskStatus
+import com.rarible.core.loader.generateLoadTaskId
 import com.rarible.loader.cache.CacheEntry
 import com.rarible.loader.cache.CacheLoaderService
 import com.rarible.loader.cache.CacheType
@@ -17,11 +18,12 @@ class CacheLoaderServiceImpl<T>(
     private val logger = LoggerFactory.getLogger(CacheLoaderServiceImpl::class.java)
 
     override suspend fun update(key: String) {
-        val loadTaskId = loadService.scheduleLoad(
+        val loadTaskId = generateLoadTaskId()
+        cacheLoadTaskIdService.save(type, key, loadTaskId)
+        loadService.scheduleLoad(
             loadType = encodeLoadType(type),
             key = key
         )
-        cacheLoadTaskIdService.save(type, key, loadTaskId)
     }
 
     override suspend fun remove(key: String) {
