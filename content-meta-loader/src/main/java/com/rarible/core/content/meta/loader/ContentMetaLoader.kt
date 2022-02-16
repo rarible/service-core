@@ -55,6 +55,7 @@ class ContentMetaLoader(
                 url.endsWith(".mp4") -> ContentMeta("video/mp4").toMono()
                 url.endsWith(".webm") -> ContentMeta("video/webm").toMono()
                 url.endsWith(".mp3") -> ContentMeta("audio/mp3").toMono()
+                url.endsWith(".wav") -> ContentMeta("audio/wav").toMono()
                 url.endsWith(".mpga") -> ContentMeta("audio/mpeg").toMono()
                 url.endsWith(".svg") -> ContentMeta("image/svg+xml", 192, 192).toMono()
                 else -> {
