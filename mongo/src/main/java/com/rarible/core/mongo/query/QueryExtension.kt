@@ -1,5 +1,6 @@
 package com.rarible.core.mongo.query
 
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.stereotype.Component
@@ -12,12 +13,14 @@ class QueryExtension(
 ) {
 
     init {
+        logger.info("Setting timeout for mongo: FAST=$fast, MEDIUM=$medium, SLOW=$slow")
         FAST = fast
         MEDIUM = medium
         SLOW = slow
     }
 
     companion object {
+        private val logger = LoggerFactory.getLogger(QueryExtension::class.java)
         var FAST: Long = 0
         var MEDIUM: Long = 0
         var SLOW: Long = 0
