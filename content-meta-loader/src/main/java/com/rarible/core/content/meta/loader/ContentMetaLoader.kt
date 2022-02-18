@@ -35,7 +35,8 @@ import javax.imageio.metadata.IIOMetadata
 class ContentMetaLoader(
     private val mediaFetchTimeout: Int,
     private val mediaFetchMaxSize: Long,
-    private val openSeaProxyUrl: String
+    private val openSeaProxyUrl: String,
+    private val extensionMapping: Map<String, String> = DEFAULT_MAPPING
 ) {
 
     private val client = WebClient.builder()
@@ -51,14 +52,11 @@ class ContentMetaLoader(
     suspend fun fetchContentMeta(url: String): ContentMeta? {
         return LoggingUtils.withMarker { marker ->
             logger.info(marker, "Fetching content meta by URL: {}", url)
+            val extension = url.substringAfterLast(".", "")
+            val typeByExtension = extensionMapping[extension]
             when {
-                url.endsWith(".mp4") -> ContentMeta("video/mp4").toMono()
-                url.endsWith(".webm") -> ContentMeta("video/webm").toMono()
-                url.endsWith(".mp3") -> ContentMeta("audio/mp3").toMono()
-                url.endsWith(".wav") -> ContentMeta("audio/wav").toMono()
-                url.endsWith(".flac") -> ContentMeta("audio/flac").toMono()
-                url.endsWith(".mpga") -> ContentMeta("audio/mpeg").toMono()
-                url.endsWith(".svg") -> ContentMeta("image/svg+xml", 192, 192).toMono()
+                typeByExtension != null -> ContentMeta(typeByExtension).toMono()
+                extension == "svg" -> ContentMeta("image/svg+xml", 192, 192).toMono()
                 else -> {
                     getMetadata(url)
                         .flatMap { (width, height, metadata, contentLength) ->
@@ -143,7 +141,6 @@ class ContentMetaLoader(
             .onErrorResume { Mono.empty() }
     }
 
-
     @Suppress("UnstableApiUsage")
     private fun InputStream.limited(url: String): InputStream {
         val limitedStream = ByteStreams.limit(this, mediaFetchMaxSize)
@@ -151,7 +148,9 @@ class ContentMetaLoader(
         return object : FilterInputStream(countingStream) {
             override fun close() {
                 if (countingStream.count > mediaFetchMaxSize / 2) {
-                    logger.warn("Suspiciously many bytes (${countingStream.count}) are read from the content input stream for $url")
+                    logger.warn(
+                        "Suspiciously many bytes (${countingStream.count}) are read from the content input stream for $url"
+                    )
                 }
                 super.close()
             }
@@ -201,7 +200,18 @@ class ContentMetaLoader(
     }
 
     companion object {
+
         val logger: Logger = LoggerFactory.getLogger(ContentMetaLoader::class.java)
         const val OPENSEA_DOMAIN = "opensea.io"
+
+        val DEFAULT_MAPPING = mapOf(
+            "mp4" to "video/mp4",
+            "webm" to "video/webm",
+            "mp3" to "audio/mp3",
+            "wav" to "audio/wav",
+            "flac" to "audio/flac",
+            "mpga" to "audio/mpeg",
+        )
+
     }
 }
