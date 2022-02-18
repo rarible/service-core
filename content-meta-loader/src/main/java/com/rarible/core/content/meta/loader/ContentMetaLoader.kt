@@ -211,6 +211,9 @@ class ContentMetaLoader(
             "wav" to "audio/wav",
             "flac" to "audio/flac",
             "mpga" to "audio/mpeg",
+            // See https://www.khronos.org/registry/glTF/specs/2.0/glTF-2.0.pdf
+            "gltf" to "model/gltf+json",
+            "glb" to "model/gltf-binary"
         )
 
     }
