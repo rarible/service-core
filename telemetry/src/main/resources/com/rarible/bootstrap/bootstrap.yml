@@ -49,8 +49,8 @@ management:
     distribution:
       percentiles-histogram:
         http.server.requests: true
-      slo:
-        http.server.requests: 100ms,150ms,250ms,500ms,1s
+      sla:
+        http.server.requests: 100ms,500ms,1s
     export:
       prometheus:
         enabled: true
