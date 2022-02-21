@@ -1,21 +1,23 @@
 package com.rarible.loader.cache.internal
 
+import com.rarible.core.common.nowMillis
 import com.rarible.core.loader.LoadService
 import com.rarible.core.loader.LoadTaskStatus
 import com.rarible.core.loader.generateLoadTaskId
+import com.rarible.core.loader.internal.common.nowMillis
 import com.rarible.loader.cache.CacheEntry
 import com.rarible.loader.cache.CacheLoaderService
 import com.rarible.loader.cache.CacheType
 import org.slf4j.LoggerFactory
+import java.time.Clock
 
 class CacheLoaderServiceImpl<T>(
     override val type: CacheType,
     private val cacheRepository: CacheRepository,
     private val loadService: LoadService,
-    private val cacheLoadTaskIdService: CacheLoadTaskIdService
+    private val cacheLoadTaskIdService: CacheLoadTaskIdService,
+    private val clock: Clock
 ) : CacheLoaderService<T> {
-
-    private val logger = LoggerFactory.getLogger(CacheLoaderServiceImpl::class.java)
 
     override suspend fun update(key: String) {
         val loadTaskId = generateLoadTaskId()
@@ -31,23 +33,21 @@ class CacheLoaderServiceImpl<T>(
         cacheRepository.remove(type, key)
     }
 
+    override suspend fun save(key: String, data: T) {
+        cacheRepository.save(type, key, data, clock.nowMillis())
+    }
+
     override suspend fun get(key: String): CacheEntry<T> {
         val loadTaskId = cacheLoadTaskIdService.getLastTaskId(type, key)
         val loadStatus = loadTaskId?.let { loadService.getStatus(loadTaskId) }
         val cacheEntry = cacheRepository.get<T>(type, key)
-        if (loadStatus == null && cacheEntry != null) {
-            // Generally, this should not happen, but let's log it.
-            logger.error("Cache entry was loaded without an associated task ($loadTaskId) $cacheEntry")
-        }
-        if (cacheEntry == null) {
-            return when (loadStatus) {
+            ?: return when (loadStatus) {
                 is LoadTaskStatus.Scheduled -> getInitialLoading(loadStatus)
                 is LoadTaskStatus.WaitsForRetry -> getInitialLoading(loadStatus)
                 is LoadTaskStatus.Failed -> getInitialFailed(loadStatus)
                 null -> getNotAvailable() // Hasn't been scheduled and not available.
                 is LoadTaskStatus.Loaded -> getNotAvailable() // Removed entry.
             }
-        }
         return getAvailableCacheEntry(cacheEntry, loadStatus)
     }
 

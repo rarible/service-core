@@ -163,6 +163,18 @@ class CacheLoaderIt : AbstractIntegrationTest() {
     }
 
     @Test
+    fun `save and get`() = runBlocking<Unit> {
+        val key = randomString()
+        val testImage = TestImage("content")
+
+        val savedAt = nowMillis()
+        every { clock.instant() } returns savedAt
+
+        imageLoadService.save(key, testImage)
+        assertThat(imageLoadService.get(key)).isEqualTo(CacheEntry.Loaded(savedAt, testImage))
+    }
+
+    @Test
     fun `retry if an error occurs`() = runBlocking<Unit> {
         val key = randomString()
         val imageChannel = Channel<Result<TestImage>>()

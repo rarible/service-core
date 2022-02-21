@@ -44,14 +44,16 @@ class CacheLoaderConfiguration {
         loadService: LoadService,
         cacheLoadTaskIdService: CacheLoadTaskIdService,
         cacheLoaders: List<CacheLoader<*>>,
-        cacheLoaderEventListeners: List<CacheLoaderEventListener<*>>
+        cacheLoaderEventListeners: List<CacheLoaderEventListener<*>>,
+        clock: Clock
     ): List<CacheLoaderService<*>> =
         cacheLoaders.map { it.type }.map { cacheType ->
             CacheLoaderServiceImpl<Any>(
                 type = cacheType,
                 cacheRepository = cacheRepository,
                 loadService = loadService,
-                cacheLoadTaskIdService = cacheLoadTaskIdService
+                cacheLoadTaskIdService = cacheLoadTaskIdService,
+                clock = clock
             )
         }
 

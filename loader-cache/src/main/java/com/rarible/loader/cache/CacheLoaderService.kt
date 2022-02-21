@@ -20,6 +20,11 @@ interface CacheLoaderService<T> {
     suspend fun update(key: String)
 
     /**
+     * Save data by [key]. [get] will return [CacheEntry.Loaded] result for it.
+     */
+    suspend fun save(key: String, data: T)
+
+    /**
      * Remove cache entry by [key].
      */
     suspend fun remove(key: String)
