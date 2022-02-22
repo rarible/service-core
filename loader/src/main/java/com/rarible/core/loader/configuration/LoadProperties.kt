@@ -37,6 +37,10 @@ data class LoadProperties(
      */
     val loadNotificationsTopicPartitions: Int = 10,
     /**
+     * The number of tasks pulled out in batch for processing in parallel using [workers] threads.
+     */
+    val loadTasksBatchSize: Int = 50,
+    /**
      * The number of worker threads that execute the loading tasks.
      *
      * This field is only applicable if the [enableWorkers] is true.

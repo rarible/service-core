@@ -53,8 +53,6 @@ class LoadRunnerConfiguration {
     private companion object {
         private val logger = LoggerFactory.getLogger(LoadRunnerConfiguration::class.java)
 
-        const val CONSUMER_BATCH_SIZE = 500
-
         val CONSUMER_BATCH_MAX_PROCESSING_MS = TimeUnit.MINUTES.toMillis(10).toInt()
     }
 
@@ -131,7 +129,7 @@ class LoadRunnerConfiguration {
                     }
                 },
                 workerName = workerName,
-                properties = DaemonWorkerProperties(consumerBatchSize = CONSUMER_BATCH_SIZE),
+                properties = DaemonWorkerProperties(consumerBatchSize = loadProperties.loadTasksBatchSize),
                 retryProperties = RetryProperties(attempts = 1, delay = Duration.ZERO),
                 completionHandler = {
                     if (it != null && it !is CancellationException) {
