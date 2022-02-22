@@ -2,12 +2,15 @@ package com.rarible.core.loader.internal.runner
 
 import com.rarible.core.loader.internal.common.KafkaLoadTaskId
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.isActive
+import org.jetbrains.annotations.TestOnly
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -32,6 +35,11 @@ class LoadRunnerParalleller(
 
     suspend fun load(loadTasks: List<KafkaLoadTaskId>) {
         loadTasks.map { scope.async { loadRunner.load(it.id) } }.awaitAll()
+    }
+
+    @TestOnly
+    fun cancelAll() {
+        scope.coroutineContext[Job]?.cancelChildren()
     }
 
     override fun close() {

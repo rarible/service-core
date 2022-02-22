@@ -2,6 +2,7 @@ package com.rarible.core.loader
 
 import com.rarible.core.common.nowMillis
 import com.rarible.core.loader.internal.common.LoadMetrics
+import com.rarible.core.loader.internal.runner.LoadRunnerParalleller
 import com.rarible.core.loader.internal.runner.RetryTasksService
 import com.rarible.core.loader.test.testLoaderType
 import com.rarible.core.loader.test.testReceivedNotifications
@@ -34,9 +35,13 @@ class LoadIt : AbstractIntegrationTest() {
     @Autowired
     lateinit var loadMetrics: LoadMetrics
 
+    @Autowired
+    lateinit var loadRunnerParalleller: LoadRunnerParalleller
+
     @BeforeEach
     fun clearMetrics() {
         loadMetrics.reset()
+        loadRunnerParalleller.cancelAll()
     }
 
     @Test
