@@ -29,6 +29,7 @@ import org.springframework.context.annotation.Import
 import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories
 import org.springframework.scheduling.annotation.EnableScheduling
 import java.time.Duration
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 /**
@@ -62,10 +63,12 @@ class LoadRunnerConfiguration {
         loadKafkaTopicsRegistry: LoadKafkaTopicsRegistry
     ): LoadNotificationKafkaSender {
         val kafkaSenders = loaders.map { it.type }.associateWith { type ->
+            val uniqueId = UUID.randomUUID().toString()
             createProducerForLoadNotifications(
                 bootstrapServers = loadProperties.brokerReplicaSet,
                 type = type,
-                loadKafkaTopicsRegistry = loadKafkaTopicsRegistry
+                loadKafkaTopicsRegistry = loadKafkaTopicsRegistry,
+                id = uniqueId
             )
         }
         return LoadNotificationKafkaSender(kafkaSenders)
@@ -112,11 +115,12 @@ class LoadRunnerConfiguration {
         loadKafkaTopicsRegistry: LoadKafkaTopicsRegistry
     ): List<ConsumerBatchWorker<KafkaLoadTaskId>> {
         return (0 until loadProperties.loadTasksTopicPartitions).map { id ->
+            val uniqueId = UUID.randomUUID().toString()
             val consumer = createConsumerForLoadTasks(
                 loadKafkaTopicsRegistry = loadKafkaTopicsRegistry,
                 bootstrapServers = loadProperties.brokerReplicaSet,
                 type = type,
-                id = id
+                id = uniqueId
             )
             val workerName = "load-worker-$type-$id"
             logger.info("Creating load worker $workerName")
@@ -143,7 +147,7 @@ class LoadRunnerConfiguration {
         loadKafkaTopicsRegistry: LoadKafkaTopicsRegistry,
         bootstrapServers: String,
         type: LoadType,
-        id: Int,
+        id: String,
     ): RaribleKafkaConsumer<KafkaLoadTaskId> = RaribleKafkaConsumer(
         clientId = "loader-tasks-consumer-$type-$id",
         consumerGroup = "loader-tasks-group-$type",
@@ -159,9 +163,10 @@ class LoadRunnerConfiguration {
     private fun createProducerForLoadNotifications(
         bootstrapServers: String,
         type: LoadType,
-        loadKafkaTopicsRegistry: LoadKafkaTopicsRegistry
+        loadKafkaTopicsRegistry: LoadKafkaTopicsRegistry,
+        id: String
     ): RaribleKafkaProducer<LoadNotification> = RaribleKafkaProducer(
-        clientId = "loader-notification-client-$type",
+        clientId = "loader-notification-consumer-$type-$id",
         valueSerializerClass = JsonSerializer::class.java,
         defaultTopic = loadKafkaTopicsRegistry.getLoadNotificationsTopic(type),
         bootstrapServers = bootstrapServers,
