@@ -17,7 +17,7 @@ import com.rarible.core.loader.configuration.LoadProperties
 import com.rarible.core.loader.internal.common.KafkaLoadTaskId
 import com.rarible.core.loader.internal.common.LoadCommonConfiguration
 import com.rarible.core.loader.internal.common.LoadKafkaTopicsRegistry
-import com.rarible.core.loader.internal.common.LoadNotificationKafkaSender
+import com.rarible.core.loader.internal.notification.LoadNotificationKafkaSender
 import kotlinx.coroutines.CancellationException
 import org.apache.kafka.clients.consumer.OffsetResetStrategy
 import org.slf4j.LoggerFactory

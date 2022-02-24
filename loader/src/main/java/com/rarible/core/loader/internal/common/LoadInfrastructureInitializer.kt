@@ -1,7 +1,5 @@
 package com.rarible.core.loader.internal.common
 
-import com.rarible.core.daemon.sequential.ConsumerWorkerHolder
-import com.rarible.core.loader.LoadNotification
 import com.rarible.core.loader.Loader
 import kotlinx.coroutines.runBlocking
 import org.springframework.boot.context.event.ApplicationReadyEvent
@@ -14,7 +12,6 @@ class LoadInfrastructureInitializer(
     private val mongo: ReactiveMongoOperations,
     private val loadKafkaTopicsRegistry: LoadKafkaTopicsRegistry,
     private val loaders: List<Loader>,
-    private val loadNotificationListenersWorkers: ConsumerWorkerHolder<LoadNotification>
 ) {
 
     @EventListener(ApplicationReadyEvent::class)
@@ -22,7 +19,6 @@ class LoadInfrastructureInitializer(
         val loadTypes = loaders.map { it.type }
         loadKafkaTopicsRegistry.createTopics(loadTypes)
         createMongoIndexes()
-        loadNotificationListenersWorkers.start()
     }
 
     private fun createMongoIndexes() {

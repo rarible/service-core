@@ -1,6 +1,7 @@
 package com.rarible.core.loader.configuration
 
 import com.rarible.core.loader.internal.common.LoadCommonConfiguration
+import com.rarible.core.loader.internal.notification.LoadNotificationConfiguration
 import com.rarible.core.loader.internal.runner.LoadRunnerConfiguration
 import org.springframework.context.annotation.Import
 
@@ -16,6 +17,7 @@ import org.springframework.context.annotation.Import
 @Retention(AnnotationRetention.RUNTIME)
 @Import(
     LoadCommonConfiguration::class,
-    LoadRunnerConfiguration::class
+    LoadRunnerConfiguration::class,
+    LoadNotificationConfiguration::class
 )
 annotation class EnableRaribleLoader
