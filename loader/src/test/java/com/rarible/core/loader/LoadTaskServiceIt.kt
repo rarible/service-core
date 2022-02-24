@@ -18,7 +18,14 @@ class LoadTaskServiceIt : AbstractIntegrationTest() {
     fun `mongo indexes`() = runBlocking<Unit> {
         val indexInfos = mongo.indexOps(MongoLoadTaskRepository.COLLECTION).indexInfo.asFlow().toSet()
         assertThat(indexInfos.map { it.name }.toSet())
-            .isEqualTo(setOf("_id_", "status.rescheduled_1_status.retryAt_1__id_1"))
+            .isEqualTo(
+                setOf(
+                    "_id_",
+                    "status.rescheduled_1_status.retryAt_1__id_1",
+                    "status._class_1__id_1",
+                    "status.scheduledAt_1__id_1"
+                )
+            )
     }
 
     @Test
