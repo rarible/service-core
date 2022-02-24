@@ -4,7 +4,6 @@ import com.rarible.core.loader.LoadNotification
 import com.rarible.core.loader.Loader
 import com.rarible.core.loader.configuration.LoadProperties
 import com.rarible.core.loader.internal.common.LoadMetrics
-import com.rarible.core.loader.internal.notification.LoadNotificationKafkaSender
 import com.rarible.core.loader.internal.common.LoadTask
 import com.rarible.core.loader.LoadTaskId
 import com.rarible.core.loader.internal.common.LoadTaskService

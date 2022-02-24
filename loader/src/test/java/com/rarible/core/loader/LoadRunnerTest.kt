@@ -5,7 +5,7 @@ import com.rarible.core.loader.configuration.LoadProperties
 import com.rarible.core.loader.configuration.RetryProperties
 import com.rarible.core.loader.internal.runner.LoadFatalError
 import com.rarible.core.loader.internal.common.LoadMetrics
-import com.rarible.core.loader.internal.notification.LoadNotificationKafkaSender
+import com.rarible.core.loader.internal.runner.LoadNotificationKafkaSender
 import com.rarible.core.loader.internal.runner.LoadRunner
 import com.rarible.core.loader.internal.common.LoadTask
 import com.rarible.core.loader.internal.common.LoadTaskService
