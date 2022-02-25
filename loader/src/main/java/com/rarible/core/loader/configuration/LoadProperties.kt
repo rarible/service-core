@@ -33,6 +33,12 @@ data class LoadProperties(
      */
     val loadTasksTopicPartitions: Int = 10,
     /**
+     * The number of instances of the application that performs the loading.
+     * Every instance will process tasks from [loadTasksTopicPartitions] / [loadTasksServiceInstances] partitions.
+     * By default, this is 1, so that there is only one application loading the tasks.
+     */
+    val loadTasksServiceInstances: Int = 1,
+    /**
      * The number of partitions to use for loading notifications' topics. May be used to tune performance.
      */
     val loadNotificationsTopicPartitions: Int = 10,

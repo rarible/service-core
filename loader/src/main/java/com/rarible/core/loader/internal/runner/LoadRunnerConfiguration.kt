@@ -31,6 +31,7 @@ import org.springframework.scheduling.annotation.EnableScheduling
 import java.time.Duration
 import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.math.roundToInt
 
 /**
  * Auto-configuration of the runners part of the loader infrastructure.
@@ -114,7 +115,8 @@ class LoadRunnerConfiguration {
         loadRunnerParalleller: LoadRunnerParalleller,
         loadKafkaTopicsRegistry: LoadKafkaTopicsRegistry
     ): List<ConsumerBatchWorker<KafkaLoadTaskId>> {
-        return (0 until loadProperties.loadTasksTopicPartitions).map { id ->
+        val numberOfPartitionsToSubscribeTo = (loadProperties.loadTasksTopicPartitions.toDouble() / loadProperties.loadTasksServiceInstances).roundToInt()
+        return (0 until numberOfPartitionsToSubscribeTo).map { id ->
             val uniqueId = UUID.randomUUID().toString()
             val consumer = createConsumerForLoadTasks(
                 loadKafkaTopicsRegistry = loadKafkaTopicsRegistry,
