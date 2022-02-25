@@ -33,7 +33,7 @@ class LoadServiceImpl(
             key = key,
             status = status
         )
-        try {
+        val savedTask = try {
             loadTaskService.save(loadTask)
         } catch (e: Exception) {
             if (e is OptimisticLockingFailureException || e is DuplicateKeyException) {
@@ -44,8 +44,8 @@ class LoadServiceImpl(
             }
             throw e
         }
-        logger.info("Scheduling task to run $loadTask")
-        sendKafkaTask(loadTask.id, loadTask.type, false)
+        logger.info("Scheduling task to run $savedTask")
+        sendKafkaTask(savedTask.id, savedTask.type, false)
         return loadTaskId
     }
 
