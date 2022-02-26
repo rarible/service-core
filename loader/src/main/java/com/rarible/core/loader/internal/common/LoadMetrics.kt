@@ -5,6 +5,7 @@ import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Timer
 import org.springframework.stereotype.Component
+import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
 
 @Component
@@ -45,13 +46,11 @@ class LoadMetrics(
     fun onLoaderStarted(): Timer.Sample =
         Timer.start(meterRegistry)
 
-    fun onLoaderSuccess(type: LoadType, sample: Timer.Sample) {
-        sample.stop(getLoaderTimer(type, true))
-    }
+    fun onLoaderSuccess(type: LoadType, sample: Timer.Sample): Duration =
+        Duration.ofNanos(sample.stop(getLoaderTimer(type, true)))
 
-    fun onLoaderFailed(type: LoadType, sample: Timer.Sample) {
-        sample.stop(getLoaderTimer(type, false))
-    }
+    fun onLoaderFailed(type: LoadType, sample: Timer.Sample): Duration =
+        Duration.ofNanos(sample.stop(getLoaderTimer(type, false)))
 
     fun getNumberOfScheduledTasks(type: LoadType, forRetry: Boolean): Long =
         getScheduledTasksCounter(type, forRetry).count().toLong()

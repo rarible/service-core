@@ -8,6 +8,7 @@ import com.rarible.core.loader.internal.common.LoadTask
 import com.rarible.core.loader.LoadTaskId
 import com.rarible.core.loader.internal.common.LoadTaskService
 import com.rarible.core.loader.internal.common.nowMillis
+import com.rarible.core.loader.internal.common.presentable
 import com.rarible.core.loader.internal.common.toApiStatus
 import org.slf4j.LoggerFactory
 import org.springframework.dao.OptimisticLockingFailureException
@@ -47,16 +48,16 @@ class LoadRunner(
         val newStatus = try {
             loader.load(loadTask.key)
             val loadedAt = clock.instant()
-            logger.info("Loaded successfully $loadTask")
-            loadMetrics.onLoaderSuccess(loadTask.type, loaderSample)
+            val duration = loadMetrics.onLoaderSuccess(loadTask.type, loaderSample)
+            logger.info("Loaded successfully $loadTask (${duration.presentable()})")
             getNewLoadedStatus(loadTask, loadedAt)
         } catch (e: Throwable) {
-            loadMetrics.onLoaderFailed(loadTask.type, loaderSample)
+            val duration = loadMetrics.onLoaderFailed(loadTask.type, loaderSample)
             if (e is Error) {
-                logger.error("Fatal failure to load $loadTask", e)
+                logger.error("Fatal failure to load $loadTask (${duration.presentable()})", e)
                 throw e
             }
-            logger.info("Failed to load $loadTask", e)
+            logger.info("Failed to load $loadTask (${duration.presentable()})", e)
             val errorMessage = e.localizedMessage ?: e.message ?: e::class.java.simpleName
             val failedAt = clock.nowMillis()
             getNewFailedStatus(loadTask, failedAt, errorMessage)
