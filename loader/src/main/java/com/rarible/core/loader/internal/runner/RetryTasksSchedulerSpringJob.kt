@@ -1,10 +1,21 @@
 package com.rarible.core.loader.internal.runner
 
+import com.rarible.core.loader.configuration.LOADER_PROPERTIES_PREFIX
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
+/**
+ * Spring scheduled job that periodically finds tasks to be retried and schedules them.
+ */
+@ConditionalOnProperty(
+    prefix = LOADER_PROPERTIES_PREFIX,
+    name = ["enableRetrySchedulerJob"],
+    havingValue = "true",
+    matchIfMissing = true
+)
 @Component
 class RetryTasksSchedulerSpringJob(
     private val retryTasksService: RetryTasksService
