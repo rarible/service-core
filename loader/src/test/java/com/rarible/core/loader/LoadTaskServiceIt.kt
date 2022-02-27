@@ -23,7 +23,8 @@ class LoadTaskServiceIt : AbstractIntegrationTest() {
                     "_id_",
                     "status.rescheduled_1_status.retryAt_1__id_1",
                     "status._class_1__id_1",
-                    "status.scheduledAt_1__id_1"
+                    "status.scheduledAt_1__id_1",
+                    "type_1_key_1__id_1"
                 )
             )
     }

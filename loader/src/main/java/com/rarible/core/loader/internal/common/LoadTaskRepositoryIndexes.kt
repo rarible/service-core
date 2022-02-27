@@ -34,6 +34,12 @@ object LoadTaskRepositoryIndexes {
             Index()
                 .on(STATUS_SCHEDULED_AT, Sort.Direction.ASC)
                 .on("_id", Sort.Direction.ASC)
+                .background(),
+
+            Index()
+                .on(LoadTask::type.name, Sort.Direction.ASC)
+                .on(LoadTask::key.name, Sort.Direction.ASC)
+                .on("_id", Sort.Direction.ASC)
                 .background()
         )
         indexes.forEach { index ->
