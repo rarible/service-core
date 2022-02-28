@@ -2,7 +2,8 @@ package com.rarible.core.telemetry.metrics
 
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
-import java.util.*
+import java.time.Duration
+import java.util.Locale
 
 abstract class Metric internal constructor(
     protected val name: String,
@@ -31,10 +32,25 @@ abstract class TimingMetric protected constructor(name: String, vararg tags: Tag
     }
 }
 
+abstract class DistributionSummaryMetric protected constructor(name: String, vararg tags: Tag) : Metric(name, *tags) {
+    fun bind(registry: MeterRegistry): RegisteredDistributionSummary {
+        val distributionSummary = registry.summary(name, tags)
+        return RegisteredDistributionSummary(distributionSummary)
+    }
+}
+
 fun MeterRegistry.increment(countingMetric: CountingMetric, size: Number = 1) {
     countingMetric.bind(this).increment(size)
 }
 
 inline fun <T> MeterRegistry.measure(timingMetric: TimingMetric, block: () -> T): T {
     return timingMetric.bind(this).measure(block)
+}
+
+fun MeterRegistry.recordTime(timingMetric: TimingMetric, duration: Duration) {
+    timingMetric.bind(this).record(duration)
+}
+
+fun MeterRegistry.recordValue(distributionSummary: DistributionSummaryMetric, amount: Number) {
+    distributionSummary.bind(this).record(amount)
 }

@@ -2,7 +2,9 @@ package com.rarible.core.telemetry.metrics
 
 import io.micrometer.core.instrument.Clock
 import io.micrometer.core.instrument.Counter
+import io.micrometer.core.instrument.DistributionSummary
 import io.micrometer.core.instrument.Timer
+import java.time.Duration
 
 class RegisteredCounter internal constructor(
     private val counter: Counter
@@ -29,5 +31,17 @@ class RegisteredTimer internal constructor(
 
     fun endSample(sample: Timer.Sample) {
         sample.stop(timer)
+    }
+
+    fun record(duration: Duration) {
+        timer.record(duration)
+    }
+}
+
+class RegisteredDistributionSummary internal constructor(
+    private val distributionSummary: DistributionSummary
+) {
+    fun record(amount: Number) {
+        distributionSummary.record(amount.toDouble())
     }
 }
