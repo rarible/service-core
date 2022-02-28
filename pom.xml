@@ -40,6 +40,7 @@
         <nexus.maven.public>http://nexus.rarible.int/repository/maven-public/</nexus.maven.public>
         <springmockk.version>3.0.1</springmockk.version>
         <elastic-apm.version>1.28.4</elastic-apm.version>
+        <ktor.client.version>1.6.7</ktor.client.version>
     </properties>
 
     <dependencyManagement>

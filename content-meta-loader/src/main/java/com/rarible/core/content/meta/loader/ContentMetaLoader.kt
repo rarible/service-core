@@ -32,6 +32,7 @@ import javax.imageio.metadata.IIOMetadata
 // TODO[meta]: implementation must throw an exception if failed to determine meta, not return null.
 // TODO[meta]: implementation is blocking - it uses URLConnection.
 // TODO[meta]: implementation depends on Java 8.
+@Deprecated("")
 class ContentMetaLoader(
     private val mediaFetchTimeout: Int,
     private val mediaFetchMaxSize: Long,
