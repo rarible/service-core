@@ -14,17 +14,18 @@ object LoadTaskRepositoryIndexes {
     val RETRY_AT_ATTRIBUTE_PATH = LoadTask::status.name + "." + LoadTask.Status.WaitsForRetry::retryAt.name
     val STATUS_CLASS = LoadTask::status.name + "." + "_class"
     val STATUS_SCHEDULED_AT = LoadTask::status.name + "." + LoadTask.Status::scheduledAt.name
+    val rescheduledAndRetryAtIndex = Index()
+        .on(RESCHEDULED_ATTRIBUTE_PATH, Sort.Direction.ASC)
+        .on(RETRY_AT_ATTRIBUTE_PATH, Sort.Direction.ASC)
+        .on("_id", Sort.Direction.ASC)
+        .sparse()
 
     suspend fun ensureIndexes(mongo: ReactiveMongoOperations) {
         val collection = MongoLoadTaskRepository.COLLECTION
         logger.info("Ensuring Mongo indexes on $collection")
         val indexOps = mongo.indexOps(collection)
         val indexes = listOf(
-            Index()
-                .on(RESCHEDULED_ATTRIBUTE_PATH, Sort.Direction.ASC)
-                .on(RETRY_AT_ATTRIBUTE_PATH, Sort.Direction.ASC)
-                .on("_id", Sort.Direction.ASC)
-                .sparse(),
+            rescheduledAndRetryAtIndex,
 
             Index()
                 .on(STATUS_CLASS, Sort.Direction.ASC)

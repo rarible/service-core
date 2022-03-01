@@ -60,7 +60,7 @@ class MongoLoadTaskRepository(
                 LoadTaskRepositoryIndexes.RETRY_AT_ATTRIBUTE_PATH,
                 "_id"
             )
-        )
+        ).withHint(LoadTaskRepositoryIndexes.rescheduledAndRetryAtIndex.indexKeys)
         return mongo.find<LoadTask>(query, COLLECTION).asFlow()
     }
 
