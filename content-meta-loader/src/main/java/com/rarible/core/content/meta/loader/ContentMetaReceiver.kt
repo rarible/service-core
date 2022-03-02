@@ -65,7 +65,18 @@ class ContentMetaReceiver(
         val metadata = try {
             ImageMetadataReader.readMetadata(bytes.inputStream())
         } catch (e: Exception) {
-            logger.info("$logPrefix: failed to extract metadata for ${bytes.size} bytes")
+            val fallbackMeta = if (contentBytes.contentType != null) {
+                ContentMeta(
+                    type = contentBytes.contentType,
+                    size = contentBytes.contentLength
+                )
+            } else {
+                null
+            }
+            logger.info(
+                "$logPrefix: failed to extract metadata by ${bytes.size} bytes" +
+                        if (fallbackMeta != null) " fallback meta $fallbackMeta" else ""
+            )
             return null
         }
         var mimeType: String? = null

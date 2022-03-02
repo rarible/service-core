@@ -33,7 +33,7 @@
     </distributionManagement>
 
     <properties>
-        <revision>2.3.28</revision>
+        <revision>2.3.29</revision>
         <logstash-encoder.version>7.0.1</logstash-encoder.version>
         <testcontainers.version>1.16.2</testcontainers.version>
         <springfox.version>3.0.0</springfox.version>
