@@ -18,10 +18,23 @@ class ContentMetaReceiverTest {
     )
 
     @Test
+    fun svg() {
+        val meta = getContentMeta("https://storage.opensea.io/files/73df4a40af3cd70ca6800dadc493fc2c.svg")
+        assertEquals(
+            ContentMeta(
+                type = "image/svg+xml",
+                width = 192,
+                height = 192,
+                size = 350
+            ),
+            meta
+        )
+    }
+
+    @Test
     fun gif() {
-        val meta = runBlocking {
-            service.receive("https://lh3.googleusercontent.com/CIKzsJLHKmoC8YmHt3l6h7pzj-mJx5uHrS231VE006DCZ-IQLyONCtMBCYiOwbT9SzS5IdkSOF517Zq1CejmHVrMuQ=s250")!!
-        }
+        val meta =
+            getContentMeta("https://lh3.googleusercontent.com/CIKzsJLHKmoC8YmHt3l6h7pzj-mJx5uHrS231VE006DCZ-IQLyONCtMBCYiOwbT9SzS5IdkSOF517Zq1CejmHVrMuQ=s250")
         assertEquals(
             ContentMeta(
                 type = "image/gif",
@@ -35,9 +48,7 @@ class ContentMetaReceiverTest {
 
     @Test
     fun mp4() {
-        val meta = runBlocking {
-            service.receive("https://storage.opensea.io/files/3f89eab5930c7b61acb22a45412f1662.mp4")
-        }
+        val meta = getContentMeta("https://storage.opensea.io/files/3f89eab5930c7b61acb22a45412f1662.mp4")
         assertEquals(
             ContentMeta(
                 type = "video/mp4",
@@ -51,9 +62,8 @@ class ContentMetaReceiverTest {
 
     @Test
     fun amazon() {
-        val meta = runBlocking {
-            service.receive("https://s3.us-west-2.amazonaws.com/sing.serve/e487c504da821859cbac142e63ef9d8cc36015f0dfaf1de2949e6f894f5aa538%2Feae9b612-df09-4023-9b53-ac73e6319b44")
-        }
+        val meta =
+            getContentMeta("https://s3.us-west-2.amazonaws.com/sing.serve/e487c504da821859cbac142e63ef9d8cc36015f0dfaf1de2949e6f894f5aa538%2Feae9b612-df09-4023-9b53-ac73e6319b44")
         assertEquals(
             ContentMeta(
                 type = "video/mp4",
@@ -67,9 +77,8 @@ class ContentMetaReceiverTest {
 
     @Test
     fun jpeg() {
-        val meta = runBlocking {
-            service.receive("https://lh3.googleusercontent.com/rnS-RmufKkrLlWb4gl0_3yHx_lsQI7V0kRbB1VAiSCBRcY-fiHa_2U42xexLz9ZtaUZnRuo2-o-CcYPuCkmVdko=s250")
-        }
+        val meta =
+            getContentMeta("https://lh3.googleusercontent.com/rnS-RmufKkrLlWb4gl0_3yHx_lsQI7V0kRbB1VAiSCBRcY-fiHa_2U42xexLz9ZtaUZnRuo2-o-CcYPuCkmVdko=s250")
         assertEquals(
             ContentMeta(
                 type = "image/jpeg",
@@ -83,9 +92,10 @@ class ContentMetaReceiverTest {
 
     @Test
     fun video() {
-        val meta =
-            runBlocking { service.receive("https://ipfs.io/ipfs/QmSNhGhcBynr1s9QgPnon8HaiPzE5dKgmqSDNsNXCfDHGs/image.gif") }
+        val meta = getContentMeta("https://ipfs.io/ipfs/QmSNhGhcBynr1s9QgPnon8HaiPzE5dKgmqSDNsNXCfDHGs/image.gif")
         assertEquals(ContentMeta(type = "image/gif", width = 600, height = 404, size = 2559234), meta)
     }
+
+    private fun getContentMeta(url: String): ContentMeta = runBlocking { service.receive(url) }!!
 
 }

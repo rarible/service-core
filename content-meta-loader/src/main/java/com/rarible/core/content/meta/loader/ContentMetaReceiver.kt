@@ -1,7 +1,6 @@
 package com.rarible.core.content.meta.loader
 
 import com.drew.imaging.ImageMetadataReader
-import com.drew.imaging.ImageProcessingException
 import com.drew.metadata.Directory
 import com.drew.metadata.MetadataException
 import com.drew.metadata.avi.AviDirectory
@@ -57,6 +56,10 @@ class ContentMetaReceiver(
                     "mime type ${contentBytes.contentType})"
         )
         val bytes = contentBytes.bytes
+        parseSvg(contentBytes)?.let {
+            logger.info("$logPrefix: parsed SVG content meta $it")
+            return it
+        }
 
         @Suppress("BlockingMethodInNonBlockingContext")
         val metadata = try {
@@ -87,6 +90,18 @@ class ContentMetaReceiver(
         )
         logger.info("$logPrefix: received content meta: $contentMeta (errors extracting $errors)")
         return contentMeta
+    }
+
+    private fun parseSvg(contentBytes: ContentBytes): ContentMeta? {
+        if (contentBytes.contentType == svgMimeType || contentBytes.bytes.take(svgPrefix.size) == svgPrefix) {
+            return ContentMeta(
+                type = svgMimeType,
+                width = 192,
+                height = 192,
+                size = contentBytes.contentLength
+            )
+        }
+        return null
     }
 
     private fun parseImageOrVideoWidthAndHeight(directory: Directory, url: URL): Pair<Int?, Int?>? {
@@ -176,5 +191,8 @@ class ContentMetaReceiver(
             "gltf" to "model/gltf+json",
             "glb" to "model/gltf-binary"
         )
+
+        const val svgMimeType = "image/svg+xml"
+        val svgPrefix = "data:image/svg+xml".toByteArray(Charsets.UTF_8).toList()
     }
 }
