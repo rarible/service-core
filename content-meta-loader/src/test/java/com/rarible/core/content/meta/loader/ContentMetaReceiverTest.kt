@@ -1,5 +1,6 @@
 package com.rarible.core.content.meta.loader
 
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Disabled
@@ -8,13 +9,15 @@ import org.junit.jupiter.api.Test
 @Disabled
 class ContentMetaReceiverTest {
 
+    private val contentReceiverMetrics = ContentReceiverMetrics(SimpleMeterRegistry())
     private val contentReceiver = KtorApacheClientContentReceiver(
         timeout = 10000
     )
 
     private val service = ContentMetaReceiver(
         contentReceiver = contentReceiver,
-        maxBytes = 128 * 1024
+        maxBytes = 128 * 1024,
+        contentReceiverMetrics = contentReceiverMetrics
     )
 
     @Test
@@ -29,6 +32,7 @@ class ContentMetaReceiverTest {
             ),
             meta
         )
+        assertEquals(350, contentReceiverMetrics.totalBytesReceived)
     }
 
     @Test

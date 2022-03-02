@@ -40,6 +40,10 @@
             <artifactId>ktor-client-apache</artifactId>
             <version>${ktor.client.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>org.junit.jupiter</groupId>

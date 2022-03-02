@@ -26,7 +26,8 @@ import java.net.URL
 
 class ContentMetaReceiver(
     private val contentReceiver: ContentReceiver,
-    private val maxBytes: Int
+    private val maxBytes: Int,
+    private val contentReceiverMetrics: ContentReceiverMetrics
 ) {
     private val logger = LoggerFactory.getLogger(ContentMetaReceiver::class.java)
 
@@ -36,7 +37,15 @@ class ContentMetaReceiver(
     @Suppress("MemberVisibilityCanBePrivate")
     suspend fun receive(url: URL): ContentMeta? {
         getPredefinedContentMeta(url)?.let { return it }
-        return doReceive(url)
+        val startSample = contentReceiverMetrics.startReceiving()
+        return try {
+            val contentMeta = doReceive(url)
+            contentReceiverMetrics.endReceiving(startSample, true)
+            contentMeta
+        } catch (e: Throwable) {
+            contentReceiverMetrics.endReceiving(startSample, false)
+            throw e
+        }
     }
 
     private fun getPredefinedContentMeta(url: URL): ContentMeta? {
@@ -56,6 +65,7 @@ class ContentMetaReceiver(
                     "mime type ${contentBytes.contentType})"
         )
         val bytes = contentBytes.bytes
+        contentReceiverMetrics.receivedBytes(bytes.size)
         parseSvg(contentBytes)?.let {
             logger.info("$logPrefix: parsed SVG content meta $it")
             return it
