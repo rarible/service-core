@@ -1,6 +1,7 @@
 package com.rarible.core.content.meta.loader
 
 import com.drew.imaging.ImageMetadataReader
+import com.drew.imaging.ImageProcessingException
 import com.drew.metadata.Directory
 import com.drew.metadata.MetadataException
 import com.drew.metadata.avi.AviDirectory
@@ -36,12 +37,7 @@ class ContentMetaReceiver(
     @Suppress("MemberVisibilityCanBePrivate")
     suspend fun receive(url: URL): ContentMeta? {
         getPredefinedContentMeta(url)?.let { return it }
-        return try {
-            doReceive(url)
-        } catch (e: Throwable) {
-            logger.error("Failed to receive content meta by ${url.toExternalForm()}", e)
-            return null
-        }
+        return doReceive(url)
     }
 
     private fun getPredefinedContentMeta(url: URL): ContentMeta? {
@@ -51,18 +47,24 @@ class ContentMetaReceiver(
     }
 
     private suspend fun doReceive(url: URL): ContentMeta? {
-        logger.info("Receiving content meta by $url")
+        val logPrefix = "Content meta by $url"
+        logger.info("$logPrefix: started receiving")
         val contentBytes = contentReceiver.receiveBytes(url, maxBytes)
         logger.info(
-            "Received content by $url " +
+            "$logPrefix: received content " +
                     "(bytes ${contentBytes.bytes.size}, " +
                     "content length ${contentBytes.contentLength}, " +
                     "mime type ${contentBytes.contentType})"
         )
-        val bytes = contentBytes.bytes.inputStream()
+        val bytes = contentBytes.bytes
 
         @Suppress("BlockingMethodInNonBlockingContext")
-        val metadata = ImageMetadataReader.readMetadata(bytes)
+        val metadata = try {
+            ImageMetadataReader.readMetadata(bytes.inputStream())
+        } catch (e: Exception) {
+            logger.info("$logPrefix: failed to extract metadata for ${bytes.size} bytes")
+            return null
+        }
         var mimeType: String? = null
         var width: Int? = null
         var height: Int? = null
@@ -83,7 +85,7 @@ class ContentMetaReceiver(
             height = height,
             size = contentBytes.contentLength
         )
-        logger.info("Detected content meta by $url: $contentMeta (detector internal errors $errors)")
+        logger.info("$logPrefix: received content meta: $contentMeta (errors extracting $errors)")
         return contentMeta
     }
 
