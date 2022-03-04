@@ -3,6 +3,7 @@ package com.rarible.core.content.meta.loader
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
@@ -119,6 +120,22 @@ class ContentMetaReceiverTest {
         )
     }
 
-    private fun getContentMeta(url: String): ContentMeta = runBlocking { service.receive(url) }!!
+    @Test
+    fun `ignore html`() {
+        val meta = getContentMeta(
+            "https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types"
+        )
+        assertNull(meta)
+    }
+
+    @Test
+    fun `ignore 404`() {
+        val meta = getContentMeta(
+            "https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/NON_EXISTING"
+        )
+        assertNull(meta)
+    }
+
+    private fun getContentMeta(url: String): ContentMeta? = runBlocking { service.receive(url) }
 
 }

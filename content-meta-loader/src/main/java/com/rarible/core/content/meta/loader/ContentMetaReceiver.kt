@@ -24,7 +24,6 @@ import com.drew.metadata.webp.WebpDirectory
 import org.slf4j.LoggerFactory
 import java.net.URL
 import java.time.Duration
-import kotlin.system.measureNanoTime
 
 class ContentMetaReceiver(
     private val contentReceiver: ContentReceiver,
@@ -59,7 +58,7 @@ class ContentMetaReceiver(
                 "$logPrefix: failed to receive content meta" +
                         " (in ${duration.presentableSlow(Duration.ofSeconds(1))})", e
             )
-            throw e
+            null
         }
     }
 
@@ -97,10 +96,19 @@ class ContentMetaReceiver(
             ImageMetadataReader.readMetadata(bytes.inputStream())
         } catch (e: Exception) {
             val fallbackMeta = if (contentBytes.contentType != null) {
-                ContentMeta(
-                    type = contentBytes.contentType,
-                    size = contentBytes.contentLength
-                )
+                if (
+                    contentBytes.contentType.startsWith("image/")
+                    || contentBytes.contentType.startsWith("video/")
+                    || contentBytes.contentType.startsWith("audio/")
+                    || contentBytes.contentType.startsWith("model/")
+                ) {
+                    ContentMeta(
+                        type = contentBytes.contentType,
+                        size = contentBytes.contentLength
+                    )
+                } else {
+                    null
+                }
             } else {
                 getWithExtensionFallback(url)?.copy(size = contentBytes.contentLength)
             }
