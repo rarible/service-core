@@ -81,8 +81,9 @@ class ContentMetaReceiverTest {
 
     @Test
     fun jpeg() {
-        val meta =
-            getContentMeta("https://lh3.googleusercontent.com/rnS-RmufKkrLlWb4gl0_3yHx_lsQI7V0kRbB1VAiSCBRcY-fiHa_2U42xexLz9ZtaUZnRuo2-o-CcYPuCkmVdko=s250")
+        val meta = getContentMeta(
+            "https://lh3.googleusercontent.com/rnS-RmufKkrLlWb4gl0_3yHx_lsQI7V0kRbB1VAiSCBRcY-fiHa_2U42xexLz9ZtaUZnRuo2-o-CcYPuCkmVdko=s250"
+        )
         assertEquals(
             ContentMeta(
                 type = "image/jpeg",
@@ -96,8 +97,26 @@ class ContentMetaReceiverTest {
 
     @Test
     fun video() {
-        val meta = getContentMeta("https://ipfs.io/ipfs/QmSNhGhcBynr1s9QgPnon8HaiPzE5dKgmqSDNsNXCfDHGs/image.gif")
+        val meta = getContentMeta(
+            "https://ipfs.io/ipfs/QmSNhGhcBynr1s9QgPnon8HaiPzE5dKgmqSDNsNXCfDHGs/image.gif"
+        )
         assertEquals(ContentMeta(type = "image/gif", width = 600, height = 404, size = 2559234), meta)
+    }
+
+    @Test
+    fun `fallback to extension detector`() {
+        val meta = getContentMeta(
+            "https://rinkeby.traitsy.com/meta/0xc91741d26b851d6724cffdf9aa3cf379b678272a/99362971277997261421968536521162276234322138208043033076209335008158078363510/revealed.png"
+        )
+        assertEquals(
+            ContentMeta(
+                type = "image/png",
+                width = null,
+                height = null,
+                size = null
+            ),
+            meta
+        )
     }
 
     private fun getContentMeta(url: String): ContentMeta = runBlocking { service.receive(url) }!!

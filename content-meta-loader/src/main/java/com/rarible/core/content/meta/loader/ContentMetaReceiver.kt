@@ -24,6 +24,7 @@ import com.drew.metadata.webp.WebpDirectory
 import org.slf4j.LoggerFactory
 import java.net.URL
 import java.time.Duration
+import kotlin.system.measureNanoTime
 
 class ContentMetaReceiver(
     private val contentReceiver: ContentReceiver,
@@ -44,11 +45,14 @@ class ContentMetaReceiver(
         return try {
             val contentMeta = doReceive(url, logPrefix)
             val duration = contentReceiverMetrics.endReceiving(startSample, true)
-            logger.info(
-                "$logPrefix: " + if (contentMeta != null) "empty result" else "received $contentMeta" +
-                        " (in ${duration.presentableSlow(Duration.ofSeconds(1))})"
-            )
-            contentMeta
+            if (contentMeta != null) {
+                logger.info(
+                    "$logPrefix: received $contentMeta (in ${duration.presentableSlow(Duration.ofSeconds(1))})"
+                )
+                contentMeta
+            } else {
+                null
+            }
         } catch (e: Throwable) {
             val duration = contentReceiverMetrics.endReceiving(startSample, false)
             logger.warn(
@@ -57,6 +61,14 @@ class ContentMetaReceiver(
             )
             throw e
         }
+    }
+
+    private fun getWithExtensionFallback(url: URL): ContentMeta? {
+        val extension = url.toExternalForm().substringAfterLast(".", "")
+        val mimeType = extensionMapping[extension] ?: return null
+        return ContentMeta(
+            type = mimeType,
+        )
     }
 
     private fun getPredefinedContentMeta(url: URL): ContentMeta? {
@@ -90,13 +102,14 @@ class ContentMetaReceiver(
                     size = contentBytes.contentLength
                 )
             } else {
-                null
+                getWithExtensionFallback(url)?.copy(size = contentBytes.contentLength)
             }
-            logger.info(
-                "$logPrefix: failed to extract metadata by ${bytes.size} bytes" +
-                        if (fallbackMeta != null) " fallback meta $fallbackMeta" else ""
+            logger.warn(
+                "$logPrefix: failed to extract metadata by ${bytes.size} bytes, fallback meta " +
+                        if (fallbackMeta != null) "$fallbackMeta" else "is empty",
+                e
             )
-            return null
+            return fallbackMeta
         }
         var mimeType: String? = null
         var width: Int? = null
@@ -218,6 +231,18 @@ class ContentMetaReceiver(
 
             "gltf" to "model/gltf+json",
             "glb" to "model/gltf-binary"
+        )
+
+        val extensionMapping = mapOf(
+            "png" to "image/png",
+            "jpg" to "image/jpeg",
+            "jpeg" to "image/jpeg",
+            "gif" to "image/gif",
+            "bmp" to "image/bmp",
+            "mp4" to "video/mp4",
+            "webm" to "video/webm",
+            "avi" to "video/x-msvideo",
+            "mpeg" to "video/mpeg"
         )
 
         const val svgMimeType = "image/svg+xml"
