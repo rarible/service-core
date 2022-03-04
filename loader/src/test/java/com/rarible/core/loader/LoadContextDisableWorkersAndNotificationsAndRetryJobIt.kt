@@ -8,21 +8,21 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.ActiveProfiles
 
-@ActiveProfiles("disable-workers-and-notifications", inheritProfiles = false)
-class LoadContextDisableWorkersAndNotificationsIt : AbstractIntegrationTest() {
+@ActiveProfiles("disable-workers-and-notifications-and-retry-job", inheritProfiles = false)
+class LoadContextDisableWorkersAndNotificationsAndRetryJobIt : AbstractIntegrationTest() {
     @Autowired(required = false)
     var loadWorkers: ConsumerWorkerHolder<KafkaLoadTaskId>? = null
 
     @Autowired(required = false)
     var loadNotificationListenersWorkers: ConsumerWorkerHolder<LoadNotification>? = null
 
-    // Must be present.
     @Autowired(required = false)
-    lateinit var retryTasksSchedulerSpringJob: RetryTasksSchedulerSpringJob
+    var retryTasksSchedulerSpringJob: RetryTasksSchedulerSpringJob? = null
 
     @Test
     fun `notification listeners but not loading workers are initialized`() {
         assertThat(loadWorkers).isNull()
         assertThat(loadNotificationListenersWorkers).isNull()
+        assertThat(retryTasksSchedulerSpringJob).isNull()
     }
 }

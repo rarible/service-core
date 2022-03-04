@@ -2,7 +2,7 @@ package com.rarible.loader.cache
 
 import com.rarible.core.common.nowMillis
 import com.rarible.core.loader.configuration.LoadProperties
-import com.rarible.core.loader.internal.runner.RetryTasksService
+import com.rarible.core.loader.internal.common.RetryTasksService
 import com.rarible.core.test.containers.KafkaTestContainer
 import com.rarible.core.test.ext.MongoCleanup
 import com.rarible.core.test.ext.MongoTest

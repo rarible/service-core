@@ -1,0 +1,7 @@
+rarible:
+  loader:
+    broker-replica-set: ${kafka.hosts}
+    topics-prefix: loader-test
+    enableWorkers: false
+    enableNotifications: false
+    enableRetrySchedulerJob: false

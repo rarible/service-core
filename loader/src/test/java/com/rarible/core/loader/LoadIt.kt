@@ -3,7 +3,7 @@ package com.rarible.core.loader
 import com.rarible.core.common.nowMillis
 import com.rarible.core.loader.internal.common.LoadMetrics
 import com.rarible.core.loader.internal.runner.LoadRunnerParalleller
-import com.rarible.core.loader.internal.runner.RetryTasksService
+import com.rarible.core.loader.internal.common.RetryTasksService
 import com.rarible.core.loader.test.testLoaderType
 import com.rarible.core.loader.test.testReceivedNotifications
 import com.rarible.core.test.data.randomString

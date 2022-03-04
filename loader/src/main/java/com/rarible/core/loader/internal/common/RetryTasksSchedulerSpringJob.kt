@@ -1,4 +1,4 @@
-package com.rarible.core.loader.internal.runner
+package com.rarible.core.loader.internal.common
 
 import com.rarible.core.loader.configuration.LOADER_PROPERTIES_PREFIX
 import kotlinx.coroutines.runBlocking
