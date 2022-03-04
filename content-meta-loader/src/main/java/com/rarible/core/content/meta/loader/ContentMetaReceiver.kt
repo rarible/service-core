@@ -23,6 +23,7 @@ import com.drew.metadata.wav.WavDirectory
 import com.drew.metadata.webp.WebpDirectory
 import org.slf4j.LoggerFactory
 import java.net.URL
+import java.time.Duration
 
 class ContentMetaReceiver(
     private val contentReceiver: ContentReceiver,
@@ -37,13 +38,23 @@ class ContentMetaReceiver(
     @Suppress("MemberVisibilityCanBePrivate")
     suspend fun receive(url: URL): ContentMeta? {
         getPredefinedContentMeta(url)?.let { return it }
+        val logPrefix = "Content meta by $url"
+        logger.info("$logPrefix: started receiving")
         val startSample = contentReceiverMetrics.startReceiving()
         return try {
-            val contentMeta = doReceive(url)
-            contentReceiverMetrics.endReceiving(startSample, true)
+            val contentMeta = doReceive(url, logPrefix)
+            val duration = contentReceiverMetrics.endReceiving(startSample, true)
+            logger.info(
+                "$logPrefix: " + if (contentMeta != null) "empty result" else "received $contentMeta" +
+                        " (in ${duration.presentableSlow(Duration.ofSeconds(1))})"
+            )
             contentMeta
         } catch (e: Throwable) {
-            contentReceiverMetrics.endReceiving(startSample, false)
+            val duration = contentReceiverMetrics.endReceiving(startSample, false)
+            logger.warn(
+                "$logPrefix: failed to receive content meta" +
+                        " (in ${duration.presentableSlow(Duration.ofSeconds(1))})", e
+            )
             throw e
         }
     }
@@ -54,9 +65,7 @@ class ContentMetaReceiver(
         return ContentMeta(mediaType)
     }
 
-    private suspend fun doReceive(url: URL): ContentMeta? {
-        val logPrefix = "Content meta by $url"
-        logger.info("$logPrefix: started receiving")
+    private suspend fun doReceive(url: URL, logPrefix: String): ContentMeta? {
         val contentBytes = contentReceiver.receiveBytes(url, maxBytes)
         logger.info(
             "$logPrefix: received content " +
@@ -103,14 +112,12 @@ class ContentMetaReceiver(
             }
             errors += directory.errors.toList().size
         }
-        val contentMeta = ContentMeta(
+        return ContentMeta(
             type = mimeType ?: contentBytes.contentType ?: return null,
             width = width,
             height = height,
             size = contentBytes.contentLength
         )
-        logger.info("$logPrefix: received content meta: $contentMeta (errors extracting $errors)")
-        return contentMeta
     }
 
     private fun parseSvg(contentBytes: ContentBytes): ContentMeta? {

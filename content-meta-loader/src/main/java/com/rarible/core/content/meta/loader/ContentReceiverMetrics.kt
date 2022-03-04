@@ -3,6 +3,7 @@ package com.rarible.core.content.meta.loader
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
 import io.micrometer.core.instrument.Timer
+import java.time.Duration
 
 class ContentReceiverMetrics(
     meterRegistry: MeterRegistry
@@ -24,12 +25,13 @@ class ContentReceiverMetrics(
 
     fun startReceiving(): Timer.Sample = Timer.start()
 
-    fun endReceiving(sample: Timer.Sample, success: Boolean) {
-        if (success) {
+    fun endReceiving(sample: Timer.Sample, success: Boolean): Duration {
+        val time = if (success) {
             sample.stop(receiveSuccessTimer)
         } else {
             sample.stop(receiveFailureTimer)
         }
+        return Duration.ofNanos(time)
     }
 
     fun receivedBytes(count: Int) {
