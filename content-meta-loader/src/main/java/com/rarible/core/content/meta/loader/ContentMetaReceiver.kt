@@ -91,6 +91,11 @@ class ContentMetaReceiver(
             return it
         }
 
+        PngDetector.detectPngContentMeta(contentBytes)?.let {
+            logger.info("$logPrefix: parsed PNG content meta $it")
+            return it
+        }
+
         @Suppress("BlockingMethodInNonBlockingContext")
         val metadata = try {
             ImageMetadataReader.readMetadata(bytes.inputStream())

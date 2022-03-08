@@ -1,11 +1,15 @@
 package com.rarible.core.content.meta.loader
 
+import com.drew.imaging.png.PngChunkReader
+import com.drew.lang.StreamReader
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
+import java.io.File
+import java.net.URL
 
 @Disabled
 class ContentMetaReceiverTest {
@@ -105,15 +109,31 @@ class ContentMetaReceiverTest {
     }
 
     @Test
-    fun `fallback to extension detector`() {
+    fun png() {
+        val meta = getContentMeta(
+            "https://rarible.mypinata.cloud/ipfs/QmSorbC4UvLA6s92myE7CMog9htep9J5TXi4mUTFckc4mU"
+        )
+        assertEquals(
+            ContentMeta(
+                type = "image/png",
+                width = 1262,
+                height = 1262,
+                size = 605891
+            ),
+            meta
+        )
+    }
+
+    @Test
+    fun `png with wrong content type`() {
         val meta = getContentMeta(
             "https://rinkeby.traitsy.com/meta/0xc91741d26b851d6724cffdf9aa3cf379b678272a/99362971277997261421968536521162276234322138208043033076209335008158078363510/revealed.png"
         )
         assertEquals(
             ContentMeta(
                 type = "image/png",
-                width = null,
-                height = null,
+                width = 4000,
+                height = 4000,
                 size = null
             ),
             meta
