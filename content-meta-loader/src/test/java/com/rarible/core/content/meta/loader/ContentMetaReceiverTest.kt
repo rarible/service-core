@@ -111,7 +111,7 @@ class ContentMetaReceiverTest {
     @Test
     fun png() {
         val meta = getContentMeta(
-            "https://rarible.mypinata.cloud/ipfs/QmSorbC4UvLA6s92myE7CMog9htep9J5TXi4mUTFckc4mU"
+            "https://lh3.googleusercontent.com/v-6yD0Vf2BEo-nSPG-VuSSdYYAxaJkgFAAdizbO_2gxgqa85eWg0l27lerLKxOOcfJjKf7bCmug3S_cbJdCQ-csxqLN_Fvs3vHVOZFU"
         )
         assertEquals(
             ContentMeta(

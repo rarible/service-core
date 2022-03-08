@@ -21,9 +21,11 @@ import com.drew.metadata.photoshop.PsdHeaderDirectory
 import com.drew.metadata.png.PngDirectory
 import com.drew.metadata.wav.WavDirectory
 import com.drew.metadata.webp.WebpDirectory
+import com.rarible.core.common.nowMillis
 import org.slf4j.LoggerFactory
 import java.net.URL
 import java.time.Duration
+import kotlin.time.toJavaDuration
 
 class ContentMetaReceiver(
     private val contentReceiver: ContentReceiver,
@@ -46,7 +48,7 @@ class ContentMetaReceiver(
             val duration = contentReceiverMetrics.endReceiving(startSample, true)
             if (contentMeta != null) {
                 logger.info(
-                    "$logPrefix: received $contentMeta (in ${duration.presentableSlow(Duration.ofSeconds(1))})"
+                    "$logPrefix: received $contentMeta (in ${duration.presentableSlow(slowThreshold)})"
                 )
                 contentMeta
             } else {
@@ -56,7 +58,7 @@ class ContentMetaReceiver(
             val duration = contentReceiverMetrics.endReceiving(startSample, false)
             logger.warn(
                 "$logPrefix: failed to receive content meta" +
-                        " (in ${duration.presentableSlow(Duration.ofSeconds(1))})", e
+                        " (in ${duration.presentableSlow(slowThreshold)})", e
             )
             null
         }
@@ -77,12 +79,23 @@ class ContentMetaReceiver(
     }
 
     private suspend fun doReceive(url: URL, logPrefix: String): ContentMeta? {
-        val contentBytes = contentReceiver.receiveBytes(url, maxBytes)
+        val startLoading = nowMillis()
+        val contentBytes = try {
+            contentReceiver.receiveBytes(url, maxBytes)
+        } catch (e: Exception) {
+            logger.warn(
+                "$logPrefix: failed to get content bytes in " +
+                        Duration.between(startLoading, nowMillis()).presentableSlow(slowThreshold)
+            )
+            throw e
+        }
+        val receiveTime = Duration.between(startLoading, nowMillis())
         logger.info(
             "$logPrefix: received content " +
                     "(bytes ${contentBytes.bytes.size}, " +
                     "content length ${contentBytes.contentLength}, " +
-                    "mime type ${contentBytes.contentType})"
+                    "mime type ${contentBytes.contentType}) " +
+                    "in ${receiveTime.presentableSlow(slowThreshold)}"
         )
         val bytes = contentBytes.bytes
         contentReceiverMetrics.receivedBytes(bytes.size)
@@ -236,6 +249,8 @@ class ContentMetaReceiver(
     }
 
     private companion object {
+        private val slowThreshold = Duration.ofSeconds(1)
+
         val ignoredExtensions = mapOf(
             "mp3" to "audio/mp3",
             "wav" to "audio/wav",
