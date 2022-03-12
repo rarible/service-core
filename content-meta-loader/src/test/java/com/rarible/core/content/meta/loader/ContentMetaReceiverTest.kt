@@ -116,9 +116,9 @@ class ContentMetaReceiverTest {
         assertEquals(
             ContentMeta(
                 type = "image/png",
-                width = 1262,
-                height = 1262,
-                size = 605891
+                width = 512,
+                height = 512,
+                size = 173580
             ),
             meta
         )
