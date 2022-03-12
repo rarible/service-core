@@ -25,7 +25,6 @@ import com.rarible.core.common.nowMillis
 import org.slf4j.LoggerFactory
 import java.net.URL
 import java.time.Duration
-import kotlin.time.toJavaDuration
 
 class ContentMetaReceiver(
     private val contentReceiver: ContentReceiver,
@@ -52,7 +51,7 @@ class ContentMetaReceiver(
                 )
                 contentMeta
             } else {
-                null
+                getFallbackContentMeta(url, null)
             }
         } catch (e: Throwable) {
             val duration = contentReceiverMetrics.endReceiving(startSample, false)
@@ -60,16 +59,32 @@ class ContentMetaReceiver(
                 "$logPrefix: failed to receive content meta" +
                         " (in ${duration.presentableSlow(slowThreshold)})", e
             )
-            null
+            getFallbackContentMeta(url, null)
         }
     }
 
-    private fun getWithExtensionFallback(url: URL): ContentMeta? {
+    private fun getFallbackContentMeta(url: URL, contentBytes: ContentBytes?): ContentMeta? {
+        val contentType = contentBytes?.contentType
+        if (contentType != null && listOf("image/", "video/", "audio/", "model/").any { contentType.startsWith(it) }) {
+            val fallback = ContentMeta(
+                type = contentType,
+                size = contentBytes.contentLength
+            )
+            logger.info("Content meta by $url: falling back by mimeType from the HTTP headers to $fallback")
+            return fallback
+        }
         val extension = url.toExternalForm().substringAfterLast(".", "")
-        val mimeType = extensionMapping[extension] ?: return null
-        return ContentMeta(
-            type = mimeType,
-        )
+        val mimeType = extensionMapping[extension]
+        if (mimeType != null) {
+            val fallback = ContentMeta(
+                type = mimeType,
+                size = contentBytes?.contentLength
+            )
+            logger.info("Content meta by $url: falling back by extension of URL $fallback")
+            return fallback
+        }
+        logger.warn("Content meta by $url: cannot fall back")
+        return null
     }
 
     private fun getPredefinedContentMeta(url: URL): ContentMeta? {
@@ -113,23 +128,7 @@ class ContentMetaReceiver(
         val metadata = try {
             ImageMetadataReader.readMetadata(bytes.inputStream())
         } catch (e: Exception) {
-            val fallbackMeta = if (contentBytes.contentType != null) {
-                if (
-                    contentBytes.contentType.startsWith("image/")
-                    || contentBytes.contentType.startsWith("video/")
-                    || contentBytes.contentType.startsWith("audio/")
-                    || contentBytes.contentType.startsWith("model/")
-                ) {
-                    ContentMeta(
-                        type = contentBytes.contentType,
-                        size = contentBytes.contentLength
-                    )
-                } else {
-                    null
-                }
-            } else {
-                getWithExtensionFallback(url)?.copy(size = contentBytes.contentLength)
-            }
+            val fallbackMeta = getFallbackContentMeta(url, contentBytes)
             logger.warn(
                 "$logPrefix: failed to extract metadata by ${bytes.size} bytes, fallback meta " +
                         if (fallbackMeta != null) "$fallbackMeta" else "is empty",
