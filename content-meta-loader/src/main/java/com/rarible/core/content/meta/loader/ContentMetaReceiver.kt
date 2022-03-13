@@ -39,38 +39,32 @@ class ContentMetaReceiver(
     @Suppress("MemberVisibilityCanBePrivate")
     suspend fun receive(url: URL): ContentMeta? {
         getPredefinedContentMeta(url)?.let { return it }
-        val logPrefix = "Content meta by $url"
-        logger.info("$logPrefix: started receiving")
+        logger.info("${logPrefix(url)}: started receiving")
         val startSample = contentReceiverMetrics.startReceiving()
         return try {
-            val contentMeta = doReceive(url, logPrefix)
+            val contentMeta = doReceive(url)
             val duration = contentReceiverMetrics.endReceiving(startSample, true)
             if (contentMeta != null) {
-                logger.info(
-                    "$logPrefix: received $contentMeta (in ${duration.presentableSlow(slowThreshold)})"
-                )
+                logger.info("${logPrefix(url)}: received $contentMeta (in ${duration.presentableSlow(slowThreshold)})")
                 contentMeta
             } else {
                 getFallbackContentMeta(url, null)
             }
         } catch (e: Throwable) {
             val duration = contentReceiverMetrics.endReceiving(startSample, false)
-            logger.warn(
-                "$logPrefix: failed to receive content meta" +
-                        " (in ${duration.presentableSlow(slowThreshold)})", e
-            )
+            logger.warn("${logPrefix(url)}: failed to receive (in ${duration.presentableSlow(slowThreshold)})", e)
             getFallbackContentMeta(url, null)
         }
     }
 
     private fun getFallbackContentMeta(url: URL, contentBytes: ContentBytes?): ContentMeta? {
         val contentType = contentBytes?.contentType
-        if (contentType != null && listOf("image/", "video/", "audio/", "model/").any { contentType.startsWith(it) }) {
+        if (contentType != null && knownMediaTypePrefixes.any { contentType.startsWith(it) }) {
             val fallback = ContentMeta(
                 type = contentType,
                 size = contentBytes.contentLength
             )
-            logger.info("Content meta by $url: falling back by mimeType from the HTTP headers to $fallback")
+            logger.info("${logPrefix(url)}: falling back by mimeType from the HTTP headers to $fallback")
             return fallback
         }
         val extension = url.toExternalForm().substringAfterLast(".", "")
@@ -80,7 +74,7 @@ class ContentMetaReceiver(
                 type = mimeType,
                 size = contentBytes?.contentLength
             )
-            logger.info("Content meta by $url: falling back by extension of URL $fallback")
+            logger.info("${logPrefix(url)}: falling back by extension to $fallback")
             return fallback
         }
         logger.warn("Content meta by $url: cannot fall back")
@@ -93,34 +87,35 @@ class ContentMetaReceiver(
         return ContentMeta(mediaType)
     }
 
-    private suspend fun doReceive(url: URL, logPrefix: String): ContentMeta? {
+    private suspend fun doReceive(url: URL): ContentMeta? {
         val startLoading = nowMillis()
         val contentBytes = try {
             contentReceiver.receiveBytes(url, maxBytes)
         } catch (e: Exception) {
             logger.warn(
-                "$logPrefix: failed to get content bytes in " +
-                        Duration.between(startLoading, nowMillis()).presentableSlow(slowThreshold)
+                "${logPrefix(url)}: failed to received content bytes (spent ${
+                    Duration.between(startLoading, nowMillis()).presentableSlow(slowThreshold)
+                })",
+                e
             )
-            throw e
+            return getFallbackContentMeta(url, null)
         }
-        val receiveTime = Duration.between(startLoading, nowMillis())
         logger.info(
-            "$logPrefix: received content " +
+            "${logPrefix(url)}: received content " +
                     "(bytes ${contentBytes.bytes.size}, " +
                     "content length ${contentBytes.contentLength}, " +
                     "mime type ${contentBytes.contentType}) " +
-                    "in ${receiveTime.presentableSlow(slowThreshold)}"
+                    "in ${Duration.between(startLoading, nowMillis()).presentableSlow(slowThreshold)}"
         )
         val bytes = contentBytes.bytes
         contentReceiverMetrics.receivedBytes(bytes.size)
         parseSvg(contentBytes)?.let {
-            logger.info("$logPrefix: parsed SVG content meta $it")
+            logger.info("${logPrefix(url)}: parsed SVG content meta $it")
             return it
         }
 
         PngDetector.detectPngContentMeta(contentBytes)?.let {
-            logger.info("$logPrefix: parsed PNG content meta $it")
+            logger.info("${logPrefix(url)}: parsed PNG content meta $it")
             return it
         }
 
@@ -128,13 +123,8 @@ class ContentMetaReceiver(
         val metadata = try {
             ImageMetadataReader.readMetadata(bytes.inputStream())
         } catch (e: Exception) {
-            val fallbackMeta = getFallbackContentMeta(url, contentBytes)
-            logger.warn(
-                "$logPrefix: failed to extract metadata by ${bytes.size} bytes, fallback meta " +
-                        if (fallbackMeta != null) "$fallbackMeta" else "is empty",
-                e
-            )
-            return fallbackMeta
+            logger.warn("${logPrefix(url)}: failed to extract metadata by ${bytes.size} bytes", e)
+            return getFallbackContentMeta(url, contentBytes)
         }
         var mimeType: String? = null
         var width: Int? = null
@@ -247,6 +237,8 @@ class ContentMetaReceiver(
         null
     }
 
+    private fun logPrefix(url: URL): String = "Content meta by $url"
+
     private companion object {
         private val slowThreshold = Duration.ofSeconds(1)
 
@@ -274,5 +266,7 @@ class ContentMetaReceiver(
 
         const val svgMimeType = "image/svg+xml"
         val svgPrefix = "data:image/svg+xml".toByteArray(Charsets.UTF_8).toList()
+
+        val knownMediaTypePrefixes = listOf("image/", "video/", "audio/", "model/")
     }
 }
