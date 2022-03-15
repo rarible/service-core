@@ -51,7 +51,7 @@ data class LoadProperties(
      *
      * This field is only applicable if the [enableWorkers] is true.
      */
-    val workers: Int = 1,
+    val workers: Int = 4,
     /**
      * Retry policy for failed tasks.
      */
