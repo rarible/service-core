@@ -1,6 +1,5 @@
 package com.rarible.loader.cache.internal
 
-import com.rarible.core.common.nowMillis
 import com.rarible.core.loader.LoadService
 import com.rarible.core.loader.LoadTaskStatus
 import com.rarible.core.loader.generateLoadTaskId
@@ -8,7 +7,6 @@ import com.rarible.core.loader.internal.common.nowMillis
 import com.rarible.loader.cache.CacheEntry
 import com.rarible.loader.cache.CacheLoaderService
 import com.rarible.loader.cache.CacheType
-import org.slf4j.LoggerFactory
 import java.time.Clock
 
 class CacheLoaderServiceImpl<T>(
@@ -38,42 +36,21 @@ class CacheLoaderServiceImpl<T>(
     }
 
     override suspend fun get(key: String): CacheEntry<T> {
-        val loadTaskId = cacheLoadTaskIdService.getLastTaskId(type, key)
-        val loadStatus = loadTaskId?.let { loadService.getStatus(loadTaskId) }
         val cacheEntry = cacheRepository.get<T>(type, key)
-            ?: return when (loadStatus) {
-                is LoadTaskStatus.Scheduled -> getInitialLoading(loadStatus)
-                is LoadTaskStatus.WaitsForRetry -> getInitialLoading(loadStatus)
-                is LoadTaskStatus.Failed -> getInitialFailed(loadStatus)
-                null -> getNotAvailable() // Hasn't been scheduled and not available.
-                is LoadTaskStatus.Loaded -> getNotAvailable() // Removed entry.
-            }
-        return getAvailableCacheEntry(cacheEntry, loadStatus)
-    }
-
-    private fun getAvailableCacheEntry(
-        cacheEntry: MongoCacheEntry<T>,
-        loadStatus: LoadTaskStatus?
-    ) = when (loadStatus) {
-        null, is LoadTaskStatus.Loaded -> CacheEntry.Loaded(
-            cachedAt = cacheEntry.cachedAt,
-            data = cacheEntry.data
-        )
-        is LoadTaskStatus.Failed -> CacheEntry.LoadedAndUpdateFailed(
-            cachedAt = cacheEntry.cachedAt,
-            data = cacheEntry.data,
-            failedUpdateStatus = loadStatus
-        )
-        is LoadTaskStatus.Scheduled -> CacheEntry.LoadedAndUpdateScheduled(
-            cachedAt = cacheEntry.cachedAt,
-            data = cacheEntry.data,
-            updateStatus = loadStatus
-        )
-        is LoadTaskStatus.WaitsForRetry -> CacheEntry.LoadedAndUpdateScheduled(
-            cachedAt = cacheEntry.cachedAt,
-            data = cacheEntry.data,
-            updateStatus = loadStatus
-        )
+        if (cacheEntry != null) {
+            return CacheEntry.Loaded(
+                cachedAt = cacheEntry.cachedAt,
+                data = cacheEntry.data
+            )
+        }
+        val loadTaskId = cacheLoadTaskIdService.getLastTaskId(type, key)
+        return when (val loadStatus = loadTaskId?.let { loadService.getStatus(loadTaskId) }) {
+            is LoadTaskStatus.Scheduled -> getInitialLoading(loadStatus)
+            is LoadTaskStatus.WaitsForRetry -> getInitialLoading(loadStatus)
+            is LoadTaskStatus.Failed -> getInitialFailed(loadStatus)
+            null -> getNotAvailable() // Hasn't been scheduled and not available.
+            is LoadTaskStatus.Loaded -> getNotAvailable() // Removed entry.
+        }
     }
 
     override suspend fun getAvailable(key: String): T? =

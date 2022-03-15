@@ -88,12 +88,9 @@ class CacheLoaderIt : AbstractIntegrationTest() {
         cacheEvents.clear()
         imageLoadService.update(key)
         Wait.waitAssert {
-            val loadedAndUpdateScheduled = CacheEntry.LoadedAndUpdateScheduled(
+            val loadedAndUpdateScheduled = CacheEntry.Loaded(
                 cachedAt = loadedAt,
-                data = testImage,
-                updateStatus = LoadTaskStatus.Scheduled(
-                    scheduledAt = updateScheduledAt
-                )
+                data = testImage
             )
             assertThat(imageLoadService.get(key)).isEqualTo(loadedAndUpdateScheduled)
             assertThat(imageLoadService.getAvailable(key)).isEqualTo(testImage)
