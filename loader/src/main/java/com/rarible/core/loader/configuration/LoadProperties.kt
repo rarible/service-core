@@ -30,6 +30,8 @@ data class LoadProperties(
     val topicsPrefix: String,
     /**
      * The number of partitions to use for the tasks topics. May be used to tune performance.
+     *
+     * NOTE! TODO: for now, this option should be set in all services' configurations. Topics are created by the first started service.
      */
     val loadTasksTopicPartitions: Int = 10,
     /**
@@ -40,6 +42,8 @@ data class LoadProperties(
     val loadTasksServiceInstances: Int = 1,
     /**
      * The number of partitions to use for loading notifications' topics. May be used to tune performance.
+     *
+     * NOTE! TODO: for now, this option should be set in all services' configurations. Topics are created by the first started service.
      */
     val loadNotificationsTopicPartitions: Int = 10,
     /**
