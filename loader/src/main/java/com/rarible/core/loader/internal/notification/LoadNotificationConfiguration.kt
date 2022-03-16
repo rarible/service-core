@@ -67,7 +67,7 @@ class LoadNotificationConfiguration {
     fun loadNotificationConfigurationStartupLogger(
         loadProperties: LoadProperties
     ): CommandLineRunner = CommandLineRunner {
-        logger.info("Loader notifications infrastructure has been initialized")
+        logger.info("Loader notifications infrastructure has been initialized with properties $loadProperties")
     }
 
     private fun notificationListenersWorkers(
@@ -76,6 +76,7 @@ class LoadNotificationConfiguration {
         loadNotificationListenersCaller: LoadNotificationListenersCaller,
         loadKafkaTopicsRegistry: LoadKafkaTopicsRegistry
     ): List<ConsumerWorker<LoadNotification>> {
+        logger.info("Creating ${loadProperties.loadNotificationsTopicPartitions} notification listener workers")
         return (0 until loadProperties.loadNotificationsTopicPartitions).map { id ->
             val consumer = createConsumerForLoadNotifications(
                 bootstrapServers = loadProperties.brokerReplicaSet,

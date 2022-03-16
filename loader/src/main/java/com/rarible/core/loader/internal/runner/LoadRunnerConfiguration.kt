@@ -106,7 +106,7 @@ class LoadRunnerConfiguration {
     fun loadRunnerConfigurationStartupLogger(
         loadProperties: LoadProperties
     ): CommandLineRunner = CommandLineRunner {
-        logger.info("Loader workers have been initialized")
+        logger.info("Loader workers have been initialized with properties $loadProperties")
     }
 
     private fun loadWorkers(

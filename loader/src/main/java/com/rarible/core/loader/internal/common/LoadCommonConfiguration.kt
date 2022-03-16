@@ -50,7 +50,7 @@ class LoadCommonConfiguration {
     fun loadCommonConfigurationStartupLogger(
         loadProperties: LoadProperties
     ): CommandLineRunner = CommandLineRunner {
-        logger.info("Loader infrastructure has been initialized")
+        logger.info("Loader infrastructure has been initialized with properties $loadProperties")
     }
 
     private fun createProducerForLoadTasks(
