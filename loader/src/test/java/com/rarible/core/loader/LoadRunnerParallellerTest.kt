@@ -19,7 +19,7 @@ class LoadRunnerParallellerTest {
     private val loadRunner = mockk<LoadRunner>()
 
     private val loadRunnerParalleller = LoadRunnerParalleller(
-        numberOfWorkingThreads = 1,
+        numberOfThreads = 1,
         loadRunner = loadRunner
     )
 

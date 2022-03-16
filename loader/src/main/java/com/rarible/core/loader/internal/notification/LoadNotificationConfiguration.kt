@@ -1,8 +1,9 @@
 package com.rarible.core.loader.internal.notification
 
+import com.rarible.core.daemon.DaemonWorkerProperties
 import com.rarible.core.daemon.RetryProperties
-import com.rarible.core.daemon.sequential.ConsumerEventHandler
-import com.rarible.core.daemon.sequential.ConsumerWorker
+import com.rarible.core.daemon.sequential.ConsumerBatchEventHandler
+import com.rarible.core.daemon.sequential.ConsumerBatchWorker
 import com.rarible.core.daemon.sequential.ConsumerWorkerHolder
 import com.rarible.core.kafka.RaribleKafkaConsumer
 import com.rarible.core.kafka.json.JsonDeserializer
@@ -18,7 +19,6 @@ import org.apache.kafka.clients.consumer.OffsetResetStrategy
 import org.slf4j.LoggerFactory
 import org.springframework.boot.CommandLineRunner
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.Configuration
@@ -50,17 +50,26 @@ class LoadNotificationConfiguration {
     fun notificationListenersWorkers(
         loaders: List<Loader>,
         loadProperties: LoadProperties,
-        loadNotificationListenersCaller: LoadNotificationListenersCaller,
-        loadKafkaTopicsRegistry: LoadKafkaTopicsRegistry
+        loadKafkaTopicsRegistry: LoadKafkaTopicsRegistry,
+        loadNotificationListenerCallerParalleller: LoadNotificationListenerCallerParalleller
     ): ConsumerWorkerHolder<LoadNotification> = ConsumerWorkerHolder(
         loaders.flatMap { loader ->
-            notificationListenersWorkers(
+            createNotificationListenersWorkers(
                 type = loader.type,
                 loadProperties = loadProperties,
-                loadNotificationListenersCaller = loadNotificationListenersCaller,
-                loadKafkaTopicsRegistry = loadKafkaTopicsRegistry
+                loadKafkaTopicsRegistry = loadKafkaTopicsRegistry,
+                loadNotificationListenerCallerParalleller = loadNotificationListenerCallerParalleller
             )
         }
+    )
+
+    @Bean
+    fun loadNotificationListenerCallerParalleller(
+        loadNotificationListenersCaller: LoadNotificationListenersCaller,
+        loadProperties: LoadProperties
+    ) = LoadNotificationListenerCallerParalleller(
+        numberOfThreads = loadProperties.notificationListenersCallerWorkers,
+        loadNotificationListenersCaller = loadNotificationListenersCaller
     )
 
     @Bean
@@ -70,12 +79,12 @@ class LoadNotificationConfiguration {
         logger.info("Loader notifications infrastructure has been initialized with properties $loadProperties")
     }
 
-    private fun notificationListenersWorkers(
+    private fun createNotificationListenersWorkers(
         type: LoadType,
         loadProperties: LoadProperties,
-        loadNotificationListenersCaller: LoadNotificationListenersCaller,
-        loadKafkaTopicsRegistry: LoadKafkaTopicsRegistry
-    ): List<ConsumerWorker<LoadNotification>> {
+        loadKafkaTopicsRegistry: LoadKafkaTopicsRegistry,
+        loadNotificationListenerCallerParalleller: LoadNotificationListenerCallerParalleller
+    ): List<ConsumerBatchWorker<LoadNotification>> {
         logger.info("Creating ${loadProperties.loadNotificationsTopicPartitions} notification listener workers")
         return (0 until loadProperties.loadNotificationsTopicPartitions).map { id ->
             val consumer = createConsumerForLoadNotifications(
@@ -84,17 +93,16 @@ class LoadNotificationConfiguration {
                 id = id,
                 loadKafkaTopicsRegistry = loadKafkaTopicsRegistry
             )
-            val notificationsLogger = LoggerFactory.getLogger("loading-notifications-$type")
             val workerName = "loader-notification-consumer-$type-$id"
             logger.info("Creating notification listener worker $workerName")
-            ConsumerWorker(
+            ConsumerBatchWorker(
                 consumer = consumer,
-                eventHandler = object : ConsumerEventHandler<LoadNotification> {
-                    override suspend fun handle(event: LoadNotification) {
-                        notificationsLogger.info("Received load notification $event")
-                        loadNotificationListenersCaller.notifyListeners(event)
+                eventHandler = object : ConsumerBatchEventHandler<LoadNotification> {
+                    override suspend fun handle(event: List<LoadNotification>) {
+                        loadNotificationListenerCallerParalleller.load(event)
                     }
                 },
+                properties = DaemonWorkerProperties(consumerBatchSize = loadProperties.loadNotificationsBatchSize),
                 workerName = workerName,
                 retryProperties = RetryProperties(attempts = 1, delay = Duration.ZERO),
                 completionHandler = {

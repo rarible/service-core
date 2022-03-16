@@ -98,7 +98,7 @@ class LoadRunnerConfiguration {
         loadRunner: LoadRunner,
         loadProperties: LoadProperties
     ) = LoadRunnerParalleller(
-        numberOfWorkingThreads = loadProperties.workers,
+        numberOfThreads = loadProperties.workers,
         loadRunner = loadRunner
     )
 

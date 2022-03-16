@@ -47,6 +47,10 @@ data class LoadProperties(
      */
     val loadNotificationsTopicPartitions: Int = 10,
     /**
+     * The number of notifications pulled out in batch for processing in parallel by notification listeners.
+     */
+    val loadNotificationsBatchSize: Int = 50,
+    /**
      * The number of tasks pulled out in batch for processing in parallel using [workers] threads.
      */
     val loadTasksBatchSize: Int = 50,
@@ -56,6 +60,12 @@ data class LoadProperties(
      * This field is only applicable if the [enableWorkers] is true.
      */
     val workers: Int = 4,
+    /**
+     * The number of worker threads that call the notification listeners.
+     *
+     * This field is only applicable if the [enableNotifications] is true.
+     */
+    val notificationListenersCallerWorkers: Int = 4,
     /**
      * Retry policy for failed tasks.
      */
