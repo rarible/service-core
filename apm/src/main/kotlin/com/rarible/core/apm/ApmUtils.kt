@@ -20,8 +20,6 @@ import reactor.util.context.Context
 import java.util.Optional
 import kotlin.coroutines.coroutineContext
 
-private val logger = LoggerFactory.getLogger(ApmContext::class.java)
-
 suspend fun <T> withSpan(
     info: SpanInfo,
     body: suspend () -> T
@@ -67,23 +65,14 @@ suspend fun <T> withTransaction(
 
 suspend fun <T> Span.using(body: suspend () -> T, name: String? = null): T {
     return try {
-        if (name != null) {
-            logger.info("Starting tx {} id = {}", name, this.id)
-        }
         val current = coroutineContext[ReactorContext.Key]?.context ?: Context.empty()
         withContext(ReactorContext(current.put(ApmContext.Key, ApmContext(this)))) {
             body()
         }
     } catch (e: Throwable) {
-        if (name != null) {
-            logger.info("Capturing ex for tx {} id = {}", name, this.id)
-        }
         captureException(e)
         throw e
     } finally {
-        if (name != null) {
-            logger.info("Ending tx {} id = {}", name, this.id)
-        }
         end()
     }
 }
