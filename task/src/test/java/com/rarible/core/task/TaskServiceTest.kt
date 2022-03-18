@@ -45,7 +45,7 @@ class TaskServiceTest : AbstractIntegrationTest() {
         }
 
         runBlocking {
-            service.readAndRun()
+            service.runTasks()
         }
 
         waitAssert {

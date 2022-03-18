@@ -58,21 +58,20 @@ class TaskService(
     }
 
     @Scheduled(initialDelayString = "\${rarible.task.initialDelay:30000}", fixedDelayString = "\${rarible.task.delay:60000}")
-    fun readAndRun() {
+    fun runTasks() {
         scope.launch {
-            logger.info("readAndRun()")
-            Flux.concat(
+            logger.info("TaskHandler: find tasks to run")
+            val tasksStarted = Flux.concat(
                 taskRepository.findByRunningAndLastStatus(false, TaskStatus.ERROR),
                 taskRepository.findByRunningAndLastStatus(false, TaskStatus.NONE)
             )
                 .asFlow()
                 .map {
                     runTask(it.type, it.param, it.sample)
+                    logger.info("TaskHandler: started task $it")
                 }
-                .collect {
-                    logger.info("started: $it")
-                }
-            logger.info("completed readAndRun()")
+                .count()
+            logger.info("TaskHandler: started $tasksStarted tasks")
         }
     }
 
