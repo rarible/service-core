@@ -40,7 +40,8 @@ class RaribleKafkaProducer<V>(
      */
     deliveryTimeout: Duration = Duration.ofMinutes(2),
     valueClass: Class<V>? = null,
-    compression: Compression = Compression.NONE
+    compression: Compression = Compression.NONE,
+    properties: Map<String, String> = emptyMap()
 ) : AutoCloseable, KafkaProducer<V> {
 
     private val sender: KafkaSender<String, V>
@@ -55,7 +56,7 @@ class RaribleKafkaProducer<V>(
             ProducerConfig.ACKS_CONFIG to acknowledgement.kafkaValue,
             ProducerConfig.DELIVERY_TIMEOUT_MS_CONFIG to deliveryTimeout.toMillis().toInt(),
             ProducerConfig.COMPRESSION_TYPE_CONFIG to compression.kafkaValue
-        )
+        ) + properties
         val senderOptions = SenderOptions
             .create<String, V>(senderProperties)
             .maxInFlight(backpressure)
