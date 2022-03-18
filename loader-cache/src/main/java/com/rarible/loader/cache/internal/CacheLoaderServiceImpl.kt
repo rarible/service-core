@@ -29,6 +29,7 @@ class CacheLoaderServiceImpl<T>(
 
     override suspend fun remove(key: String) {
         cacheRepository.remove(type, key)
+        cacheLoadTaskIdService.remove(type, key)
     }
 
     override suspend fun save(key: String, data: T) {

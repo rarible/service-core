@@ -33,4 +33,17 @@ class CacheLoadTaskIdServiceIt : AbstractIntegrationTest() {
         cacheLoadTaskIdService.save(type, key, loadTaskId2)
         assertThat(cacheLoadTaskIdService.getLastTaskId(type, key)).isEqualTo(loadTaskId2)
     }
+
+    @Test
+    fun `save and remove`() = runBlocking<Unit> {
+        val type = randomString()
+        val key = randomString()
+        val loadTaskId = randomString()
+        assertThat(cacheLoadTaskIdService.getLastTaskId(type, key)).isNull()
+        cacheLoadTaskIdService.save(type, key, loadTaskId)
+        assertThat(cacheLoadTaskIdService.getLastTaskId(type, key)).isEqualTo(loadTaskId)
+        cacheLoadTaskIdService.remove(type, key)
+        assertThat(cacheLoadTaskIdService.getLastTaskId(type, key)).isNull()
+    }
+
 }

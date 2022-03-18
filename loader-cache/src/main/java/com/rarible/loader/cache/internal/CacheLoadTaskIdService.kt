@@ -12,6 +12,7 @@ import org.springframework.data.mongodb.core.mapping.Document
 import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.core.query.isEqualTo
+import org.springframework.data.mongodb.core.remove
 import org.springframework.stereotype.Component
 
 @Component
@@ -31,6 +32,16 @@ class CacheLoadTaskIdService(
             )
         ).with(Sort.by(Sort.Direction.DESC, "_id")).limit(1)
         return mongo.findOne<MongoCacheLoadTaskId>(query, COLLECTION).awaitFirstOrNull()?.taskId
+    }
+
+    suspend fun remove(type: CacheType, key: String) {
+        val query = Query(
+            Criteria().andOperator(
+                MongoCacheLoadTaskId::type.isEqualTo(type),
+                MongoCacheLoadTaskId::key.isEqualTo(key)
+            )
+        )
+        mongo.remove(query, COLLECTION).awaitFirstOrNull()
     }
 
     companion object {
