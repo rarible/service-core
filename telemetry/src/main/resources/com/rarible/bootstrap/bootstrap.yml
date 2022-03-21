@@ -47,6 +47,8 @@ management:
     health.show-details: always
   metrics:
     distribution:
+      percentiles:
+        http.server.requests: 0.5, 0.95, 0.99
       sla:
         http.server.requests: 50ms,100ms,200ms,500ms,1s,2s,5s,10s
     export:
