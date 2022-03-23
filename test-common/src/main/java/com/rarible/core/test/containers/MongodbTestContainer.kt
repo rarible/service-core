@@ -11,7 +11,7 @@ class MongodbTestContainer {
 
     companion object {
         const val MONGODB_EXPOSED_PORT = 27017
-        val MONGO_IMAGE: DockerImageName = DockerImageName.parse("mongo:4.0.21")
+        val MONGO_IMAGE: DockerImageName = DockerImageName.parse("mongo:4.4.10")
 
         @JvmStatic
         val mongo: MongoDBContainer by lazy {
