@@ -3,6 +3,8 @@ package com.rarible.core.content.meta.loader
 import com.drew.imaging.png.PngChunkReader
 import com.drew.lang.StreamReader
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
@@ -154,6 +156,25 @@ class ContentMetaReceiverTest {
             "https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/NON_EXISTING"
         )
         assertNull(meta)
+    }
+
+    @Volatile  var i = 0
+
+    @Test
+    @Disabled
+    fun customTest()  = runBlocking {
+        File("C:\\urls\\urls.txt").
+        forEachLine {
+            launch {
+                i += 1
+                println(i)
+                service.receive(it)
+                //getContentMeta(it)
+            }
+            runBlocking {
+                delay(300)
+            }
+        }
     }
 
     private fun getContentMeta(url: String): ContentMeta? = runBlocking { service.receive(url) }

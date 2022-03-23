@@ -37,9 +37,22 @@
 
         <dependency>
             <groupId>io.ktor</groupId>
-            <artifactId>ktor-client-apache</artifactId>
+            <artifactId>ktor-client-core-jvm</artifactId>
             <version>${ktor.client.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-client-cio</artifactId>
+            <version>${ktor.client.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-client-cio-jvm</artifactId>
+            <version>${ktor.client.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-core</artifactId>
@@ -54,6 +67,11 @@
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-http-cio-jvm</artifactId>
+            <version>1.6.7</version>
         </dependency>
     </dependencies>
 </project>
