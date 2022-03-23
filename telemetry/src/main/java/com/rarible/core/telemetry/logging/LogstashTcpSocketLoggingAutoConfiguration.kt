@@ -42,6 +42,7 @@ internal class LogstashTcpSocketLoggingAutoConfiguration(
             addDestination(properties.destinations.joinToString { "${it.host}:${it.port}" })
             addFilter(levelFilter)
             encoder = logstashEncoder
+            ringBufferSize = properties.ringBufferSize
             start()
         }
     }
