@@ -34,7 +34,14 @@ class ContentMetaReceiver(
     private val logger = LoggerFactory.getLogger(ContentMetaReceiver::class.java)
 
     @Suppress("BlockingMethodInNonBlockingContext")
-    suspend fun receive(url: String): ContentMeta? = receive(URL(url))
+    suspend fun receive(url: String): ContentMeta?{
+      return try {
+          receive(URL(url))
+      } catch (e: Throwable) {
+          logger.warn("Wrong URL: $url", e)
+          null
+      }
+    }
 
     @Suppress("MemberVisibilityCanBePrivate")
     suspend fun receive(url: URL): ContentMeta? {
