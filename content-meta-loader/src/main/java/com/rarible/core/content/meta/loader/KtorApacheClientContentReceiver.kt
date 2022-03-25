@@ -7,7 +7,9 @@ import io.ktor.client.engine.apache.*
 
 class KtorApacheClientContentReceiver(
     private val timeout: Int,
-    private val threadsCount: Int = 1
+    private val threadsCount: Int = 1,
+    private val totalConnection: Int = 1000,
+    private val connectionPerRoute: Int = 20
 ) : KtorClientContentReceiver() {
 
     override val client = HttpClient(Apache) {
@@ -19,8 +21,8 @@ class KtorApacheClientContentReceiver(
             connectTimeout = timeout
             connectionRequestTimeout = timeout
             customizeClient {
-                setMaxConnTotal(1000)
-                setMaxConnPerRoute(20)
+                setMaxConnTotal(totalConnection)
+                setMaxConnPerRoute(connectionPerRoute)
             }
         }
         BrowserUserAgent()
