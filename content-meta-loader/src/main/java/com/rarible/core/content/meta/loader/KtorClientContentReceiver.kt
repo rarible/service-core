@@ -21,7 +21,7 @@ abstract class KtorClientContentReceiver : ContentReceiver {
             } finally {
                 channel.cancel()
             }
-            val contentType = httpResponse.headers[HttpHeaders.ContentType]
+            val contentType = httpResponse.contentType().toString()
             ContentBytes(bytes, contentType, httpResponse.contentLength())
         }
     }

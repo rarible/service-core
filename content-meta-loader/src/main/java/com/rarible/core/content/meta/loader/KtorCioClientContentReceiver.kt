@@ -6,7 +6,7 @@ import io.ktor.client.features.*
 
 class KtorCioClientContentReceiver (
     private val timeout: Int,
-    private val threadsCount: Int = 64
+    private val threadsCount: Int = 1
 ) : KtorClientContentReceiver() {
 
     override val client = HttpClient(CIO) {
