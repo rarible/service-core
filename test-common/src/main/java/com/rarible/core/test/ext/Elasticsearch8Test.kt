@@ -1,6 +1,6 @@
 package com.rarible.core.test.ext
 
-import com.rarible.core.test.containers.ElasticsearchTestContainer
+import com.rarible.core.test.containers.Elasticsearch8TestContainer
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.extension.ExtensionContext
@@ -20,6 +20,6 @@ class ElasticSearchTestExtension : BeforeAllCallback {
     }
 
     companion object {
-        val esContainer = ElasticsearchTestContainer()
+        val esContainer = Elasticsearch8TestContainer()
     }
 }
