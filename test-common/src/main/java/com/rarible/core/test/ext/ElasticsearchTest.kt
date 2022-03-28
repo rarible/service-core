@@ -1,6 +1,6 @@
 package com.rarible.core.test.ext
 
-import com.rarible.core.test.containers.Elasticsearch8TestContainer
+import com.rarible.core.test.containers.ElasticsearchTestContainer
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.extension.ExtensionContext
@@ -11,15 +11,23 @@ import java.lang.annotation.Inherited
 @Retention(AnnotationRetention.RUNTIME)
 @Inherited
 @ExtendWith(ElasticSearchTestExtension::class)
-annotation class Elasticsearch8Test
+annotation class ElasticsearchTest
 
 class ElasticSearchTestExtension : BeforeAllCallback {
 
     override fun beforeAll(context: ExtensionContext) {
-        System.setProperty("elasticsearch.host", esContainer.elasticUrl())
+        System.setProperty(
+            "elasticsearch.cluster-nodes",
+            esContainer.getClusterNodes()
+        )
+
+        System.setProperty(
+            "elasticsearch.api-nodes",
+            esContainer.getApiNodes()
+        )
     }
 
     companion object {
-        val esContainer = Elasticsearch8TestContainer()
+        val esContainer = ElasticsearchTestContainer()
     }
 }

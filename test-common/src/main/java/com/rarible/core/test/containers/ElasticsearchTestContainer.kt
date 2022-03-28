@@ -1,12 +1,19 @@
 package com.rarible.core.test.containers
 
-import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.elasticsearch.ElasticsearchContainer
 import org.testcontainers.utility.DockerImageName
 
 class ElasticsearchTestContainer {
 
     fun elasticUrl(): String {
+        return elasticsearch.httpHostAddress
+    }
+
+    fun getClusterNodes(): String {
+        return "${elasticsearch.containerIpAddress}:${elasticsearch.getMappedPort(9300)}"
+    }
+
+    fun getApiNodes(): String {
         return elasticsearch.httpHostAddress
     }
 
@@ -17,8 +24,6 @@ class ElasticsearchTestContainer {
         @JvmStatic
         private val elasticsearch: ElasticsearchContainer by lazy {
             ElasticsearchContainer(ELASTIC_SEARCH__IMAGE).apply {
-                withEnv("discovery.type", "single-node")
-                waitingFor(Wait.defaultWaitStrategy())
                 withReuse(true)
             }
         }
