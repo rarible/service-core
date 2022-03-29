@@ -271,6 +271,7 @@
         <module>api</module>
         <module>apm</module>
         <module>apm-starter</module>
+        <module>data-util</module>
     </modules>
 
 </project>
