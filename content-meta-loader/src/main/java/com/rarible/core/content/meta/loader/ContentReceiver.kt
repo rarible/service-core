@@ -6,3 +6,4 @@ import java.net.URL
 interface ContentReceiver : Closeable {
     suspend fun receiveBytes(url: URL, maxBytes: Int): ContentBytes
 }
+

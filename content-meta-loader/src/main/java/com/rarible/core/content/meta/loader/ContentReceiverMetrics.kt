@@ -39,11 +39,4 @@ class ContentReceiverMetrics(
     }
 
     val totalBytesReceived: Long get() = receivedBytes.count().toLong()
-
-    private fun Boolean.booleanToString() = if (this) "true" else "false"
-
-    private companion object {
-        const val PREFIX = "content_meta_loader"
-    }
-
 }
