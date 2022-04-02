@@ -8,37 +8,45 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 
-
-
-@Disabled
+//@Disabled
 class ContentMetaReceiverTest {
 
     companion object {
         private val contentReceiverMetrics = ContentReceiverMetrics(SimpleMeterRegistry())
-        private val contentCioReceiver = KtorCioClientContentReceiver(
+
+        private val contentKtorCioReceiver = KtorCioClientContentReceiver(
             timeout = 10000
         )
-
-        private val contentApacheReceiver = KtorApacheClientContentReceiver(
+        private val contentKtorApacheReceiver = KtorApacheClientContentReceiver(
             timeout = 10000
         )
+        private val contentApacheAsyncHttpContentReceiver = ApacheHttpContentReceiver(
+            timeout = 10000,
+            connectionsPerRoute = 200,
+            keepAlive = true
+        )
 
-        private val contentCioMetaReceiver = ContentMetaReceiver(
-            contentReceiver = contentCioReceiver,
+        private val contentMetaKtorCioReceiver = ContentMetaReceiver(
+            contentReceiver = contentKtorCioReceiver,
             maxBytes = 128 * 1024,
             contentReceiverMetrics = contentReceiverMetrics
         )
-
-        private val contentMetaApacheReceiver = ContentMetaReceiver(
-            contentReceiver = contentApacheReceiver,
+        private val contentMetaKtorApacheReceiver = ContentMetaReceiver(
+            contentReceiver = contentKtorApacheReceiver,
+            maxBytes = 128 * 1024,
+            contentReceiverMetrics = contentReceiverMetrics
+        )
+        private val contentMetaApacheAsyncHttpReceiver = ContentMetaReceiver(
+            contentReceiver = contentApacheAsyncHttpContentReceiver,
             maxBytes = 128 * 1024,
             contentReceiverMetrics = contentReceiverMetrics
         )
     }
 
     enum class ContentMetaReceiversEnum(val receiver: ContentMetaReceiver){
-        CIO(contentCioMetaReceiver),
-        APACHE(contentMetaApacheReceiver)
+        KTOR_CIO(contentMetaKtorCioReceiver),
+        KTOR_APACHE(contentMetaKtorApacheReceiver),
+        APACHE_ASYNC(contentMetaApacheAsyncHttpReceiver)
     }
 
     @ParameterizedTest
