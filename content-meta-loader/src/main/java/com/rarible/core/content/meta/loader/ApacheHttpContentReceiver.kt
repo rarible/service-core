@@ -12,14 +12,20 @@ import org.apache.http.impl.nio.conn.PoolingNHttpClientConnectionManager
 import org.apache.http.impl.nio.reactor.DefaultConnectingIOReactor
 import org.apache.http.nio.reactor.ConnectingIOReactor
 import org.apache.http.HttpResponse
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import org.apache.http.HttpVersion
+import org.apache.http.message.BasicHttpResponse
+import org.apache.http.message.BasicStatusLine
+import org.apache.http.nio.IOControl
+import org.apache.http.nio.client.methods.AsyncByteConsumer
+import org.apache.http.nio.client.methods.HttpAsyncMethods
+import org.apache.http.protocol.HttpContext
 import java.io.Closeable
 import java.io.IOException
-import java.io.InputStream
 import java.net.URL
+import java.nio.ByteBuffer
 import java.util.concurrent.CancellationException
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.atomic.AtomicReference
 
 class ApacheHttpContentReceiver(
     private val timeout: Int,
@@ -51,83 +57,107 @@ class ApacheHttpContentReceiver(
             .setConnectTimeout(timeout)
             .setConnectionRequestTimeout(timeout)
             .build()
+
         request.config = config;
 
-        val callback = HttpResponseFutureCallback(request, maxBytes)
-        client.execute(request, callback)
-        return callback.promise.await()
+        val promise = CompletableFuture<ContentBytes>().exceptionally { throwable ->
+            if ((throwable is CancellationException || throwable.cause is CancellationException)) {
+                request.abortedSafely()
+            }
+            null
+        }
+        val callback = HttpResponseFutureCallback(promise, request)
+        val consumerCallback = HttpAsyncResponseConsumerCallback(promise, request, maxBytes)
+        client.execute(HttpAsyncMethods.create(request), consumerCallback, callback)
+        return promise.await()
     }
 
     override fun close() {
         client.close()
     }
 
-    private class HttpResponseFutureCallback(
+
+    private class HttpAsyncResponseConsumerCallback(
+        private val promise: CompletableFuture<ContentBytes>,
         private val request: HttpUriRequest,
-        private val maxBytes: Int
-    ) : FutureCallback<HttpResponse> {
-        val promise: CompletableFuture<ContentBytes> = CompletableFuture<ContentBytes>()
+        maxBytes: Int
+    ): AsyncByteConsumer<HttpResponse>(maxBytes) {
+        private val contentBytes = AtomicReference(EMPTY_CONTENT)
+        private val result = AtomicReference(EMPTY_HTTP_RESPONSE)
+        private val byteBuffer = ByteBuffer.allocate(maxBytes)
 
-        init {
-            promise.exceptionally { throwable ->
-                if ((throwable is CancellationException || throwable.cause is CancellationException) &&
-                    !request.isAborted
-                ) {
-                    request.abort()
-                }
-                null
-            }
-        }
-
-        override fun completed(httpResponse: HttpResponse) {
+        override fun onResponseReceived(response: HttpResponse) {
             try {
-                val entity = httpResponse.entity
-                val code = httpResponse.statusLine.statusCode
+                result.set(response)
+                val entity = response.entity
+                val code = response.statusLine.statusCode
                 if (entity != null && code == 200) {
                     val contentLength = entity.contentLength
                     val contentType = entity.contentType?.value
 
-                    val bytes = readBytes(entity.content, Math.toIntExact(contentLength), maxBytes)
-                    request.abort()
-
-                    promise.complete(ContentBytes(
-                        bytes = bytes,
+                    contentBytes.set(EMPTY_CONTENT.copy(
                         contentType = contentType,
                         contentLength = contentLength.takeUnless { it < 0 }
                     ))
                 } else {
-                    promise.completeExceptionally(
-                        IOException("No response entity, http code=$code")
-                    )
+                    completeExceptionally(IOException("No response entity, http code=$code"))
                 }
             } catch (ex: Throwable) {
-                promise.completeExceptionally(ex)
+                completeExceptionally(ex)
             }
         }
 
-        override fun failed(ex: Exception) {
+        override fun onByteReceived(buf: ByteBuffer, ioControl: IOControl) {
+            byteBuffer.put(buf.array(), 0, minOf(buf.limit(), byteBuffer.remaining()))
+            val currentContentBytes = contentBytes.get()
+            contentBytes.set(currentContentBytes.copy(bytes =  byteBuffer.array().copyOf(byteBuffer.position())))
+
+            if (byteBuffer.remaining() == 0) {
+                complete()
+            }
+        }
+
+        override fun buildResult(context: HttpContext): HttpResponse? {
+            complete()
+            return null
+        }
+
+        private fun complete() {
+            promise.complete(contentBytes.get())
+            request.abortedSafely()
+        }
+
+        private fun completeExceptionally(ex: Throwable) {
             promise.completeExceptionally(ex)
-        }
-
-        override fun cancelled() {
-            if (!request.isAborted) {
-                request.abort()
-            }
-        }
-
-        private fun readBytes(input: InputStream, contentLength: Int, maxBytes: Int): ByteArray {
-            val length = minOf(
-                maxBytes,
-                if (contentLength < 0) Int.MAX_VALUE else contentLength,
-            )
-
-            val buffer = ByteArray(length)
-            input.buffered(length).read(buffer, 0, length)
-            return buffer
+            request.abortedSafely()
         }
     }
 
-    private companion object {
-        val logger: Logger = LoggerFactory.getLogger(ApacheHttpContentReceiver::class.java)
+    private class HttpResponseFutureCallback(
+        private val promise: CompletableFuture<ContentBytes>,
+        private val request: HttpUriRequest
+    ) : FutureCallback<HttpResponse> {
+
+        override fun completed(httpResponse: HttpResponse) {
+            if (promise.isDone.not()) promise.complete(EMPTY_CONTENT)
+        }
+
+        override fun failed(ex: Exception) {
+            if (promise.isDone.not()) promise.completeExceptionally(ex)
+        }
+
+        override fun cancelled() {
+            request.abortedSafely()
+            if (promise.isDone.not()) promise.completeExceptionally(CancellationException("Request ${request.uri} was canceled"))
+        }
+    }
+}
+
+internal val EMPTY_CONTENT = ContentBytes(ByteArray(0), null, null)
+internal val EMPTY_HTTP_RESPONSE: HttpResponse = BasicHttpResponse(BasicStatusLine(HttpVersion.HTTP_1_1, 500, "No server response"))
+
+internal fun HttpUriRequest.abortedSafely() {
+    if (!isAborted) {
+        abort()
     }
 }
