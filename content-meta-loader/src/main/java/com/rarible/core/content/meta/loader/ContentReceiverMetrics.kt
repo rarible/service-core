@@ -8,7 +8,6 @@ import java.time.Duration
 class ContentReceiverMetrics(
     meterRegistry: MeterRegistry
 ) {
-
     private val receiveSuccessTimer =
         meterRegistry.timer(
             "${PREFIX}_time",
@@ -21,11 +20,33 @@ class ContentReceiverMetrics(
             listOf(Tag.of("success", "false"))
         )
 
-    private val receivedBytes = meterRegistry.counter("${PREFIX}_received_bytes")
+    private val receiveContentMetaTypeSuccessCounter =
+        meterRegistry.counter("${PREFIX}_content_meta_type_success")
+
+    private val receiveContentMetaTypeFailCounter =
+        meterRegistry.counter("${PREFIX}_content_meta_type_fail")
+
+    private val receiveContentMetaWidthHeightSuccessCounter =
+        meterRegistry.counter("${PREFIX}_content_meta_width_height_success")
+
+    private val receiveContentMetaWidthHeightFailCounter =
+        meterRegistry.counter("${PREFIX}_content_meta_width_height_fail")
+
+    private val receivedBytes =
+        meterRegistry.counter("${PREFIX}_received_bytes")
+
+    fun receiveContentMetaTypeSuccess() = receiveContentMetaTypeSuccessCounter.increment()
+
+    fun receiveContentMetaTypeFail() = receiveContentMetaTypeFailCounter.increment()
+
+    fun receiveContentMetaWidthHeightSuccess() = receiveContentMetaWidthHeightSuccessCounter.increment()
+
+    fun receiveContentMetaWidthHeightFail() = receiveContentMetaWidthHeightFailCounter.increment()
 
     fun startReceiving(): Timer.Sample = Timer.start()
 
     fun endReceiving(sample: Timer.Sample, success: Boolean): Duration {
+        receiveSuccessTimer.count()
         val time = if (success) {
             sample.stop(receiveSuccessTimer)
         } else {

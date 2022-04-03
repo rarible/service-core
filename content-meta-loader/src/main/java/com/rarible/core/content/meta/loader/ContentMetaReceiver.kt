@@ -48,7 +48,7 @@ class ContentMetaReceiver(
         getPredefinedContentMeta(url)?.let { return it }
         logger.info("${logPrefix(url)}: started receiving")
         val startSample = contentReceiverMetrics.startReceiving()
-        return try {
+        val result = try {
             val contentMeta = doReceive(url)
             val duration = contentReceiverMetrics.endReceiving(startSample, true)
             if (contentMeta != null) {
@@ -62,6 +62,8 @@ class ContentMetaReceiver(
             logger.warn("${logPrefix(url)}: failed to receive (in ${duration.presentableSlow(slowThreshold)})", e)
             getFallbackContentMeta(url, null)
         }
+        countResult(result)
+        return result
     }
 
     private fun getFallbackContentMeta(url: URL, contentBytes: ContentBytes?): ContentMeta? {
@@ -275,5 +277,18 @@ class ContentMetaReceiver(
         val svgPrefix = "data:image/svg+xml".toByteArray(Charsets.UTF_8).toList()
 
         val knownMediaTypePrefixes = listOf("image/", "video/", "audio/", "model/")
+    }
+
+    private fun countResult(contentMeta: ContentMeta?) {
+        if (contentMeta != null && contentMeta.type.isNotBlank()) {
+            contentReceiverMetrics.receiveContentMetaTypeSuccess()
+        } else {
+            contentReceiverMetrics.receiveContentMetaTypeFail()
+        }
+        if (contentMeta != null && (contentMeta.width != null && contentMeta.height != null)) {
+            contentReceiverMetrics.receiveContentMetaWidthHeightSuccess()
+        } else {
+            contentReceiverMetrics.receiveContentMetaWidthHeightFail()
+        }
     }
 }
