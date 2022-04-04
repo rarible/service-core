@@ -5,6 +5,7 @@ import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.DistributionSummary
 import io.micrometer.core.instrument.Timer
 import java.time.Duration
+import java.util.concurrent.TimeUnit
 
 class RegisteredCounter internal constructor(
     private val counter: Counter
@@ -35,6 +36,10 @@ class RegisteredTimer internal constructor(
 
     fun record(duration: Duration) {
         timer.record(duration)
+    }
+
+    fun record(amount: Long, unit: TimeUnit) {
+        timer.record(amount, unit)
     }
 }
 
