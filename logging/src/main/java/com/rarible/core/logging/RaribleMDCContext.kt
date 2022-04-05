@@ -2,7 +2,6 @@ package com.rarible.core.logging
 
 import com.rarible.core.logging.LoggingUtils.extractMDCMap
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ThreadContextElement
 import kotlinx.coroutines.reactor.ReactorContext
 import kotlinx.coroutines.withContext
@@ -12,9 +11,8 @@ import kotlin.coroutines.CoroutineContext
 
 typealias MDCContextMap = Map<String, String>?
 
-@ExperimentalCoroutinesApi
 class RaribleMDCContext(
-    public val contextMap: MDCContextMap = MDC.getCopyOfContextMap()
+    val contextMap: MDCContextMap = MDC.getCopyOfContextMap()
 ) : ThreadContextElement<MDCContextMap>, AbstractCoroutineContextElement(RaribleMDCContext) {
 
     companion object Key : CoroutineContext.Key<RaribleMDCContext>
@@ -49,7 +47,17 @@ class RaribleMDCContext(
     }
 }
 
-@ExperimentalCoroutinesApi
 suspend fun <T> withMdc(block: suspend CoroutineScope.() -> T): T {
     return withContext(RaribleMDCContext(), block)
+}
+
+suspend fun <T> addToMdc(vararg values: Pair<String, String>, block: suspend CoroutineScope.() -> T): T {
+    val map = MDC.getCopyOfContextMap()
+    val newValues = mapOf(*values)
+    val resultMap = if (map == null) {
+        newValues
+    } else {
+        newValues + map
+    }
+    return withContext(RaribleMDCContext(resultMap), block)
 }
