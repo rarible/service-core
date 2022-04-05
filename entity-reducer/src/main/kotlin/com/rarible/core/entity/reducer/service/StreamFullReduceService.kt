@@ -17,7 +17,7 @@ open class StreamFullReduceService<Id, Event, E : Identifiable<Id>>(
     private val reducer: Reducer<Event, E>
 ) : ReduceService<Id, Event, E> {
 
-    override suspend fun reduce(events: Flow<Event>): Flow<E> = flow {
+    override fun reduce(events: Flow<Event>): Flow<E> = flow {
         var entity: E? = null
         events.collect { event ->
             val id = entityIdService.getEntityId(event)
