@@ -5,7 +5,7 @@ import com.rarible.core.daemon.sequential.SequentialDaemonWorker
 import io.micrometer.core.instrument.MeterRegistry
 import kotlinx.coroutines.CompletionHandler
 
-abstract class JobDaemonWorker(
+class JobDaemonWorker(
     private val jobHandler: JobHandler,
     meterRegistry: MeterRegistry,
     properties: DaemonWorkerProperties,
