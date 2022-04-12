@@ -1,6 +1,8 @@
 package com.rarible.core.content.meta.loader
 
 import kotlinx.coroutines.future.await
+import org.apache.http.HttpResponse
+import org.apache.http.HttpVersion
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpUriRequest
@@ -10,14 +12,12 @@ import org.apache.http.impl.client.DefaultConnectionKeepAliveStrategy
 import org.apache.http.impl.nio.client.HttpAsyncClients
 import org.apache.http.impl.nio.conn.PoolingNHttpClientConnectionManager
 import org.apache.http.impl.nio.reactor.DefaultConnectingIOReactor
-import org.apache.http.nio.reactor.ConnectingIOReactor
-import org.apache.http.HttpResponse
-import org.apache.http.HttpVersion
 import org.apache.http.message.BasicHttpResponse
 import org.apache.http.message.BasicStatusLine
 import org.apache.http.nio.IOControl
 import org.apache.http.nio.client.methods.AsyncByteConsumer
 import org.apache.http.nio.client.methods.HttpAsyncMethods
+import org.apache.http.nio.reactor.ConnectingIOReactor
 import org.apache.http.protocol.HttpContext
 import java.io.Closeable
 import java.io.IOException
@@ -67,7 +67,7 @@ class ApacheHttpContentReceiver(
             null
         }
         val callback = HttpResponseFutureCallback(promise, request)
-        val consumerCallback = HttpAsyncResponseConsumerCallback(promise, request, maxBytes)
+        val consumerCallback = HttpAsyncResponseConsumerCallback(url, promise, request, maxBytes)
         client.execute(HttpAsyncMethods.create(request), consumerCallback, callback)
         return promise.await()
     }
@@ -76,13 +76,14 @@ class ApacheHttpContentReceiver(
         client.close()
     }
 
-
     private class HttpAsyncResponseConsumerCallback(
+        private val url: URL,
         private val promise: CompletableFuture<ContentBytes>,
         private val request: HttpUriRequest,
         maxBytes: Int
-    ): AsyncByteConsumer<HttpResponse>(maxBytes) {
-        private val contentBytes = AtomicReference(EMPTY_CONTENT)
+    ) : AsyncByteConsumer<HttpResponse>(maxBytes) {
+
+        private val contentBytes = AtomicReference(ContentBytes.EMPTY)
         private val result = AtomicReference(EMPTY_HTTP_RESPONSE)
         private val byteBuffer = ByteBuffer.allocate(maxBytes)
 
@@ -95,7 +96,8 @@ class ApacheHttpContentReceiver(
                     val contentLength = entity.contentLength
                     val contentType = entity.contentType?.value
 
-                    contentBytes.set(EMPTY_CONTENT.copy(
+                    contentBytes.set(ContentBytes.EMPTY.copy(
+                        url = url,
                         contentType = contentType,
                         contentLength = contentLength.takeUnless { it < 0 }
                     ))
@@ -110,7 +112,7 @@ class ApacheHttpContentReceiver(
         override fun onByteReceived(buf: ByteBuffer, ioControl: IOControl) {
             byteBuffer.put(buf.array(), 0, minOf(buf.limit(), byteBuffer.remaining()))
             val currentContentBytes = contentBytes.get()
-            contentBytes.set(currentContentBytes.copy(bytes =  byteBuffer.array().copyOf(byteBuffer.position())))
+            contentBytes.set(currentContentBytes.copy(bytes = byteBuffer.array().copyOf(byteBuffer.position())))
 
             if (byteBuffer.remaining() == 0) {
                 complete()
@@ -139,7 +141,7 @@ class ApacheHttpContentReceiver(
     ) : FutureCallback<HttpResponse> {
 
         override fun completed(httpResponse: HttpResponse) {
-            if (promise.isDone.not()) promise.complete(EMPTY_CONTENT)
+            if (promise.isDone.not()) promise.complete(ContentBytes.EMPTY)
         }
 
         override fun failed(ex: Exception) {
@@ -148,13 +150,16 @@ class ApacheHttpContentReceiver(
 
         override fun cancelled() {
             request.abortedSafely()
-            if (promise.isDone.not()) promise.completeExceptionally(CancellationException("Request ${request.uri} was canceled"))
+            if (promise.isDone.not()) promise.completeExceptionally(
+                CancellationException("Request ${request.uri} was canceled")
+            )
         }
     }
 }
 
-internal val EMPTY_CONTENT = ContentBytes(ByteArray(0), null, null)
-internal val EMPTY_HTTP_RESPONSE: HttpResponse = BasicHttpResponse(BasicStatusLine(HttpVersion.HTTP_1_1, 500, "No server response"))
+internal val EMPTY_HTTP_RESPONSE: HttpResponse = BasicHttpResponse(
+    BasicStatusLine(HttpVersion.HTTP_1_1, 500, "No server response")
+)
 
 internal fun HttpUriRequest.abortedSafely() {
     if (!isAborted) {

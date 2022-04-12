@@ -1,9 +1,12 @@
-package com.rarible.core.content.meta.loader
+package com.rarible.core.content.meta.loader.detector
 
 import com.drew.imaging.png.PngChunk
 import com.drew.imaging.png.PngChunkType
 import com.drew.imaging.png.PngHeader
 import com.drew.lang.SequentialByteArrayReader
+import com.rarible.core.content.meta.loader.ContentBytes
+import com.rarible.core.content.meta.loader.ContentMeta
+import org.slf4j.LoggerFactory
 
 /**
  * Copied from [com.drew.imaging.png.PngMetadataReader].
@@ -11,8 +14,12 @@ import com.drew.lang.SequentialByteArrayReader
  * We need to extract width/height of PNG images by first bytes, but the `metadata-extractor` library
  * requires the PNG file to be fully read (including `PngChunkType.IEND` tag, see [com.drew.imaging.png.PngChunkReader]).
  */
-object PngDetector {
-    fun detectPngContentMeta(contentBytes: ContentBytes): ContentMeta? {
+object PngDetector : ContentMetaDetector {
+
+    private val logger = LoggerFactory.getLogger(javaClass)
+
+    override fun detect(contentBytes: ContentBytes): ContentMeta? {
+        val url = contentBytes.url
         val reader = SequentialByteArrayReader(contentBytes.bytes)
         reader.isMotorolaByteOrder = true
         val prefix = runCatching { reader.getBytes(PNG_SIGNATURE_BYTES.size) }.getOrNull() ?: return null
@@ -32,12 +39,15 @@ object PngDetector {
                 val pngHeader = runCatching { PngHeader(chunk.bytes) }.getOrNull() ?: return null
                 val imageWidth = pngHeader.imageWidth
                 val imageHeight = pngHeader.imageHeight
-                return ContentMeta(
+
+                val result = ContentMeta(
                     type = "image/png",
                     width = imageWidth,
                     height = imageHeight,
                     size = contentBytes.contentLength
                 )
+                logger.info("${logPrefix(url)}: parsed PNG content meta $result")
+                return result
             } else {
                 runCatching { reader.skip(chunkDataLength.toLong()) }.getOrNull() ?: return null
             }
