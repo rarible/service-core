@@ -1,65 +1,51 @@
 package com.rarible.core.content.meta.loader
 
-import com.drew.imaging.ImageMetadataReader
-import com.drew.metadata.Directory
-import com.drew.metadata.MetadataException
-import com.drew.metadata.avi.AviDirectory
-import com.drew.metadata.bmp.BmpHeaderDirectory
-import com.drew.metadata.eps.EpsDirectory
-import com.drew.metadata.exif.ExifDirectoryBase
-import com.drew.metadata.exif.ExifImageDirectory
-import com.drew.metadata.file.FileTypeDirectory
-import com.drew.metadata.gif.GifHeaderDirectory
-import com.drew.metadata.gif.GifImageDirectory
-import com.drew.metadata.heif.HeifDirectory
-import com.drew.metadata.ico.IcoDirectory
-import com.drew.metadata.jpeg.JpegDirectory
-import com.drew.metadata.mov.media.QuickTimeVideoDirectory
-import com.drew.metadata.mp3.Mp3Directory
-import com.drew.metadata.mp4.media.Mp4VideoDirectory
-import com.drew.metadata.photoshop.PsdHeaderDirectory
-import com.drew.metadata.png.PngDirectory
-import com.drew.metadata.wav.WavDirectory
-import com.drew.metadata.webp.WebpDirectory
 import com.rarible.core.common.nowMillis
+import com.rarible.core.content.meta.loader.detector.ExifDetector
+import com.rarible.core.content.meta.loader.detector.HtmlDetector
+import com.rarible.core.content.meta.loader.detector.PngDetector
+import com.rarible.core.content.meta.loader.detector.SvgDetector
 import org.slf4j.LoggerFactory
 import java.net.URL
 import java.time.Duration
+import java.time.Instant
 
 class ContentMetaReceiver(
     private val contentReceiver: ContentReceiver,
     private val maxBytes: Int,
     private val contentReceiverMetrics: ContentReceiverMetrics
 ) {
-    private val logger = LoggerFactory.getLogger(ContentMetaReceiver::class.java)
+
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     @Suppress("BlockingMethodInNonBlockingContext")
-    suspend fun receive(url: String): ContentMeta?{
-      return try {
-          receive(URL(url))
-      } catch (e: Throwable) {
-          logger.warn("Wrong URL: $url", e)
-          null
-      }
+    suspend fun receive(url: String): ContentMeta? {
+        return try {
+            receive(URL(url))
+        } catch (e: Throwable) {
+            logger.warn("Wrong URL: $url", e)
+            null
+        }
     }
 
     @Suppress("MemberVisibilityCanBePrivate")
     suspend fun receive(url: URL): ContentMeta? {
         getPredefinedContentMeta(url)?.let { return it }
+
         logger.info("${logPrefix(url)}: started receiving")
         val startSample = contentReceiverMetrics.startReceiving()
         val result = try {
             val contentMeta = doReceive(url)
             val duration = contentReceiverMetrics.endReceiving(startSample, true)
             if (contentMeta != null) {
-                logger.info("${logPrefix(url)}: received $contentMeta (in ${duration.presentableSlow(slowThreshold)})")
+                logger.info("${logPrefix(url)}: received $contentMeta (in ${spent(duration)})")
                 contentMeta
             } else {
                 getFallbackContentMeta(url, null)
             }
         } catch (e: Throwable) {
             val duration = contentReceiverMetrics.endReceiving(startSample, false)
-            logger.warn("${logPrefix(url)}: failed to receive (in ${duration.presentableSlow(slowThreshold)})", e)
+            logger.warn("${logPrefix(url)}: failed to receive (in ${spent(duration)})", e)
             getFallbackContentMeta(url, null)
         }
         countResult(result)
@@ -86,7 +72,7 @@ class ContentMetaReceiver(
             logger.info("${logPrefix(url)}: falling back by extension to $fallback")
             return fallback
         }
-        logger.warn("Content meta by $url: cannot fall back")
+        logger.warn("${logPrefix(url)}: cannot fall back (contentType = $contentType, extension = $extension)")
         return null
     }
 
@@ -98,157 +84,36 @@ class ContentMetaReceiver(
 
     private suspend fun doReceive(url: URL): ContentMeta? {
         val startLoading = nowMillis()
+
         val contentBytes = try {
             contentReceiver.receiveBytes(url, maxBytes)
         } catch (e: Exception) {
-            logger.warn(
-                "${logPrefix(url)}: failed to received content bytes (spent ${
-                    Duration.between(startLoading, nowMillis()).presentableSlow(slowThreshold)
-                })",
-                e
-            )
+            logger.warn("${logPrefix(url)}: failed to received content bytes (spent ${spent(startLoading)})", e)
             return getFallbackContentMeta(url, null)
         }
+
         logger.info(
             "${logPrefix(url)}: received content " +
-                    "(bytes ${contentBytes.bytes.size}, " +
-                    "content length ${contentBytes.contentLength}, " +
-                    "mime type ${contentBytes.contentType}) " +
-                    "in ${Duration.between(startLoading, nowMillis()).presentableSlow(slowThreshold)}"
+                "(bytes ${contentBytes.bytes.size}, " +
+                "content length ${contentBytes.contentLength}, " +
+                "mime type ${contentBytes.contentType}) " +
+                "in ${spent(startLoading)}"
         )
-        val bytes = contentBytes.bytes
-        contentReceiverMetrics.receivedBytes(bytes.size)
-        parseSvg(contentBytes)?.let {
-            logger.info("${logPrefix(url)}: parsed SVG content meta $it")
-            return it
-        }
 
-        PngDetector.detectPngContentMeta(contentBytes)?.let {
-            logger.info("${logPrefix(url)}: parsed PNG content meta $it")
-            return it
-        }
+        contentReceiverMetrics.receivedBytes(contentBytes.bytes.size)
 
-        @Suppress("BlockingMethodInNonBlockingContext")
-        val metadata = try {
-            ImageMetadataReader.readMetadata(bytes.inputStream())
-        } catch (e: Exception) {
-            logger.warn("${logPrefix(url)}: failed to extract metadata by ${bytes.size} bytes", e)
-            return getFallbackContentMeta(url, contentBytes)
-        }
-        var mimeType: String? = null
-        var width: Int? = null
-        var height: Int? = null
-        var errors = 0
-        for (directory in metadata.directories) {
-            if (directory is FileTypeDirectory) {
-                mimeType = directory.safeString(FileTypeDirectory.TAG_DETECTED_FILE_MIME_TYPE, url)
-            }
-            parseImageOrVideoWidthAndHeight(directory, url)?.let {
-                width = width ?: it.first
-                height = height ?: it.second
-            }
-            errors += directory.errors.toList().size
-        }
-        return ContentMeta(
-            type = mimeType ?: contentBytes.contentType ?: return null,
-            width = width,
-            height = height,
-            size = contentBytes.contentLength
-        )
+        // HTML should be BEFORE SVG since svg could be a part of HTML document
+        HtmlDetector.detect(contentBytes)?.let { return it }
+        SvgDetector.detect(contentBytes)?.let { return it }
+
+        PngDetector.detect(contentBytes)?.let { return it }
+        ExifDetector.detect(contentBytes)?.let { return it }
+
+        return getFallbackContentMeta(url, contentBytes)
     }
-
-    private fun parseSvg(contentBytes: ContentBytes): ContentMeta? {
-        if (contentBytes.contentType == svgMimeType || contentBytes.bytes.take(svgPrefix.size) == svgPrefix) {
-            return ContentMeta(
-                type = svgMimeType,
-                width = 192,
-                height = 192,
-                size = contentBytes.contentLength
-            )
-        }
-        return null
-    }
-
-    private fun parseImageOrVideoWidthAndHeight(directory: Directory, url: URL): Pair<Int?, Int?>? {
-        return when (directory) {
-            // Images
-            is JpegDirectory -> {
-                directory.safeInt(JpegDirectory.TAG_IMAGE_WIDTH, url) to
-                        directory.safeInt(JpegDirectory.TAG_IMAGE_HEIGHT, url)
-            }
-            is GifImageDirectory -> {
-                directory.safeInt(GifImageDirectory.TAG_WIDTH, url) to
-                        directory.safeInt(GifImageDirectory.TAG_HEIGHT, url)
-            }
-            is GifHeaderDirectory -> {
-                directory.safeInt(GifHeaderDirectory.TAG_IMAGE_WIDTH, url) to
-                        directory.safeInt(GifHeaderDirectory.TAG_IMAGE_HEIGHT, url)
-            }
-            is BmpHeaderDirectory -> {
-                directory.safeInt(BmpHeaderDirectory.TAG_IMAGE_WIDTH, url) to
-                        directory.safeInt(BmpHeaderDirectory.TAG_IMAGE_HEIGHT, url)
-            }
-            is PngDirectory -> {
-                directory.safeInt(PngDirectory.TAG_IMAGE_WIDTH, url) to
-                        directory.safeInt(PngDirectory.TAG_IMAGE_HEIGHT, url)
-            }
-            is IcoDirectory -> {
-                directory.safeInt(IcoDirectory.TAG_IMAGE_WIDTH, url) to
-                        directory.safeInt(IcoDirectory.TAG_IMAGE_HEIGHT, url)
-            }
-            is PsdHeaderDirectory -> {
-                directory.safeInt(PsdHeaderDirectory.TAG_IMAGE_WIDTH, url) to
-                        directory.safeInt(PsdHeaderDirectory.TAG_IMAGE_HEIGHT, url)
-            }
-            is WebpDirectory -> {
-                directory.safeInt(WebpDirectory.TAG_IMAGE_WIDTH, url) to
-                        directory.safeInt(WebpDirectory.TAG_IMAGE_HEIGHT, url)
-            }
-            is EpsDirectory -> {
-                directory.safeInt(EpsDirectory.TAG_IMAGE_WIDTH, url) to
-                        directory.safeInt(EpsDirectory.TAG_IMAGE_HEIGHT, url)
-            }
-            is ExifImageDirectory -> {
-                directory.safeInt(ExifDirectoryBase.TAG_IMAGE_WIDTH, url) to
-                        directory.safeInt(ExifDirectoryBase.TAG_IMAGE_HEIGHT, url)
-            }
-            is HeifDirectory -> {
-                directory.safeInt(HeifDirectory.TAG_IMAGE_WIDTH, url) to
-                        directory.safeInt(HeifDirectory.TAG_IMAGE_HEIGHT, url)
-            }
-            // Video
-            is QuickTimeVideoDirectory -> {
-                directory.safeInt(QuickTimeVideoDirectory.TAG_WIDTH, url) to
-                        directory.safeInt(QuickTimeVideoDirectory.TAG_HEIGHT, url)
-            }
-            is AviDirectory -> {
-                directory.safeInt(AviDirectory.TAG_WIDTH, url) to
-                        directory.safeInt(AviDirectory.TAG_HEIGHT, url)
-            }
-            is Mp4VideoDirectory -> {
-                directory.safeInt(Mp4VideoDirectory.TAG_WIDTH, url) to
-                        directory.safeInt(Mp4VideoDirectory.TAG_HEIGHT, url)
-            }
-            // Audio
-            is Mp3Directory -> null
-            is WavDirectory -> null
-            else -> null
-        }
-    }
-
-    private fun Directory.safeInt(tagId: Int, url: URL): Int? = safe(tagId, url) { getInt(tagId) }
-    private fun Directory.safeString(tagId: Int, url: URL): String? = safe(tagId, url) { getString(tagId) }
-
-    private fun <T> Directory.safe(tagId: Int, url: URL, parser: () -> T): T? = try {
-        parser()
-    } catch (e: MetadataException) {
-        logger.warn("Failed to parse tag " + getTagName(tagId) + " from $url of parsed to $this", e)
-        null
-    }
-
-    private fun logPrefix(url: URL): String = "Content meta by $url"
 
     private companion object {
+
         private val slowThreshold = Duration.ofSeconds(1)
 
         val ignoredExtensions = mapOf(
@@ -273,9 +138,6 @@ class ContentMetaReceiver(
             "mpeg" to "video/mpeg"
         )
 
-        const val svgMimeType = "image/svg+xml"
-        val svgPrefix = "data:image/svg+xml".toByteArray(Charsets.UTF_8).toList()
-
         val knownMediaTypePrefixes = listOf("image/", "video/", "audio/", "model/")
     }
 
@@ -290,5 +152,15 @@ class ContentMetaReceiver(
         } else {
             contentReceiverMetrics.receiveContentMetaWidthHeightFail()
         }
+    }
+
+    private fun logPrefix(url: URL): String = "Content meta by $url"
+
+    private fun spent(duration: Duration): String {
+        return duration.presentableSlow(slowThreshold)
+    }
+
+    private fun spent(from: Instant): String {
+        return Duration.between(from, nowMillis()).presentableSlow(slowThreshold)
     }
 }

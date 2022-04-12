@@ -9,9 +9,10 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 
 @Disabled
-class ContentMetaReceiverTest {
+class ContentMetaReceiverFt {
 
     companion object {
+
         private val contentReceiverMetrics = ContentReceiverMetrics(SimpleMeterRegistry())
 
         private val contentKtorCioReceiver = KtorCioClientContentReceiver(
@@ -43,7 +44,7 @@ class ContentMetaReceiverTest {
         )
     }
 
-    enum class ContentMetaReceiversEnum(val receiver: ContentMetaReceiver){
+    enum class ContentMetaReceiversEnum(val receiver: ContentMetaReceiver) {
         KTOR_CIO(contentMetaKtorCioReceiver),
         KTOR_APACHE(contentMetaKtorApacheReceiver),
         APACHE_ASYNC(contentMetaApacheAsyncHttpReceiver)
@@ -190,12 +191,19 @@ class ContentMetaReceiverTest {
 
     @ParameterizedTest
     @EnumSource(ContentMetaReceiversEnum::class)
-    fun `ignore html`(receiverEnum: ContentMetaReceiversEnum) {
+    fun html(receiverEnum: ContentMetaReceiversEnum) {
+        // ETHEREUM:0x5bd815fd6c096bab38b4c6553cfce3585194dff9:10851
         val meta = getContentMeta(
-            "https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types",
+            "https://www.artofseasons.co/evolving/autumn/4",
             receiverEnum.receiver
         )
-        assertNull(meta)
+        assertEquals(
+            ContentMeta(
+                type = "text/html; charset=utf-8",
+                size = 1675
+            ),
+            meta
+        )
     }
 
     @ParameterizedTest
