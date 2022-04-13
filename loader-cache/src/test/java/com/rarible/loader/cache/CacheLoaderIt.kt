@@ -24,9 +24,10 @@ class CacheLoaderIt : AbstractIntegrationTest() {
         every { clock.instant() } returns scheduledAt
         val imageChannel = Channel<TestImage>()
         coEvery { imageLoader.load(key) } coAnswers { imageChannel.receive() }
-        assertThat(imageLoadService.get(key)).isEqualTo(CacheEntry.NotAvailable<TestImage>())
+        assertThat(imageLoadService.get(key)).isEqualTo(CacheEntry.NotAvailable<TestImage>(key))
         imageLoadService.update(key)
         val initialLoadScheduledCacheEntry = CacheEntry.InitialLoadScheduled<TestImage>(
+            key = key,
             loadStatus = LoadTaskStatus.Scheduled(
                 scheduledAt = scheduledAt
             )
@@ -40,6 +41,7 @@ class CacheLoaderIt : AbstractIntegrationTest() {
 
         Wait.waitAssert {
             val loadedEntry = CacheEntry.Loaded(
+                key = key,
                 cachedAt = loadedAt,
                 data = testImage
             )
@@ -75,6 +77,7 @@ class CacheLoaderIt : AbstractIntegrationTest() {
 
         Wait.waitAssert {
             val loadedEntry = CacheEntry.Loaded(
+                key,
                 cachedAt = loadedAt,
                 data = testImage
             )
@@ -89,6 +92,7 @@ class CacheLoaderIt : AbstractIntegrationTest() {
         imageLoadService.update(key)
         Wait.waitAssert {
             val loadedAndUpdateScheduled = CacheEntry.Loaded(
+                key = key,
                 cachedAt = loadedAt,
                 data = testImage
             )
@@ -105,6 +109,7 @@ class CacheLoaderIt : AbstractIntegrationTest() {
 
         Wait.waitAssert {
             val loadedEntry = CacheEntry.Loaded(
+                key = key,
                 cachedAt = loadedAt2,
                 data = testImage2
             )
@@ -142,6 +147,7 @@ class CacheLoaderIt : AbstractIntegrationTest() {
 
         Wait.waitAssert {
             val loadedEntry = CacheEntry.Loaded(
+                key = key,
                 cachedAt = loadedAt,
                 data = testImage
             )
@@ -153,7 +159,7 @@ class CacheLoaderIt : AbstractIntegrationTest() {
         cacheEvents.clear()
         imageLoadService.remove(key)
         Wait.waitAssert {
-            val notAvailable = CacheEntry.NotAvailable<TestImage>()
+            val notAvailable = CacheEntry.NotAvailable<TestImage>(key)
             assertThat(imageLoadService.get(key)).isEqualTo(notAvailable)
             assertThat(imageLoadService.getAvailable(key)).isNull()
         }
@@ -168,7 +174,7 @@ class CacheLoaderIt : AbstractIntegrationTest() {
         every { clock.instant() } returns savedAt
 
         imageLoadService.save(key, testImage)
-        assertThat(imageLoadService.get(key)).isEqualTo(CacheEntry.Loaded(savedAt, testImage))
+        assertThat(imageLoadService.get(key)).isEqualTo(CacheEntry.Loaded(key, savedAt, testImage))
     }
 
     @Test
@@ -199,6 +205,7 @@ class CacheLoaderIt : AbstractIntegrationTest() {
                 retryAt = exceptionAt + loadProperties.retry.getRetryDelay(0)
             )
             val initialLoadScheduled = CacheEntry.InitialLoadScheduled<TestImage>(
+                key = key,
                 loadStatus = waitsForRetry
             )
             assertThat(imageLoadService.get(key)).isEqualTo(initialLoadScheduled)
@@ -218,6 +225,7 @@ class CacheLoaderIt : AbstractIntegrationTest() {
 
         Wait.waitAssert {
             val loadedEntry = CacheEntry.Loaded(
+                key = key,
                 cachedAt = loadedAt,
                 data = testImage
             )
