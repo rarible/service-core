@@ -39,11 +39,21 @@ class CacheLoaderServiceImpl<T>(
     override suspend fun get(key: String): CacheEntry<T> {
         val cacheEntry = cacheRepository.get<T>(type, key)
         if (cacheEntry != null) {
-            return CacheEntry.Loaded(
-                cachedAt = cacheEntry.cachedAt,
-                data = cacheEntry.data
-            )
+            return toLoadedCacheEntry(cacheEntry)
         }
+        return getFromTask(key)
+    }
+
+    override suspend fun getAll(keys: List<String>): List<CacheEntry<T>> {
+        val entries = cacheRepository.getAll<T>(type, keys)
+        val byKey = entries.associateByTo(HashMap(), { it.key }, { toLoadedCacheEntry(it) })
+        // Keep same order
+        return keys.map { byKey[it] ?: getFromTask(it) }
+    }
+
+    // TODO it's fine to use this method per single key if cache already filled,
+    // but in general we need some kind of batching here
+    private suspend fun getFromTask(key: String): CacheEntry<T> {
         val loadTaskId = cacheLoadTaskIdService.getLastTaskId(type, key)
         return when (val loadStatus = loadTaskId?.let { loadService.getStatus(loadTaskId) }) {
             is LoadTaskStatus.Scheduled -> getInitialLoading(loadStatus)
@@ -52,6 +62,13 @@ class CacheLoaderServiceImpl<T>(
             null -> getNotAvailable() // Hasn't been scheduled and not available.
             is LoadTaskStatus.Loaded -> getNotAvailable() // Removed entry.
         }
+    }
+
+    private fun toLoadedCacheEntry(mongoCacheEntry: MongoCacheEntry<T>): CacheEntry<T> {
+        return CacheEntry.Loaded(
+            cachedAt = mongoCacheEntry.cachedAt,
+            data = mongoCacheEntry.data
+        )
     }
 
     override suspend fun getAvailable(key: String): T? =
