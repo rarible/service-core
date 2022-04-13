@@ -4,9 +4,11 @@ import com.rarible.loader.cache.CacheType
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingleOrNull
 import org.springframework.data.mongodb.core.ReactiveMongoOperations
+import org.springframework.data.mongodb.core.find
 import org.springframework.data.mongodb.core.findById
 import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
+import org.springframework.data.mongodb.core.query.inValues
 import org.springframework.data.mongodb.core.query.isEqualTo
 import org.springframework.stereotype.Component
 import java.time.Instant
@@ -34,6 +36,13 @@ class CacheRepository(
         mongo.findById<MongoCacheEntry<T>>(key, getCacheCollection(type))
             .awaitSingleOrNull()
 
+    suspend fun <T> getAll(type: CacheType, keys: List<String>): List<MongoCacheEntry<T>> {
+        val query = Query(Criteria("_id").inValues(keys))
+        return mongo.find<MongoCacheEntry<T>>(query, getCacheCollection(type))
+            .collectList()
+            .awaitSingle()
+    }
+
     suspend fun contains(type: CacheType, key: String): Boolean =
         mongo.exists(
             Query(Criteria("_id").isEqualTo(key)),
@@ -46,6 +55,7 @@ class CacheRepository(
     }
 
     companion object {
+
         fun getCacheCollection(cacheType: CacheType): String = "cache-$cacheType"
     }
 }

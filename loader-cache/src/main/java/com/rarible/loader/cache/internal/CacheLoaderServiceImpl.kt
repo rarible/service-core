@@ -39,19 +39,37 @@ class CacheLoaderServiceImpl<T>(
     override suspend fun get(key: String): CacheEntry<T> {
         val cacheEntry = cacheRepository.get<T>(type, key)
         if (cacheEntry != null) {
-            return CacheEntry.Loaded(
-                cachedAt = cacheEntry.cachedAt,
-                data = cacheEntry.data
-            )
+            return toLoadedCacheEntry(cacheEntry)
         }
+        return getFromTask(key)
+    }
+
+    override suspend fun getAll(keys: List<String>): List<CacheEntry<T>> {
+        val entries = cacheRepository.getAll<T>(type, keys)
+        val byKey = entries.associateByTo(HashMap(), { it.key }, { toLoadedCacheEntry(it) })
+        // Keep same order
+        return keys.map { byKey[it] ?: getFromTask(it) }
+    }
+
+    // TODO it's fine to use this method per single key if cache already filled,
+    // but in general we need some kind of batching here
+    private suspend fun getFromTask(key: String): CacheEntry<T> {
         val loadTaskId = cacheLoadTaskIdService.getLastTaskId(type, key)
         return when (val loadStatus = loadTaskId?.let { loadService.getStatus(loadTaskId) }) {
-            is LoadTaskStatus.Scheduled -> getInitialLoading(loadStatus)
-            is LoadTaskStatus.WaitsForRetry -> getInitialLoading(loadStatus)
-            is LoadTaskStatus.Failed -> getInitialFailed(loadStatus)
-            null -> getNotAvailable() // Hasn't been scheduled and not available.
-            is LoadTaskStatus.Loaded -> getNotAvailable() // Removed entry.
+            is LoadTaskStatus.Scheduled -> getInitialLoading(key, loadStatus)
+            is LoadTaskStatus.WaitsForRetry -> getInitialLoading(key, loadStatus)
+            is LoadTaskStatus.Failed -> getInitialFailed(key, loadStatus)
+            null -> getNotAvailable(key) // Hasn't been scheduled and not available.
+            is LoadTaskStatus.Loaded -> getNotAvailable(key) // Removed entry.
         }
+    }
+
+    private fun toLoadedCacheEntry(mongoCacheEntry: MongoCacheEntry<T>): CacheEntry<T> {
+        return CacheEntry.Loaded(
+            key = mongoCacheEntry.key,
+            cachedAt = mongoCacheEntry.cachedAt,
+            data = mongoCacheEntry.data
+        )
     }
 
     override suspend fun getAvailable(key: String): T? =
@@ -65,13 +83,13 @@ class CacheLoaderServiceImpl<T>(
         }
 
     @Suppress("UNCHECKED_CAST")
-    private fun getInitialLoading(pendingLoadStatus: LoadTaskStatus.Pending): CacheEntry<T> =
-        CacheEntry.InitialLoadScheduled(pendingLoadStatus)
+    private fun getInitialLoading(key: String, pendingLoadStatus: LoadTaskStatus.Pending): CacheEntry<T> =
+        CacheEntry.InitialLoadScheduled(key, pendingLoadStatus)
 
     @Suppress("UNCHECKED_CAST")
-    private fun getInitialFailed(failedTaskStatus: LoadTaskStatus.Failed): CacheEntry<T> =
-        CacheEntry.InitialFailed(failedTaskStatus)
+    private fun getInitialFailed(key: String, failedTaskStatus: LoadTaskStatus.Failed): CacheEntry<T> =
+        CacheEntry.InitialFailed(key, failedTaskStatus)
 
     @Suppress("UNCHECKED_CAST")
-    private fun getNotAvailable(): CacheEntry<T> = CacheEntry.NotAvailable()
+    private fun getNotAvailable(key: String): CacheEntry<T> = CacheEntry.NotAvailable(key)
 }

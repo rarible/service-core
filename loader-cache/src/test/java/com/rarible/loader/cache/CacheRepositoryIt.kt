@@ -1,6 +1,7 @@
 package com.rarible.loader.cache
 
 import com.rarible.core.common.nowMillis
+import com.rarible.core.test.data.randomString
 import com.rarible.loader.cache.internal.CacheRepository
 import com.rarible.loader.cache.internal.MongoCacheEntry
 import com.rarible.loader.cache.test.TestImage
@@ -69,6 +70,33 @@ class CacheRepositoryIt : AbstractIntegrationTest() {
                 key = key,
                 data = testImage2,
                 cachedAt = updatedAt
+            )
+        )
+    }
+
+    @Test
+    fun `get all by ids`() = runBlocking<Unit> {
+        val type = "image"
+        val key1 = randomString()
+        val key2 = randomString()
+        val key3 = randomString()
+        val keyNotFound = randomString()
+        val testImage1 = TestImage(randomString())
+        val testImage2 = TestImage(randomString())
+        val testImage3 = TestImage(randomString())
+        val cachedAt = nowMillis()
+
+        cacheRepository.save(type, key1, testImage1, cachedAt)
+        cacheRepository.save(type, key2, testImage2, cachedAt)
+        cacheRepository.save(type, key3, testImage3, cachedAt)
+
+        val result = cacheRepository.getAll<TestImage>(type, listOf(key2, key3, keyNotFound, key1))
+
+        assertThat(result).containsExactlyInAnyOrderElementsOf(
+            listOf(
+                MongoCacheEntry(key2, testImage2, cachedAt),
+                MongoCacheEntry(key3, testImage3, cachedAt),
+                MongoCacheEntry(key1, testImage1, cachedAt)
             )
         )
     }
