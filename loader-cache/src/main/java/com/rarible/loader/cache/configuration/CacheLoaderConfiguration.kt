@@ -97,7 +97,6 @@ class CacheLoaderConfiguration {
         cacheRepository: CacheRepository,
         clock: Clock
     ) = CacheLoaderRunner(
-        cacheType = cacheLoader.type,
         cacheLoader = cacheLoader as CacheLoader<T>,
         repository = cacheRepository,
         clock = clock

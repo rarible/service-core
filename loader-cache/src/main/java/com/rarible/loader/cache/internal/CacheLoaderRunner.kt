@@ -8,13 +8,13 @@ import org.slf4j.LoggerFactory
 import java.time.Clock
 
 class CacheLoaderRunner<T>(
-    private val cacheType: CacheType,
     private val cacheLoader: CacheLoader<T>,
     private val repository: CacheRepository,
     private val clock: Clock
 ) : Loader {
 
     private val logger = LoggerFactory.getLogger(CacheLoaderRunner::class.java)
+    private val cacheType: CacheType = cacheLoader.type
 
     override val type = encodeLoadType(cacheType)
 
@@ -26,7 +26,16 @@ class CacheLoaderRunner<T>(
             logger.info("Failed to load cache value of '$cacheType' for key '$key'", e)
             throw e
         }
-        repository.save(cacheType, key, data, clock.nowMillis())
-        logger.info("Saved loaded cache value of '$cacheType' for key '$key'")
+
+        val exist = repository.get<T>(cacheType, key)?.data
+        val updated = exist?.let { cacheLoader.update(data, it) } ?: data
+
+        repository.save(cacheType, key, updated, clock.nowMillis())
+
+        if (updated != data) {
+            logger.info("Saved loaded and modified cache value of '$cacheType' for key '$key': $data -> $updated")
+        } else {
+            logger.info("Saved loaded cache value of '$cacheType' for key '$key'")
+        }
     }
 }
