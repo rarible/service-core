@@ -26,33 +26,46 @@ object PngDetector : ContentMetaDetector {
         if (!prefix.contentEquals(PNG_SIGNATURE_BYTES)) {
             return null
         }
+
+        var imageWidth = 0
+        var imageHeight = 0
+        var imageType = "image/png"
         while (true) {
             val chunkDataLength = runCatching { reader.int32 }.getOrNull() ?: return null
             if (chunkDataLength < 0) {
                 return null
             }
             val chunkTypeBytes = runCatching { reader.getBytes(4) }.getOrNull() ?: return null
-            val chunkType = PngChunkType(chunkTypeBytes)
-            if (chunkType == PngChunkType.IHDR) {
-                val chunkData = runCatching { reader.getBytes(chunkDataLength) }.getOrNull() ?: return null
-                val chunk = PngChunk(chunkType, chunkData)
-                val pngHeader = runCatching { PngHeader(chunk.bytes) }.getOrNull() ?: return null
-                val imageWidth = pngHeader.imageWidth
-                val imageHeight = pngHeader.imageHeight
-
-                val result = ContentMeta(
-                    type = "image/png",
-                    width = imageWidth,
-                    height = imageHeight,
-                    size = contentBytes.contentLength
-                )
-                logger.info("${logPrefix(url)}: parsed PNG content meta $result")
-                return result
-            } else {
-                runCatching { reader.skip(chunkDataLength.toLong()) }.getOrNull() ?: return null
+            when(val chunkType = PngChunkType(chunkTypeBytes)) {
+                PngChunkType.IHDR -> {
+                    val chunkData = runCatching { reader.getBytes(chunkDataLength) }.getOrNull() ?: return null
+                    val chunk = PngChunk(chunkType, chunkData)
+                    val pngHeader = runCatching { PngHeader(chunk.bytes) }.getOrNull() ?: return null
+                    imageWidth = pngHeader.imageWidth
+                    imageHeight = pngHeader.imageHeight
+                }
+                ACTL_CHUNK_TYPE -> {
+                    imageType = "image/apng"
+                    runCatching { reader.skip(chunkDataLength.toLong()) }.getOrNull() ?: return null
+                }
+                PngChunkType.IDAT -> break
+                else -> {
+                    logger.debug("Unexpected chunk type $chunkType, trying to read next chunk")
+                    runCatching { reader.skip(chunkDataLength.toLong()) }.getOrNull() ?: return null
+                }
             }
+            runCatching { reader.skip(4) }.getOrNull() ?: return null // skipping checksum
         }
+        val result = ContentMeta(
+            type = imageType,
+            width = imageWidth,
+            height = imageHeight,
+            size = contentBytes.contentLength
+        )
+        logger.info("${logPrefix(url)}: parsed PNG content meta $result")
+        return result
     }
 
     private val PNG_SIGNATURE_BYTES = byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A)
+    private val ACTL_CHUNK_TYPE = PngChunkType("acTL", true)
 }
