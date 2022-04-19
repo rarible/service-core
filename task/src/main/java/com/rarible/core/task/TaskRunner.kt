@@ -40,7 +40,7 @@ class TaskRunner(
         var current = task
         try {
             handler.runLongTask(task.state as T?, task.param)
-                .let { if (task.sample != null) it.sample(task.sample) else it }
+                .let { if (task.sample?.takeIf { sample -> sample > 0 } != null) it.sample(task.sample) else it }
                 .collect { next ->
                     logger.info("new task state for ${handler.type} with param=${task.param}: $next")
                     current = taskRepository.save(current.withState(next)).awaitFirst()
