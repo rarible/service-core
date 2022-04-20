@@ -1,11 +1,11 @@
 package com.rarible.core.loader.internal.runner
 
 import com.rarible.core.loader.LoadNotification
+import com.rarible.core.loader.LoadTaskId
 import com.rarible.core.loader.Loader
 import com.rarible.core.loader.configuration.LoadProperties
 import com.rarible.core.loader.internal.common.LoadMetrics
 import com.rarible.core.loader.internal.common.LoadTask
-import com.rarible.core.loader.LoadTaskId
 import com.rarible.core.loader.internal.common.LoadTaskService
 import com.rarible.core.loader.internal.common.nowMillis
 import com.rarible.core.loader.internal.common.presentable
@@ -54,10 +54,10 @@ class LoadRunner(
         } catch (e: Throwable) {
             val duration = loadMetrics.onLoaderFailed(loadTask.type, loaderSample)
             if (e is Error) {
-                logger.error("Fatal failure to load $loadTask (${duration.presentable()})", e)
+                logger.error("Fatal failure to load $loadTask (${duration.presentable()}): ${e.message}", e)
                 throw e
             }
-            logger.info("Failed to load $loadTask (${duration.presentable()})", e)
+            logger.info("Failed to load $loadTask (${duration.presentable()}): ${e.message}", e)
             val errorMessage = e.localizedMessage ?: e.message ?: e::class.java.simpleName
             val failedAt = clock.nowMillis()
             getNewFailedStatus(loadTask, failedAt, errorMessage)

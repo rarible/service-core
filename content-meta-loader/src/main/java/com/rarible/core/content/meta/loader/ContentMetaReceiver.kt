@@ -20,12 +20,13 @@ class ContentMetaReceiver(
 
     @Suppress("BlockingMethodInNonBlockingContext")
     suspend fun receive(url: String): ContentMeta? {
-        return try {
-            receive(URL(url))
+        val parsedUrl = try {
+            URL(url)
         } catch (e: Throwable) {
             logger.warn("Wrong URL: $url", e)
-            null
+            return null
         }
+        return receive(parsedUrl)
     }
 
     @Suppress("MemberVisibilityCanBePrivate")
@@ -88,7 +89,7 @@ class ContentMetaReceiver(
         val contentBytes = try {
             contentReceiver.receiveBytes(url, maxBytes)
         } catch (e: Exception) {
-            logger.warn("${logPrefix(url)}: failed to received content bytes (spent ${spent(startLoading)})", e)
+            logger.warn("${logPrefix(url)}: failed to receive content bytes (spent ${spent(startLoading)})", e)
             return getFallbackContentMeta(url, null)
         }
 
@@ -132,6 +133,7 @@ class ContentMetaReceiver(
             "jpeg" to "image/jpeg",
             "gif" to "image/gif",
             "bmp" to "image/bmp",
+            "webp" to "image/webp",
             "mp4" to "video/mp4",
             "webm" to "video/webm",
             "avi" to "video/x-msvideo",
@@ -147,10 +149,15 @@ class ContentMetaReceiver(
         } else {
             contentReceiverMetrics.receiveContentMetaTypeFail()
         }
-        if (contentMeta != null && (contentMeta.width != null && contentMeta.height != null)) {
-            contentReceiverMetrics.receiveContentMetaWidthHeightSuccess()
-        } else {
-            contentReceiverMetrics.receiveContentMetaWidthHeightFail()
+        // Should be counted only for video/image, other types doesn't have width/height
+        if (contentMeta != null &&
+            (contentMeta.type.startsWith("image/") || contentMeta.type.startsWith("video/"))
+        ) {
+            if (contentMeta.width != null && contentMeta.height != null) {
+                contentReceiverMetrics.receiveContentMetaWidthHeightSuccess()
+            } else {
+                contentReceiverMetrics.receiveContentMetaWidthHeightFail()
+            }
         }
     }
 
