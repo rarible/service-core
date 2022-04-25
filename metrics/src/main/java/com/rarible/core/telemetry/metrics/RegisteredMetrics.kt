@@ -3,6 +3,7 @@ package com.rarible.core.telemetry.metrics
 import io.micrometer.core.instrument.Clock
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.DistributionSummary
+import io.micrometer.core.instrument.Gauge
 import io.micrometer.core.instrument.Timer
 import java.time.Duration
 import java.util.concurrent.TimeUnit
@@ -48,5 +49,13 @@ class RegisteredDistributionSummary internal constructor(
 ) {
     fun record(amount: Number) {
         distributionSummary.record(amount.toDouble())
+    }
+}
+
+class RegisteredGauge internal constructor(
+    private val gauge: Gauge
+) {
+    fun record() {
+        gauge.value()
     }
 }

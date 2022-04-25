@@ -1,5 +1,6 @@
 package com.rarible.core.telemetry.metrics
 
+import io.micrometer.core.instrument.Gauge
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
 import java.time.Duration
@@ -32,6 +33,16 @@ abstract class TimingMetric protected constructor(name: String, vararg tags: Tag
     }
 }
 
+abstract class GaugeMetric protected constructor(name: String, vararg tags: Tag, private val valueSupplier: () -> Double): Metric(name, *tags) {
+    fun bind(registry: MeterRegistry): RegisteredGauge {
+        val gauge = Gauge
+            .builder(name, valueSupplier)
+            .tags(tags)
+            .register(registry)
+        return RegisteredGauge(gauge)
+    }
+}
+
 abstract class DistributionSummaryMetric protected constructor(name: String, vararg tags: Tag) : Metric(name, *tags) {
     fun bind(registry: MeterRegistry): RegisteredDistributionSummary {
         val distributionSummary = registry.summary(name, tags)
@@ -53,4 +64,8 @@ fun MeterRegistry.recordTime(timingMetric: TimingMetric, duration: Duration) {
 
 fun MeterRegistry.recordValue(distributionSummary: DistributionSummaryMetric, amount: Number) {
     distributionSummary.bind(this).record(amount)
+}
+
+fun MeterRegistry.gauge(gaugeMetric: GaugeMetric, number: Number) {
+    gaugeMetric.bind(this).record()
 }
