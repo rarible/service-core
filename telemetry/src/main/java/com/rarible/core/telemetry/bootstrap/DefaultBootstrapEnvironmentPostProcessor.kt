@@ -13,27 +13,30 @@ import java.util.*
 
 class DefaultBootstrapEnvironmentPostProcessor : EnvironmentPostProcessor {
     override fun postProcessEnvironment(environment: ConfigurableEnvironment, application: SpringApplication) {
-        logger.info("postProcessEnvironment")
-        val sources = YamlPropertySourceLoader().load(
-            "rarible-bootstrap-defaults",
-            ClassPathResource("/com/rarible/bootstrap/bootstrap.yml")
-        )
-        for (source in sources.asReversed()) {
-            environment.propertySources.addLast(source)
+        val enabled = environment.getProperty("rarible.core.bootstrap.enabled", "true")
+        if (enabled.toBooleanStrict()) {
+            logger.info("postProcessEnvironment")
+            val sources = YamlPropertySourceLoader().load(
+                "rarible-bootstrap-defaults",
+                ClassPathResource("/com/rarible/bootstrap/bootstrap.yml")
+            )
+            for (source in sources.asReversed()) {
+                environment.propertySources.addLast(source)
+            }
+
+            val applicationEnvironment = environment.getProperty(APPLICATION_ENVIRONMENT)
+                ?: throw IllegalArgumentException("Can't get property '$APPLICATION_ENVIRONMENT' from environment")
+
+            val rootPath = environment.getProperty(CONSUL_ROOT_PATH) ?: environment.getProperty("consul.root.path")
+
+            val defaultContextProperty = Properties()
+            defaultContextProperty.setProperty(CONSUL_CONFIG_DEFAULT_CONTEXT_PROPERTY, rootPath ?: applicationEnvironment)
+
+            val propertySource: PropertySource<Map<String, Any>> =
+                PropertiesPropertySource("consul-config-default-context-property", defaultContextProperty)
+
+            environment.propertySources.addLast(propertySource)
         }
-
-        val applicationEnvironment = environment.getProperty(APPLICATION_ENVIRONMENT)
-            ?: throw IllegalArgumentException("Can't get property '$APPLICATION_ENVIRONMENT' from environment")
-
-        val rootPath = environment.getProperty(CONSUL_ROOT_PATH) ?: environment.getProperty("consul.root.path")
-
-        val defaultContextProperty = Properties()
-        defaultContextProperty.setProperty(CONSUL_CONFIG_DEFAULT_CONTEXT_PROPERTY, rootPath ?: applicationEnvironment)
-
-        val propertySource: PropertySource<Map<String, Any>> =
-            PropertiesPropertySource("consul-config-default-context-property", defaultContextProperty)
-
-        environment.propertySources.addLast(propertySource)
     }
 
     private companion object {
