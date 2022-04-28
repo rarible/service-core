@@ -66,6 +66,6 @@ fun MeterRegistry.recordValue(distributionSummary: DistributionSummaryMetric, am
     distributionSummary.bind(this).record(amount)
 }
 
-fun MeterRegistry.gauge(gaugeMetric: GaugeMetric, number: Number) {
+fun MeterRegistry.gauge(gaugeMetric: GaugeMetric) {
     gaugeMetric.bind(this).record()
 }
