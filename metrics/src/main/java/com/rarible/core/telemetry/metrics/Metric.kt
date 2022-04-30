@@ -4,6 +4,7 @@ import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
 import java.time.Duration
 import java.util.Locale
+import java.util.concurrent.atomic.AtomicLong
 
 abstract class Metric internal constructor(
     protected val name: String,
@@ -25,6 +26,17 @@ abstract class CountingMetric protected constructor(name: String, vararg tags: T
     }
 }
 
+abstract class LongGaugeMetric protected constructor(name: String, vararg tags: Tag) : Metric(name, *tags) {
+    fun bind(registry: MeterRegistry): RegisteredGauge<Long> {
+        val number = requireNotNull(registry.gauge(name, tags, AtomicLong(0)))
+        return RegisteredGauge(object : GaugeModifier<Long> {
+            override fun set(value: Long) {
+                number.set(value)
+            }
+        })
+    }
+}
+
 abstract class TimingMetric protected constructor(name: String, vararg tags: Tag) : Metric(name, *tags) {
     fun bind(registry: MeterRegistry): RegisteredTimer {
         val timer = registry.timer(name, tags)
@@ -41,6 +53,10 @@ abstract class DistributionSummaryMetric protected constructor(name: String, var
 
 fun MeterRegistry.increment(countingMetric: CountingMetric, size: Number = 1) {
     countingMetric.bind(this).increment(size)
+}
+
+interface GaugeModifier<T : Number> {
+    fun set(value: T)
 }
 
 inline fun <T> MeterRegistry.measure(timingMetric: TimingMetric, block: () -> T): T {
