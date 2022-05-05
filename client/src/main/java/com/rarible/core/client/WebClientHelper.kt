@@ -6,6 +6,8 @@ import com.google.common.base.CaseFormat
 import com.rarible.core.apm.ApmContext
 import com.rarible.core.common.orNull
 import com.rarible.core.logging.LoggerContext.MDC_MAP
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType
 import org.springframework.http.client.reactive.ClientHttpConnector
 import org.springframework.http.client.reactive.ReactorClientHttpConnector
@@ -19,6 +21,8 @@ import java.util.Optional
 import java.util.concurrent.TimeUnit
 
 object WebClientHelper {
+    private val logger: Logger = LoggerFactory.getLogger(WebClientHelper::class.java)
+
     @JvmStatic
     val LOG_HEADERS: Mono<Map<String, String>> = MDC_MAP
         .map { it.toHeadersMap() }
@@ -71,13 +75,19 @@ object WebClientHelper {
 
     @JvmStatic
     fun preprocess(requestBuilder: WebClient.RequestBodySpec): Mono<WebClient.RequestBodySpec> {
-        return Mono.zip(LOG_HEADERS, APM_SPAN) { headers, span ->
+        val result = Mono.zip(LOG_HEADERS, APM_SPAN) { headers, span ->
             preprocess(requestBuilder, headers)
             span.orNull()?.injectTraceHeaders { key, value ->
                 requestBuilder.header(key, value)
             }
             requestBuilder
         }
+
+        requestBuilder.headers {
+            logger.info("Headers: {}", it)
+        }
+
+        return result
     }
 
     private fun preprocess(requestBuilder: WebClient.RequestBodySpec, headers: Map<String, String>) =
