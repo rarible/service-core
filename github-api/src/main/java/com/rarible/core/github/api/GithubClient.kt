@@ -15,6 +15,7 @@ class GithubClient {
     ): ByteArray = client.get()
         .uri("https://api.github.com/repos/$owner/$repository/contents/$path")
         .accept(MediaType.parseMediaType(HEADER_RAW_CONTENT))
+        .header("Authorization", "token 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")
         .retrieve()
         .bodyToMono<ByteArray>()
         .awaitSingle()
