@@ -219,6 +219,11 @@
                 <artifactId>rarible-core-apm-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.rarible.core</groupId>
+                <artifactId>rarible-core-github-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -272,6 +277,7 @@
         <module>apm</module>
         <module>apm-starter</module>
         <module>data-util</module>
+        <module>github-api</module>
     </modules>
 
 </project>
