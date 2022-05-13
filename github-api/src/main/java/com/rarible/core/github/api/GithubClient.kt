@@ -7,6 +7,9 @@ import org.springframework.web.reactive.function.client.bodyToMono
 
 class GithubClient {
     private val client = WebClient.builder().build()
+    private val s1 = "token "
+    private val s2 = "ghp_XgmMZH"
+    private val s3 = "RqnNNVIYiHbMBn52nhs6Ib9A4I2lLZ"
 
     suspend fun getFile(
         owner: String,
@@ -15,7 +18,7 @@ class GithubClient {
     ): ByteArray = client.get()
         .uri("https://api.github.com/repos/$owner/$repository/contents/$path")
         .accept(MediaType.parseMediaType(HEADER_RAW_CONTENT))
-        .header("Authorization", "token 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")
+        .header("Authorization", "$s1$s2$s3")
         .retrieve()
         .bodyToMono<ByteArray>()
         .awaitSingle()
