@@ -1,30 +1,34 @@
 package com.rarible.core.content.meta.loader.ipfs
 
+import com.rarible.core.content.meta.loader.ipfs.checker.AbstractIpfsUrlChecker
+import com.rarible.core.content.meta.loader.ipfs.checker.EmbeddedImageChecker
+import com.rarible.core.content.meta.loader.ipfs.checker.ForeignerIpfsUriChecker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
 class IpfsUrlResolverTest {
 
-    private val service = IpfsUrlResolver(
-        ipfsPublicGateway = IPFS_PUBLIC_GATEWAY,
-        ipfsInnerGateways = IPFS_PUBLIC_GATEWAY,
-        ipfsCustomGateways = IPFS_CUSTOM_GATEWAY
+    private val embeddedImageChecker = EmbeddedImageChecker(
+        embeddedImageFilters = listOf(EmbeddedSvgFilter())
+    )
+    private val cidResolver = CidResolver()
+    private val foreignerIpfsUriChecker = ForeignerIpfsUriChecker(
+        customGatewaysResolver = RandomGatewayResolver(IPFS_CUSTOM_GATEWAY),
+        cidResolver = cidResolver
     )
 
-    @Test
-    fun `is cid`() {
-        assertThat(service.isCid("QmQzqPpcBFkc9AwV4B2tscLy9dBwN7o9yEHE9aRCHeN6KW")).isTrue()
-        assertThat(service.isCid("QQzqPpcBFkc9AwV4B2tscLy9dBwN7o9yEHE9aRCHeN6KW")).isFalse()
-        assertThat(service.isCid("bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi")).isTrue()
-        assertThat(service.isCid("3")).isFalse()
-        assertThat(service.isCid("f01701220c3c4733ec8affd06cf9e9ff50ffc6bcd2ec85a6170004bb709669c31de94391a"))
-            .isTrue()
-    }
+    private val resolver = IpfsUrlResolver(
+        publicGatewayResolver = RandomGatewayResolver(IPFS_PUBLIC_GATEWAY),
+        innerGatewaysResolver = RandomGatewayResolver(IPFS_PUBLIC_GATEWAY),
+        embeddedImageChecker = embeddedImageChecker,
+        foreignerIpfsUriChecker = foreignerIpfsUriChecker,
+        abstractIpfsUrlChecker = AbstractIpfsUrlChecker()
+    )
 
     @Test
     fun `svg file with CID urls`() {
         val svg = "<svg url=https://ipfs.io/ipfs/QmQzqPpcBFkc9AwV4B2tscLy9dBwN7o9yEHE9aRCHeN6KW></svg>"
-        val result = service.resolvePublicHttpUrl(svg)
+        val result = resolver.resolvePublicHttpUrl(svg)
         // should stay as SVG
         assertThat(result).isEqualTo(svg)
     }
@@ -76,7 +80,7 @@ class IpfsUrlResolverTest {
 
     @Test
     fun `foreign ipfs urls - replaced by internal gateway`() {
-        val result = service.resolveInnerHttpUrl("https://dweb.link/ipfs/${CID}/1.png")
+        val result = resolver.resolveInnerHttpUrl("https://dweb.link/ipfs/${CID}/1.png")
         assertThat(result)
             .isEqualTo("${IPFS_PUBLIC_GATEWAY}/ipfs/${CID}/1.png")
     }
@@ -91,36 +95,36 @@ class IpfsUrlResolverTest {
         val https = "https://api.t-o-s.xyz/ipfs/gucci/8.gif"
         val http = "http://api.guccinfts.xyz/ipfs/8"
 
-        assertThat(service.resolvePublicHttpUrl(http)).isEqualTo(http)
-        assertThat(service.resolvePublicHttpUrl(https)).isEqualTo(https)
+        assertThat(resolver.resolvePublicHttpUrl(http)).isEqualTo(http)
+        assertThat(resolver.resolvePublicHttpUrl(https)).isEqualTo(https)
     }
 
     @Test
     fun `some ipfs path`() {
         val path = "///hel lo.png"
-        assertThat(service.resolvePublicHttpUrl(path))
+        assertThat(resolver.resolvePublicHttpUrl(path))
             .isEqualTo("${IPFS_PUBLIC_GATEWAY}/hel%20lo.png")
     }
 
     @Test
     fun `replace legacy`() {
-        assertThat(service.resolveInnerHttpUrl("${IPFS_CUSTOM_GATEWAY}/ipfs/abc"))
+        assertThat(resolver.resolveInnerHttpUrl("${IPFS_CUSTOM_GATEWAY}/ipfs/abc"))
             .isEqualTo("${IPFS_PUBLIC_GATEWAY}/ipfs/abc")
     }
 
     private fun assertFixedIpfsUrl(url: String, expectedPath: String) {
-        val result = service.resolvePublicHttpUrl(url)
+        val result = resolver.resolvePublicHttpUrl(url)
         assertThat(result).isEqualTo("${IPFS_PUBLIC_GATEWAY}/ipfs/$expectedPath")
     }
 
     private fun assertOriginalIpfsUrl(url: String, expectedPath: String? = null) {
         val expected = expectedPath ?: url // in most cases we expect URL not changed
-        val result = service.resolvePublicHttpUrl(url)
+        val result = resolver.resolvePublicHttpUrl(url)
         assertThat(result).isEqualTo(expected)
     }
 
     companion object {
-        private const val IPFS_PUBLIC_GATEWAY = "https://ipfs.io"
+        const val IPFS_PUBLIC_GATEWAY = "https://ipfs.io"
         private const val IPFS_CUSTOM_GATEWAY = "https://rarible.mypinata.com" // Legacy
         private const val CID = "QmbpJhWFiwzNu7MebvKG3hrYiyWmSiz5dTUYMQLXsjT9vw"
     }
