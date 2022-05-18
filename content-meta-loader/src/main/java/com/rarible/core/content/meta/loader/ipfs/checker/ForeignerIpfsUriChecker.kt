@@ -4,8 +4,10 @@ import com.rarible.core.content.meta.loader.ipfs.CidResolver
 import com.rarible.core.content.meta.loader.ipfs.GatewayResolver
 import com.rarible.core.content.meta.loader.ipfs.isValidUrl
 import com.rarible.core.content.meta.loader.ipfs.removeLeadingSlashes
+import org.springframework.stereotype.Component
 
-open class ForeignerIpfsUriChecker(
+@Component
+class ForeignerIpfsUriChecker(
     val customGatewaysResolver: GatewayResolver,
     val cidResolver: CidResolver,
 ) {

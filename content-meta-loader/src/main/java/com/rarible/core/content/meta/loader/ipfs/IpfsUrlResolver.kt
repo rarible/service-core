@@ -55,7 +55,6 @@ class IpfsUrlResolver(
         customGateways: List<String> = emptyList(),
         replaceOriginalHost: Boolean
     ): String {
-
         embeddedImageChecker.check(url)?.let { return it }
 
         // Checking if foreign IPFS url contains /ipfs/ like http://ipfs.io/ipfs/lalala

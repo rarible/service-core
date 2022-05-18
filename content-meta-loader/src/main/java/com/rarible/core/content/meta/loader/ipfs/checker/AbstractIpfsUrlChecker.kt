@@ -1,8 +1,10 @@
 package com.rarible.core.content.meta.loader.ipfs.checker
 
 import com.rarible.core.content.meta.loader.ipfs.removeLeadingSlashes
+import org.springframework.stereotype.Component
 
-open class AbstractIpfsUrlChecker {
+@Component
+class AbstractIpfsUrlChecker {
 
     // Checking prefixed IPFS URI like ipfs://Qmlalala
     fun check(url: String, gateway: String): String? {

@@ -2,7 +2,6 @@ package com.rarible.core.content.meta.loader.ipfs
 
 import java.util.regex.Pattern
 
-
 open class CidResolver {
 
     fun isCid(test: String): Boolean {

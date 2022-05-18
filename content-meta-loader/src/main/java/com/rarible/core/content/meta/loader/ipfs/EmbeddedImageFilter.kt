@@ -1,10 +1,13 @@
 package com.rarible.core.content.meta.loader.ipfs
 
+import org.springframework.stereotype.Component
+
 interface EmbeddedImageFilter {
     fun trigger(url: String): Boolean
 }
 
-open class EmbeddedSvgFilter : EmbeddedImageFilter {
+@Component
+class EmbeddedSvgFilter : EmbeddedImageFilter {
 
     override fun trigger(url: String): Boolean {
         // Embedded image, return 'as is'
