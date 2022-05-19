@@ -10,8 +10,6 @@ fun String.isValidUrl(): Boolean =
         false
     }
 
-fun String.encodeHtmlUrl(): String = this.replace(" ", "%20")
-
 fun String.removeLeadingSlashes(): String {
     var result = this
     while (result.startsWith('/')) {

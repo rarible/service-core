@@ -1,81 +1,55 @@
 package com.rarible.core.content.meta.loader.ipfs
 
-import com.rarible.core.content.meta.loader.ipfs.checker.AbstractIpfsUrlChecker
-import com.rarible.core.content.meta.loader.ipfs.checker.EmbeddedImageChecker
-import com.rarible.core.content.meta.loader.ipfs.checker.ForeignerIpfsUriChecker
-import org.springframework.stereotype.Component
-
-@Component
 class IpfsUrlResolver(
-    val publicGatewayResolver: GatewayResolver,
-    val innerGatewaysResolver: GatewayResolver,
-    val embeddedImageChecker: EmbeddedImageChecker,
-    val foreignerIpfsUriChecker: ForeignerIpfsUriChecker,
-    val abstractIpfsUrlChecker: AbstractIpfsUrlChecker
+    private val publicGatewayProvider: GatewayProvider,
+    private val innerGatewaysResolver: GatewayProvider,
+    private val customGatewaysResolver: GatewayProvider,
 ) {
 
     /**
      * Used only for internal operations, such urls should NOT be stored anywhere
-     * @param innerGateways for override inner gateways list
-     * @param customGateways for override custom gateways list
      */
-    fun resolveInnerHttpUrl(
-        url: String,
-        innerGateways: List<String> = emptyList(),
-        customGateways: List<String> = emptyList()
-    ): String {
-        return resolveHttpUrl(
+    fun resolveInnerHttpUrl(url: MetaUrl): String =
+        resolveInternal(
             url = url,
-            gateway = innerGatewaysResolver.getGateway(innerGateways),
-            customGateways = customGateways,
+            gateway = innerGatewaysResolver.getGateway(),
             replaceOriginalHost = true // For internal calls original IPFS host should be replaced in order to avoid rate limit of the original gateway
         )
-    }
 
     /**
      * Used to build url exposed to the DB cache or API responses
-     * @param publicGateways for override public gateways list
-     * @param customGateways for override custom gateways list
      */
-    fun resolvePublicHttpUrl(
-        url: String,
-        publicGateways: List<String> = emptyList(),
-        customGateways: List<String> = emptyList()
-    ): String =
-        resolveHttpUrl(
+    fun resolvePublicHttpUrl(url: MetaUrl): String =
+        resolveInternal(
             url = url,
-            gateway = publicGatewayResolver.getGateway(publicGateways),
-            customGateways = customGateways,
+            gateway = publicGatewayProvider.getGateway(),
             replaceOriginalHost = false // For public IPFS urls we want to keep original gateway URL (if possible)
         )
 
-    private fun resolveHttpUrl(
-        url: String,
+    private fun resolveInternal(
+        url: MetaUrl,
         gateway: String,
-        customGateways: List<String> = emptyList(),
         replaceOriginalHost: Boolean
-    ): String {
-        embeddedImageChecker.check(url)?.let { return it }
+    ): String =
+        when (url) {
+            is SimpleHttpUrl -> url.getSourceUrl()
+            is IpfsUrl -> resolveIpfs(url, gateway, replaceOriginalHost)
+            else -> throw UnsupportedOperationException("Unsupported resolving for ${url.javaClass.name}")
+        }
 
-        // Checking if foreign IPFS url contains /ipfs/ like http://ipfs.io/ipfs/lalala
-        foreignerIpfsUriChecker.check(
-            url = url,
-            gateway = gateway,
-            replaceOriginalHost = replaceOriginalHost,
-            customGateways = customGateways
-        )?.let { return it.encodeHtmlUrl() }
+    private fun resolveIpfs(url: IpfsUrl, gateway: String, replaceOriginalHost: Boolean): String {
+        // If there is IPFS URL with one of legacy gateways, we need to replace it with actual public gateway
+        for (legacy in customGatewaysResolver.getAllGateways()) {
+            if (url.getSourceUrl().startsWith(legacy)) {   // TODO Maybe change to url.gateway.equals?
+                return gateway + url.ipfsPath
+            }
+        }
 
-        // Checking prefixed IPFS URI like ipfs://Qmlalala
-        abstractIpfsUrlChecker.check(
-            url = url,
-            gateway = gateway
-        )?.let { return it.encodeHtmlUrl() }
+        // If URL is valid, and we want to keep original IPFS gateway, return 'as is'
+        if (!replaceOriginalHost && url.getSourceUrl().isValidUrl()) {
+            return url.getSourceUrl()
+        }
 
-        return when {
-            url.startsWith("http") -> url
-            url.startsWith("Qm") -> "$gateway/ipfs/$url"
-            else -> "$gateway/${url.removeLeadingSlashes()}"
-        }.encodeHtmlUrl()
+        return url.resolveWithGateway(gateway)
     }
-
 }

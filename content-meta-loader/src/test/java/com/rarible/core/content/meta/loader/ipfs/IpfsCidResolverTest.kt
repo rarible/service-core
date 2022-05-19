@@ -3,9 +3,9 @@ package com.rarible.core.content.meta.loader.ipfs
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
-class CidResolverTest {
+class IpfsCidResolverTest {
 
-    private val resolver = CidResolver()
+    private val resolver = IpfsCidResolver()
 
     @Test
     fun `is cid`() {

@@ -3,9 +3,9 @@ package com.rarible.core.content.meta.loader.ipfs
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
-class GatewayResolverTest {
+class GatewayProviderTest {
 
-    private val resolver = RandomGatewayResolver(PREDEFINED_IPFS_GATEWAYS)
+    private val resolver = RandomGatewayProvider(listOf(PREDEFINED_IPFS_GATEWAYS))
 
     @Test
     fun `resolve predefined gateway`() {
@@ -15,22 +15,8 @@ class GatewayResolverTest {
 
     @Test
     fun `resolve predefined gateways`() {
-        val gateways = resolver.getGateways()
+        val gateways = resolver.getAllGateways()
         assertThat(gateways).isEqualTo(listOf(GATEWAY_ONE, GATEWAY_TWO))
-    }
-
-    @Test
-    fun `resolve user gateway`() {
-        val userGateways = listOf(GATEWAY_THREE, GATEWAY_FOUR)
-        val gateway = resolver.getGateway(userGateways)
-        assertThat(userGateways).contains(gateway)
-    }
-
-    @Test
-    fun `resolve user gateways`() {
-        val userGateways = listOf(GATEWAY_THREE, GATEWAY_FOUR)
-        val gateways = resolver.getGateways(userGateways)
-        assertThat(gateways).isEqualTo(userGateways)
     }
 
     companion object {

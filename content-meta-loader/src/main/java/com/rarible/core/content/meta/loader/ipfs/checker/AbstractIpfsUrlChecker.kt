@@ -1,5 +1,6 @@
 package com.rarible.core.content.meta.loader.ipfs.checker
 
+import com.rarible.core.content.meta.loader.ipfs.IpfsUrl
 import com.rarible.core.content.meta.loader.ipfs.removeLeadingSlashes
 import org.springframework.stereotype.Component
 
@@ -7,7 +8,7 @@ import org.springframework.stereotype.Component
 class AbstractIpfsUrlChecker {
 
     // Checking prefixed IPFS URI like ipfs://Qmlalala
-    fun check(url: String, gateway: String): String? {
+    fun check(url: String): IpfsUrl? {
         if (url.length < IPFS_PREFIX.length) {
             return null
         }
@@ -26,7 +27,12 @@ class AbstractIpfsUrlChecker {
         for (prefix in IPFS_PREFIXES) {
             if (lowerCaseIpfsPrefixUri.startsWith(prefix)) {
                 val path = lowerCaseIpfsPrefixUri.substring(prefix.length)
-                return "$gateway/ipfs/$path"
+//                return "$gateway/ipfs/$path"
+                return IpfsUrl(
+                    source = url,
+                    originalGateway = null, // Because URI like ipfs://Qmlalala
+                    ipfsPath = "/ipfs/$path"
+                )
             }
         }
         // Should not happen, we already found IPFS prefix
