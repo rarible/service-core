@@ -1,10 +1,10 @@
-package com.rarible.core.content.meta.loader.ipfs
+package com.rarible.core.content.meta.loader.addressing.cid
 
 import java.util.regex.Pattern
 
-open class IpfsCidResolver {
+class LegacyCidValidator : CidValidator {
 
-    fun isCid(test: String): Boolean {
+    override fun isCid(test: String): Boolean {
         return CID_PATTERN.matcher(test).matches()
     }
 

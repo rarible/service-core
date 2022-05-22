@@ -1,4 +1,4 @@
-package com.rarible.core.content.meta.loader.ipfs
+package com.rarible.core.content.meta.loader.addressing
 
 import java.net.URL
 
@@ -17,3 +17,5 @@ fun String.removeLeadingSlashes(): String {
     }
     return result
 }
+
+const val SLASH = "/"

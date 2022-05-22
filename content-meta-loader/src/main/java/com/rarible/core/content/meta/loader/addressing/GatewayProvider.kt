@@ -1,4 +1,4 @@
-package com.rarible.core.content.meta.loader.ipfs
+package com.rarible.core.content.meta.loader.addressing.ipfs
 
 import java.util.Random
 
@@ -12,14 +12,9 @@ class RandomGatewayProvider(
     private val gateways: List<String>
 ) : GatewayProvider {
 
-    override fun getGateway(): String =
-        getRandomGateway(gateways)
+    override fun getGateway(): String = gateways[Random().nextInt(gateways.size)]
 
     override fun getAllGateways(): List<String> = gateways
-
-    companion object {
-        private fun getRandomGateway(gateways: List<String>): String = gateways[Random().nextInt(gateways.size)]
-    }
 }
 
 class ConstantGatewayProvider(

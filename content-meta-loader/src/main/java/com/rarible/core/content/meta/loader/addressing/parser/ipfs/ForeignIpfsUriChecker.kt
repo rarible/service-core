@@ -1,15 +1,13 @@
-package com.rarible.core.content.meta.loader.ipfs.checker
+package com.rarible.core.content.meta.loader.addressing.parser.ipfs
 
-import com.rarible.core.content.meta.loader.ipfs.IpfsCidResolver
-import com.rarible.core.content.meta.loader.ipfs.GatewayProvider
-import com.rarible.core.content.meta.loader.ipfs.IpfsUrl
-import com.rarible.core.content.meta.loader.ipfs.isValidUrl
-import com.rarible.core.content.meta.loader.ipfs.removeLeadingSlashes
+import com.rarible.core.content.meta.loader.addressing.removeLeadingSlashes
+import com.rarible.core.content.meta.loader.addressing.IpfsUrl
+import com.rarible.core.content.meta.loader.addressing.cid.CidValidator
 import org.springframework.stereotype.Component
 
 @Component
 class ForeignIpfsUriChecker(
-    val ipfsCidResolver: IpfsCidResolver
+    val cidOneValidator: CidValidator
 ) {
 
     // Checking if foreign IPFS url contains /ipfs/ like http://ipfs.io/ipfs/lalala
@@ -19,15 +17,15 @@ class ForeignIpfsUriChecker(
 
         val pathEnd = url.substring(ipfsPathIndex + IPFS_PATH_PART.length).removeLeadingSlashes()
         // Works only for IPFS CIDs
-        if (!ipfsCidResolver.isCid(pathEnd.substringBefore("/"))) {  // TODO Maybe add check into AbstractIpfsUrlChecker ?
+        if (!cidOneValidator.isCid(pathEnd.substringBefore("/"))) {  // TODO Maybe add check into AbstractIpfsUrlChecker ?
             return null
         }
 
 //        return "$gateway/ipfs/$pathEnd"
         return IpfsUrl(
-            source = url,
+            origin = url,
             originalGateway = null, // TODO How to find?
-            ipfsPath = "/ipfs/$pathEnd"
+            path = "/ipfs/$pathEnd"  // TODO Remove prefix
         )
     }
 

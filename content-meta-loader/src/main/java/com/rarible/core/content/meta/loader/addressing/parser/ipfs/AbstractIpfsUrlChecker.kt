@@ -1,7 +1,7 @@
-package com.rarible.core.content.meta.loader.ipfs.checker
+package com.rarible.core.content.meta.loader.addressing.parser.ipfs
 
-import com.rarible.core.content.meta.loader.ipfs.IpfsUrl
-import com.rarible.core.content.meta.loader.ipfs.removeLeadingSlashes
+import com.rarible.core.content.meta.loader.addressing.IpfsUrl
+import com.rarible.core.content.meta.loader.addressing.removeLeadingSlashes
 import org.springframework.stereotype.Component
 
 @Component
@@ -26,12 +26,12 @@ class AbstractIpfsUrlChecker {
 
         for (prefix in IPFS_PREFIXES) {
             if (lowerCaseIpfsPrefixUri.startsWith(prefix)) {
-                val path = lowerCaseIpfsPrefixUri.substring(prefix.length)
+                val path = lowerCaseIpfsPrefixUri.substring(prefix.length).removeLeadingSlashes()
 //                return "$gateway/ipfs/$path"
                 return IpfsUrl(
-                    source = url,
+                    origin = url,
                     originalGateway = null, // Because URI like ipfs://Qmlalala
-                    ipfsPath = "/ipfs/$path"
+                    path = "/ipfs/$path"
                 )
             }
         }
