@@ -3,7 +3,6 @@ package com.rarible.core.content.meta.loader.addressing.parser
 import com.rarible.core.content.meta.loader.addressing.RawCidAddress
 import com.rarible.core.content.meta.loader.addressing.SLASH
 import com.rarible.core.content.meta.loader.addressing.cid.CidValidator
-import com.rarible.core.content.meta.loader.addressing.removeLeadingSlashes
 
 class RawCidAddressParser(
     private val cidOneValidator: CidValidator
@@ -15,9 +14,7 @@ class RawCidAddressParser(
             return RawCidAddress(
                 origin = url,
                 cid = cid,
-                additionalPath = url.substring(cid.length)
-                    .removeLeadingSlashes()
-                    .ifEmpty { null }
+                additionalPath = url.substring(cid.length).ifEmpty { null }
             )
         }
         return null

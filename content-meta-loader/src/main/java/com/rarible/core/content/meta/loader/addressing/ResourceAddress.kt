@@ -40,6 +40,6 @@ data class ArweaveUrl(
 
     companion object {
         const val AR_PREFIX = "ar://"
-        const val ARWEAVE_GATEWAY = "https://arweave.net/"
+        const val ARWEAVE_GATEWAY = "https://arweave.net"
     }
 }

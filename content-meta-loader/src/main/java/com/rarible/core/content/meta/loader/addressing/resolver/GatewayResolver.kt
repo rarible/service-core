@@ -46,9 +46,16 @@ class RawCidGatewayResolver(
         }
 }
 
-class ArweaveGatewayResolver : GatewayResolver<ArweaveUrl> {
+class ArweaveGatewayResolver(
+    private val arweaveGatewayProvider: GatewayProvider
+) : GatewayResolver<ArweaveUrl> {
 
-    override fun resolveInnerAddress(address: ArweaveUrl): String = "${address.originalGateway}${address.path}"
+    override fun resolveInnerAddress(address: ArweaveUrl): String = resolve(address)
 
-    override fun resolvePublicAddress(address: ArweaveUrl): String = "${address.originalGateway}${address.path}"
+    override fun resolvePublicAddress(address: ArweaveUrl): String = resolve(address)
+
+    private fun resolve(address: ArweaveUrl): String {
+        val gateway = address.originalGateway ?: arweaveGatewayProvider.getGateway()
+        return "${gateway}${address.path}"
+    }
 }

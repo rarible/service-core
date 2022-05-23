@@ -1,6 +1,7 @@
 package com.rarible.core.content.meta.loader.addressing.parser
 
 import com.rarible.core.content.meta.loader.addressing.ArweaveUrl
+import com.rarible.core.content.meta.loader.addressing.SLASH
 
 class ArweaveAddressParser : AddressParser<ArweaveUrl> {
 
@@ -10,7 +11,7 @@ class ArweaveAddressParser : AddressParser<ArweaveUrl> {
                 ArweaveUrl(
                     origin = url,
                     originalGateway = null,
-                    path = url.substring(ArweaveUrl.AR_PREFIX.length)  // TODO Write a test
+                    path = "$SLASH${url.substring(ArweaveUrl.AR_PREFIX.length)}"
                 )
             }
             url.startsWith(ArweaveUrl.ARWEAVE_GATEWAY) -> {

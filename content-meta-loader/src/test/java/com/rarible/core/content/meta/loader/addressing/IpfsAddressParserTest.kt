@@ -3,6 +3,7 @@ package com.rarible.core.content.meta.loader.addressing
 import com.rarible.core.content.meta.loader.addressing.AddressingTestData.CID
 import com.rarible.core.content.meta.loader.addressing.AddressingTestData.IPFS_CUSTOM_GATEWAY
 import com.rarible.core.content.meta.loader.addressing.AddressingTestData.IPFS_PUBLIC_GATEWAY
+import com.rarible.core.content.meta.loader.addressing.ArweaveUrl.Companion.ARWEAVE_GATEWAY
 import com.rarible.core.content.meta.loader.addressing.cid.CidOneValidator
 import com.rarible.core.content.meta.loader.addressing.parser.AddressParserProvider
 import com.rarible.core.content.meta.loader.addressing.parser.AddressParsingProcessor
@@ -50,7 +51,9 @@ class IpfsAddressParserTest {
             publicGatewayProvider = ConstantGatewayProvider(IPFS_PUBLIC_GATEWAY),
             innerGatewaysProvider = RandomGatewayProvider(listOf(IPFS_PUBLIC_GATEWAY))
         ),
-        arweaveGatewayResolver = ArweaveGatewayResolver(),
+        arweaveGatewayResolver = ArweaveGatewayResolver(
+            arweaveGatewayProvider = ConstantGatewayProvider(ARWEAVE_GATEWAY)
+        ),
         simpleHttpGatewayResolver = SimpleHttpGatewayResolver()
     )
 

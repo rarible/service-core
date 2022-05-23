@@ -6,7 +6,7 @@ import com.rarible.core.content.meta.loader.addressing.isValidUrl
 class HttpAddressParser : AddressParser<SimpleHttpUrl> {
 
     override fun parse(address: String): SimpleHttpUrl? {
-        if (address.isValidUrl()) { // TODO Test it
+        if (address.isValidUrl()) {
             return SimpleHttpUrl(address)
         }
         return null
