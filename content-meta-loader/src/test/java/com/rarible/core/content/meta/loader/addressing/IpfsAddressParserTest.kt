@@ -1,8 +1,9 @@
-package com.rarible.core.content.meta.loader.ipfs
+package com.rarible.core.content.meta.loader.addressing
 
+import com.rarible.core.content.meta.loader.addressing.AddressingTestData.CID
+import com.rarible.core.content.meta.loader.addressing.AddressingTestData.IPFS_CUSTOM_GATEWAY
+import com.rarible.core.content.meta.loader.addressing.AddressingTestData.IPFS_PUBLIC_GATEWAY
 import com.rarible.core.content.meta.loader.addressing.cid.CidOneValidator
-import com.rarible.core.content.meta.loader.addressing.ConstantGatewayProvider
-import com.rarible.core.content.meta.loader.addressing.RandomGatewayProvider
 import com.rarible.core.content.meta.loader.addressing.parser.AddressParserProvider
 import com.rarible.core.content.meta.loader.addressing.parser.AddressParsingProcessor
 import com.rarible.core.content.meta.loader.addressing.parser.ArweaveAddressParser
@@ -53,14 +54,6 @@ class IpfsAddressParserTest {
         simpleHttpGatewayResolver = SimpleHttpGatewayResolver()
     )
 
-//    @Test
-//    fun `svg file with CID urls`() {
-//        val svg = "<svg url=https://ipfs.io/ipfs/QmQzqPpcBFkc9AwV4B2tscLy9dBwN7o9yEHE9aRCHeN6KW></svg>"
-//        val result = container.resolvePublicHttpUrl(svg)
-//        // should stay as SVG
-//        assertThat(result).isEqualTo(svg)
-//    }
-
     // TODO Test for Arveawe
 
     @Test
@@ -110,9 +103,9 @@ class IpfsAddressParserTest {
 
     @Test
     fun `foreign ipfs urls - replaced by internal gateway`() {
-        val result = resolveInnerHttpUrl("https://dweb.link/ipfs/${CID}/1.png")
+        val result = resolveInnerHttpUrl("https://dweb.link/ipfs/$CID/1.png")
         assertThat(result)
-            .isEqualTo("${IPFS_PUBLIC_GATEWAY}/ipfs/${CID}/1.png")
+            .isEqualTo("$IPFS_PUBLIC_GATEWAY/ipfs/$CID/1.png")
     }
 
     @Test
@@ -139,13 +132,13 @@ class IpfsAddressParserTest {
 
     @Test
     fun `replace legacy`() {
-        assertThat(resolveInnerHttpUrl("${IPFS_CUSTOM_GATEWAY}/ipfs/$CID"))
-            .isEqualTo("${IPFS_PUBLIC_GATEWAY}/ipfs/$CID")
+        assertThat(resolveInnerHttpUrl("$IPFS_CUSTOM_GATEWAY/ipfs/$CID"))
+            .isEqualTo("$IPFS_PUBLIC_GATEWAY/ipfs/$CID")
     }
 
     private fun assertFixedIpfsUrl(url: String, expectedPath: String) {
         val result = resolvePublicHttpUrl(url)
-        assertThat(result).isEqualTo("${IPFS_PUBLIC_GATEWAY}/ipfs/$expectedPath")
+        assertThat(result).isEqualTo("$IPFS_PUBLIC_GATEWAY/ipfs/$expectedPath")
     }
 
     private fun assertOriginalIpfsUrl(url: String, expectedPath: String? = null) {
@@ -162,11 +155,5 @@ class IpfsAddressParserTest {
     private fun resolveInnerHttpUrl(url: String): String {
         val resourceAddress = addressParsingProcessor.parse(url)
         return gatewayResolveHandler.resolveInnerAddress(resourceAddress!!)
-    }
-
-    companion object {
-        const val IPFS_PUBLIC_GATEWAY = "https://ipfs.io"
-        private const val IPFS_CUSTOM_GATEWAY = "https://rarible.mypinata.com" // Legacy
-        private const val CID = "QmbpJhWFiwzNu7MebvKG3hrYiyWmSiz5dTUYMQLXsjT9vw"
     }
 }

@@ -1,6 +1,5 @@
-package com.rarible.core.content.meta.loader.ipfs
+package com.rarible.core.content.meta.loader.addressing
 
-import com.rarible.core.content.meta.loader.addressing.RandomGatewayProvider
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 

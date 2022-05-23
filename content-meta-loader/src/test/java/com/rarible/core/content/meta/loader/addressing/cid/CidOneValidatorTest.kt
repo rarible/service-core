@@ -1,4 +1,4 @@
-package com.rarible.core.content.meta.loader.ipfs
+package com.rarible.core.content.meta.loader.addressing.cid
 
 import com.rarible.core.content.meta.loader.addressing.cid.CidOneValidator
 import org.assertj.core.api.Assertions.assertThat
