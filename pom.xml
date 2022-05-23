@@ -282,6 +282,7 @@
         <module>apm-starter</module>
         <module>data-util</module>
         <module>github-api</module>
+        <module>meta-resource</module>
     </modules>
 
 </project>
