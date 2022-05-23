@@ -1,10 +1,11 @@
 package com.rarible.core.content.meta.loader.addressing
 
-import java.util.Random
+import java.util.*
 
 interface GatewayProvider {
     fun getGateway(): String
 
+    // TODO remove
     fun getAllGateways(): List<String>
 }
 
