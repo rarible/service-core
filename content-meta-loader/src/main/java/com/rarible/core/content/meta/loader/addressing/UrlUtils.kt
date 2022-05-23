@@ -2,7 +2,7 @@ package com.rarible.core.content.meta.loader.addressing
 
 import java.net.URL
 
-fun String.isValidUrl(): Boolean =
+fun String.isHttpUrl(): Boolean =
     try {
         val url = URL(this)
         (url.protocol == "http" || url.protocol == "https")
@@ -18,4 +18,5 @@ fun String.removeLeadingSlashes(): String {
     return result
 }
 
+// TODO remove
 const val SLASH = '/'

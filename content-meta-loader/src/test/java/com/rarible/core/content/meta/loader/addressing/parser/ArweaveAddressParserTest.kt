@@ -5,13 +5,13 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
 class ArweaveAddressParserTest {
-    private val arweaveAddressParser = ArweaveAddressParser()
+    private val arweaveAddressParser = ArweaveUrlResourceParser()
 
     @Test
     fun `ar prefix`() {
         assertThat(arweaveAddressParser.parse("ar://lVS0SkeSF8_alma1ayYMZcH9VSMLrmhAmikrDyshUcg")).isEqualTo(
             ArweaveUrl(
-                origin = "ar://lVS0SkeSF8_alma1ayYMZcH9VSMLrmhAmikrDyshUcg",
+                original = "ar://lVS0SkeSF8_alma1ayYMZcH9VSMLrmhAmikrDyshUcg",
                 originalGateway = null,
                 path = "/lVS0SkeSF8_alma1ayYMZcH9VSMLrmhAmikrDyshUcg"
             )
@@ -22,7 +22,7 @@ class ArweaveAddressParserTest {
     fun `arweave net domain`() {
         assertThat(arweaveAddressParser.parse("https://arweave.net/lVS0SkeSF8_alma1ayYMZcH9VSMLrmhAmikrDyshUcg")).isEqualTo(
             ArweaveUrl(
-                origin = "https://arweave.net/lVS0SkeSF8_alma1ayYMZcH9VSMLrmhAmikrDyshUcg",
+                original = "https://arweave.net/lVS0SkeSF8_alma1ayYMZcH9VSMLrmhAmikrDyshUcg",
                 originalGateway = "https://arweave.net",
                 path = "/lVS0SkeSF8_alma1ayYMZcH9VSMLrmhAmikrDyshUcg"
             )

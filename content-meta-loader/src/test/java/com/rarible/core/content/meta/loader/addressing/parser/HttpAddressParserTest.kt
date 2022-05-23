@@ -1,17 +1,17 @@
 package com.rarible.core.content.meta.loader.addressing.parser
 
-import com.rarible.core.content.meta.loader.addressing.SimpleHttpUrl
+import com.rarible.core.content.meta.loader.addressing.HttpUrl
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
 class HttpAddressParserTest {
 
-    private val httpAddressParser = HttpAddressParser()
+    private val httpAddressParser = HttpUrlResourceParser()
 
     @Test
     fun `valid http`() {
         assertThat(httpAddressParser.parse("https://some.io/something")).isEqualTo(
-            SimpleHttpUrl(origin = "https://some.io/something")
+            HttpUrl(original = "https://some.io/something")
         )
     }
 

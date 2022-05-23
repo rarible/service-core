@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test
 
 class AbstractIpfsAddressParserTest {
 
-    private val abstractIpfsAddressParser = AbstractIpfsAddressParser()
+    private val abstractIpfsAddressParser = AbstractIpfsUrlResourceParser()
 
     @Test
     fun `IPFS urls with ipfs path and broken slashes`() {
@@ -53,7 +53,7 @@ class AbstractIpfsAddressParserTest {
         val result = abstractIpfsAddressParser.parse(url)
         assertThat(result).isEqualTo(
             IpfsUrl(
-                origin = url,
+                original = url,
                 originalGateway = null,
                 path = "/$expectedPath"
             )

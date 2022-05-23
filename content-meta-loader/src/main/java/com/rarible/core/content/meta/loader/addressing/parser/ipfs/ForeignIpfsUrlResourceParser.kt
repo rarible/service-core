@@ -4,12 +4,12 @@ import com.rarible.core.content.meta.loader.addressing.IpfsUrl
 import com.rarible.core.content.meta.loader.addressing.IpfsUrl.Companion.IPFS_PATH_PART
 import com.rarible.core.content.meta.loader.addressing.SLASH
 import com.rarible.core.content.meta.loader.addressing.cid.CidValidator
-import com.rarible.core.content.meta.loader.addressing.parser.AddressParser
+import com.rarible.core.content.meta.loader.addressing.parser.UrlResourceParser
 import com.rarible.core.content.meta.loader.addressing.removeLeadingSlashes
 
-class ForeignIpfsUrlAddressParser(
+class ForeignIpfsUrlResourceParser(
     private val cidOneValidator: CidValidator
-) : AddressParser<IpfsUrl> {
+) : UrlResourceParser<IpfsUrl> {
 
     // Checking if foreign IPFS url contains /ipfs/ like http://ipfs.io/ipfs/lalala
     override fun parse(url: String): IpfsUrl? {
@@ -24,9 +24,9 @@ class ForeignIpfsUrlAddressParser(
         }
 
         return IpfsUrl(
-            origin = url,
+            original = url,
             originalGateway = url.substring(0, ipfsPathIndex), // TODO Test it
-            path = "$SLASH$pathEnd"
+            path = "/$pathEnd"
         )
     }
 

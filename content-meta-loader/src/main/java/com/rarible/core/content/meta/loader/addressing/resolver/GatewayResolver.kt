@@ -1,10 +1,9 @@
 package com.rarible.core.content.meta.loader.addressing.resolver
 
 import com.rarible.core.content.meta.loader.addressing.ArweaveUrl
-import com.rarible.core.content.meta.loader.addressing.RawCidAddress
-import com.rarible.core.content.meta.loader.addressing.SLASH
-import com.rarible.core.content.meta.loader.addressing.SimpleHttpUrl
+import com.rarible.core.content.meta.loader.addressing.Cid
 import com.rarible.core.content.meta.loader.addressing.GatewayProvider
+import com.rarible.core.content.meta.loader.addressing.HttpUrl
 import com.rarible.core.content.meta.loader.addressing.IpfsUrl.Companion.IPFS
 
 interface GatewayResolver<T> {
@@ -20,29 +19,29 @@ interface GatewayResolver<T> {
     fun resolvePublicAddress(address: T): String
 }
 
-class SimpleHttpGatewayResolver : GatewayResolver<SimpleHttpUrl> {
+class SimpleHttpGatewayResolver : GatewayResolver<HttpUrl> {
 
-    override fun resolveInnerAddress(address: SimpleHttpUrl): String = address.origin
+    override fun resolveInnerAddress(address: HttpUrl): String = address.original
 
-    override fun resolvePublicAddress(address: SimpleHttpUrl): String = address.origin
+    override fun resolvePublicAddress(address: HttpUrl): String = address.original
 }
 
 class RawCidGatewayResolver(
     private val publicGatewayProvider: GatewayProvider,
     private val innerGatewaysProvider: GatewayProvider
-) : GatewayResolver<RawCidAddress> {
+) : GatewayResolver<Cid> {
 
-    override fun resolveInnerAddress(address: RawCidAddress): String =
+    override fun resolveInnerAddress(address: Cid): String =
         resolveWithGateway(address, innerGatewaysProvider.getGateway())
 
-    override fun resolvePublicAddress(address: RawCidAddress): String =
+    override fun resolvePublicAddress(address: Cid): String =
         resolveWithGateway(address, publicGatewayProvider.getGateway())
 
-    private fun resolveWithGateway(address: RawCidAddress, gateway: String): String =  // TODO Add test
+    private fun resolveWithGateway(address: Cid, gateway: String): String =  // TODO Add test
         if (address.additionalPath != null) {
-            "$gateway$SLASH$IPFS$SLASH${address.cid}$SLASH${address.additionalPath}"
+            "$gateway/$IPFS/${address.cid}/${address.additionalPath}"
         } else {
-            "$gateway$SLASH$IPFS$SLASH${address.cid}"
+            "$gateway/$IPFS/${address.cid}"
         }
 }
 

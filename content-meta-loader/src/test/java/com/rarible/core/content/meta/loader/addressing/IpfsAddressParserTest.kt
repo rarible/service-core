@@ -4,14 +4,14 @@ import com.rarible.core.content.meta.loader.addressing.AddressingTestData.CID
 import com.rarible.core.content.meta.loader.addressing.AddressingTestData.IPFS_CUSTOM_GATEWAY
 import com.rarible.core.content.meta.loader.addressing.AddressingTestData.IPFS_PUBLIC_GATEWAY
 import com.rarible.core.content.meta.loader.addressing.ArweaveUrl.Companion.ARWEAVE_GATEWAY
-import com.rarible.core.content.meta.loader.addressing.cid.CidOneValidator
-import com.rarible.core.content.meta.loader.addressing.parser.AddressParserProvider
-import com.rarible.core.content.meta.loader.addressing.parser.AddressParsingProcessor
-import com.rarible.core.content.meta.loader.addressing.parser.ArweaveAddressParser
-import com.rarible.core.content.meta.loader.addressing.parser.HttpAddressParser
-import com.rarible.core.content.meta.loader.addressing.parser.RawCidAddressParser
-import com.rarible.core.content.meta.loader.addressing.parser.ipfs.AbstractIpfsAddressParser
-import com.rarible.core.content.meta.loader.addressing.parser.ipfs.ForeignIpfsUrlAddressParser
+import com.rarible.core.content.meta.loader.addressing.cid.CidV1Validator
+import com.rarible.core.content.meta.loader.addressing.parser.ArweaveUrlResourceParser
+import com.rarible.core.content.meta.loader.addressing.parser.CidUrlResourceParser
+import com.rarible.core.content.meta.loader.addressing.parser.HttpUrlResourceParser
+import com.rarible.core.content.meta.loader.addressing.parser.UrlResourceParserProvider
+import com.rarible.core.content.meta.loader.addressing.parser.UrlResourceProcessor
+import com.rarible.core.content.meta.loader.addressing.parser.ipfs.AbstractIpfsUrlResourceParser
+import com.rarible.core.content.meta.loader.addressing.parser.ipfs.ForeignIpfsUrlResourceParser
 import com.rarible.core.content.meta.loader.addressing.resolver.ArweaveGatewayResolver
 import com.rarible.core.content.meta.loader.addressing.resolver.GatewayResolveHandler
 import com.rarible.core.content.meta.loader.addressing.resolver.IpfsGatewayResolver
@@ -22,26 +22,26 @@ import org.junit.jupiter.api.Test
 
 class IpfsAddressParserTest {
 
-    private val cidOneValidator = CidOneValidator()
-    private val foreignIpfsUrlAddressParser = ForeignIpfsUrlAddressParser(
+    private val cidOneValidator = CidV1Validator()
+    private val foreignIpfsUrlAddressParser = ForeignIpfsUrlResourceParser(
         cidOneValidator = cidOneValidator
     )
 
     private val ipfsGatewayResolver = IpfsGatewayResolver(
-        customGatewaysResolver = RandomGatewayProvider(listOf(IPFS_CUSTOM_GATEWAY)),
+        customGatewaysResolver = LegacyIpfsGatewaySubstitutor(listOf(IPFS_CUSTOM_GATEWAY)),
         publicGatewayProvider = ConstantGatewayProvider(IPFS_PUBLIC_GATEWAY),
         innerGatewaysProvider = RandomGatewayProvider(listOf(IPFS_PUBLIC_GATEWAY))
     )
 
-    private val addressParserProvider = AddressParserProvider(
-        arweaveUrlParser = ArweaveAddressParser(),
+    private val addressParserProvider = UrlResourceParserProvider(
+        arweaveUrlParser = ArweaveUrlResourceParser(),
         foreignIpfsUrlAddressParser = foreignIpfsUrlAddressParser,
-        abstractIpfsAddressParser = AbstractIpfsAddressParser(),
-        rawCidAddressParser = RawCidAddressParser(cidOneValidator),
-        httpUrlParser = HttpAddressParser()
+        abstractIpfsAddressParser = AbstractIpfsUrlResourceParser(),
+        rawCidAddressParser = CidUrlResourceParser(cidOneValidator),
+        httpUrlParser = HttpUrlResourceParser()
     )
 
-    private val addressParsingProcessor = AddressParsingProcessor(
+    private val addressParsingProcessor = UrlResourceProcessor(
         addressParserProvider = addressParserProvider
     )
 

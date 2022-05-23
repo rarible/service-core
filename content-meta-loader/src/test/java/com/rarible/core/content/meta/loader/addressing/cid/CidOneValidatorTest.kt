@@ -7,8 +7,8 @@ import org.junit.jupiter.api.Test
 
 class CidOneValidatorTest {
 
-    private val cidOneValidator = CidOneValidator()
-    private val legacyCidValidator = LegacyCidValidator()
+    private val cidOneValidator = CidV1Validator()
+    private val legacyCidValidator = CidLegacyValidator()
 
     @Test
     fun `is cid with cid one validator`() {
@@ -16,7 +16,9 @@ class CidOneValidatorTest {
         assertThat(cidOneValidator.isCid(INVALID_CID)).isFalse
         assertThat(cidOneValidator.isCid("bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi")).isTrue
         assertThat(cidOneValidator.isCid("3")).isFalse
-        assertThat(cidOneValidator.isCid("f01701220c3c4733ec8affd06cf9e9ff50ffc6bcd2ec85a6170004bb709669c31de94391a")).isTrue
+        assertThat(
+            cidOneValidator.isCid("f01701220c3c4733ec8affd06cf9e9ff50ffc6bcd2ec85a6170004bb709669c31de94391a")
+        ).isTrue
         // TODO Add more cases
     }
 

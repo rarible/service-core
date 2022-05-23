@@ -2,14 +2,14 @@ package com.rarible.core.content.meta.loader.addressing.parser.ipfs
 
 import com.rarible.core.content.meta.loader.addressing.AddressingTestData
 import com.rarible.core.content.meta.loader.addressing.IpfsUrl
-import com.rarible.core.content.meta.loader.addressing.cid.CidOneValidator
+import com.rarible.core.content.meta.loader.addressing.cid.CidV1Validator
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
 class ForeignIpfsUrlAddressParserTest {
 
-    private val cidOneValidator = CidOneValidator()
-    private val foreignIpfsUrlAddressParser = ForeignIpfsUrlAddressParser(
+    private val cidOneValidator = CidV1Validator()
+    private val foreignIpfsUrlAddressParser = ForeignIpfsUrlResourceParser(
         cidOneValidator = cidOneValidator
     )
 
@@ -44,7 +44,7 @@ class ForeignIpfsUrlAddressParserTest {
     private fun assertIpfsUrl(url: String, originalGateway: String, path: String) {
         assertThat(foreignIpfsUrlAddressParser.parse(url))
             .isEqualTo(IpfsUrl(
-                origin = url,
+                original = url,
                 originalGateway = originalGateway,
                 path = path
             ))

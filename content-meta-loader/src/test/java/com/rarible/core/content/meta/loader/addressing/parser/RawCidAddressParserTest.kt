@@ -2,15 +2,15 @@ package com.rarible.core.content.meta.loader.addressing.parser
 
 import com.rarible.core.content.meta.loader.addressing.AddressingTestData.CID
 import com.rarible.core.content.meta.loader.addressing.AddressingTestData.INVALID_CID
-import com.rarible.core.content.meta.loader.addressing.RawCidAddress
-import com.rarible.core.content.meta.loader.addressing.cid.CidOneValidator
+import com.rarible.core.content.meta.loader.addressing.Cid
+import com.rarible.core.content.meta.loader.addressing.cid.CidV1Validator
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
 class RawCidAddressParserTest {
 
-    private val cidOneValidator = CidOneValidator()
-    private val rawCidAddressParser = RawCidAddressParser(
+    private val cidOneValidator = CidV1Validator()
+    private val rawCidAddressParser = CidUrlResourceParser(
         cidOneValidator = cidOneValidator
     )
 
@@ -22,8 +22,8 @@ class RawCidAddressParserTest {
     @Test
     fun `Just valid CID`() {
         assertThat(rawCidAddressParser.parse(CID)).isEqualTo(
-            RawCidAddress(
-                origin = CID,
+            Cid(
+                original = CID,
                 cid = CID,
                 additionalPath = null
             )
@@ -33,8 +33,8 @@ class RawCidAddressParserTest {
     @Test
     fun `Just valid CID and additional path`() {
         assertThat(rawCidAddressParser.parse("$CID/5103.json")).isEqualTo(
-            RawCidAddress(
-                origin = "$CID/5103.json",
+            Cid(
+                original = "$CID/5103.json",
                 cid = CID,
                 additionalPath = "/5103.json"
             )

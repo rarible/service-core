@@ -2,11 +2,10 @@ package com.rarible.core.content.meta.loader.addressing.parser.ipfs
 
 import com.rarible.core.content.meta.loader.addressing.IpfsUrl
 import com.rarible.core.content.meta.loader.addressing.IpfsUrl.Companion.IPFS_PREFIX
-import com.rarible.core.content.meta.loader.addressing.SLASH
-import com.rarible.core.content.meta.loader.addressing.parser.AddressParser
+import com.rarible.core.content.meta.loader.addressing.parser.UrlResourceParser
 import com.rarible.core.content.meta.loader.addressing.removeLeadingSlashes
 
-class AbstractIpfsAddressParser : AddressParser<IpfsUrl> {
+class AbstractIpfsUrlResourceParser : UrlResourceParser<IpfsUrl> {
 
     // Checking prefixed IPFS URI like ipfs://Qmlalala
     override fun parse(url: String): IpfsUrl? {
@@ -29,9 +28,9 @@ class AbstractIpfsAddressParser : AddressParser<IpfsUrl> {
             if (lowerCaseIpfsPrefixUri.startsWith(prefix)) {
                 val path = lowerCaseIpfsPrefixUri.substring(prefix.length).removeLeadingSlashes()
                 return IpfsUrl(
-                    origin = url,
+                    original = url,
                     originalGateway = null, // Because URI like ipfs://Qmlalala
-                    path = "$SLASH$path"
+                    path = "/$path"
                 )
             }
         }

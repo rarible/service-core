@@ -1,44 +1,48 @@
 package com.rarible.core.content.meta.loader.addressing
 
-abstract class ResourceAddress {
-    abstract val origin: String
+abstract class UrlResource {
+
+    abstract val original: String
 }
 
-data class SimpleHttpUrl(
-    override val origin: String
-) : ResourceAddress()
+data class HttpUrl(
+    override val original: String
+) : UrlResource()
 
-data class RawCidAddress(
-    override val origin: String,
+data class Cid(
+    override val original: String,
     val cid: String,
     val additionalPath: String?
-) : ResourceAddress()
+) : UrlResource()
 
-abstract class SplitUrl : ResourceAddress() {
+abstract class GatewayUrl : UrlResource() {
+
     abstract val originalGateway: String?
     abstract val path: String
 }
 
 data class IpfsUrl(
-    override val origin: String,
+    override val original: String,
     override val originalGateway: String?,
     override val path: String
-) : SplitUrl() {
+) : GatewayUrl() {
 
     companion object {
+
         const val IPFS = "ipfs"
-        const val IPFS_PREFIX = "$IPFS:$SLASH"
-        const val IPFS_PATH_PART = "$SLASH$IPFS$SLASH"
+        const val IPFS_PREFIX = "$IPFS:/"
+        const val IPFS_PATH_PART = "/$IPFS/"
     }
 }
 
 data class ArweaveUrl(
-    override val origin: String,
+    override val original: String,
     override val originalGateway: String?,
     override val path: String
-) : SplitUrl() {
+) : GatewayUrl() {
 
     companion object {
+
         const val AR_PREFIX = "ar://"
         const val ARWEAVE_GATEWAY = "https://arweave.net"
     }
