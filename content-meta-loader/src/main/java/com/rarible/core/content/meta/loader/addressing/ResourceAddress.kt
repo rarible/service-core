@@ -17,23 +17,11 @@ data class RawCidAddress(
     override val origin: String,
     val cid: String,
     val additionalPath: String?
-) : ResourceAddress() {
-
-    fun resolveWithGateway(gateway: String): String =  // TODO Maybe move to resolvers?
-        if (additionalPath != null) {
-            "$gateway${SLASH}ipfs$SLASH$cid$SLASH$additionalPath"
-        } else {
-            "$gateway${SLASH}ipfs$SLASH$cid"
-        }
-}
+) : ResourceAddress()
 
 abstract class SplitUrl : ResourceAddress() {
     abstract val originalGateway: String?
     abstract val path: String
-
-    fun resolveWithOriginalGateway(): String = "$originalGateway${path}"
-
-    fun resolveWithGateway(gateway: String): String = "${gateway}${path}"
 }
 
 data class IpfsUrl(
@@ -42,8 +30,11 @@ data class IpfsUrl(
     override val path: String  // TODO Maybe add RawCidAddress here?
 ) : SplitUrl() {
 
-    // TODO переопределить и добавить путь айпифиэс
-
+    companion object {
+        const val IPFS = "ipfs"
+        const val IPFS_PREFIX = "$IPFS:$SLASH"
+        const val IPFS_PATH_PART = "$SLASH$IPFS$SLASH"
+    }
 }
 
 data class ArweaveUrl(
@@ -54,6 +45,6 @@ data class ArweaveUrl(
 
     companion object {
         const val AR_PREFIX = "ar://"
-        const val ARWEAVE_GATEWAY = "https://arweave.net/" // TODO Может сделать ресолвер для гейтвеев
+        const val ARWEAVE_GATEWAY = "https://arweave.net/"
     }
 }

@@ -1,7 +1,8 @@
 package com.rarible.core.content.meta.loader.addressing.resolver
 
 import com.rarible.core.content.meta.loader.addressing.IpfsUrl
-import com.rarible.core.content.meta.loader.addressing.ipfs.GatewayProvider
+import com.rarible.core.content.meta.loader.addressing.SLASH
+import com.rarible.core.content.meta.loader.addressing.GatewayProvider
 import com.rarible.core.content.meta.loader.addressing.isValidUrl
 
 class IpfsGatewayResolver(
@@ -34,7 +35,7 @@ class IpfsGatewayResolver(
         // If there is IPFS URL with one of legacy gateways, we need to replace it with actual public gateway
         for (legacy in customGatewaysResolver.getAllGateways()) {
             if (url.originalGateway == legacy) {
-                return gateway + url.path
+                return resolveWithGateway(url, gateway)
             }
         }
 
@@ -43,6 +44,8 @@ class IpfsGatewayResolver(
             return url.origin
         }
 
-        return url.resolveWithGateway(gateway)
+        return resolveWithGateway(url, gateway)
     }
+
+    private fun resolveWithGateway(url: IpfsUrl, gateway: String): String = "$gateway${SLASH}ipfs${url.path}"
 }

@@ -1,8 +1,8 @@
 package com.rarible.core.content.meta.loader.ipfs
 
 import com.rarible.core.content.meta.loader.addressing.cid.CidOneValidator
-import com.rarible.core.content.meta.loader.addressing.ipfs.ConstantGatewayProvider
-import com.rarible.core.content.meta.loader.addressing.ipfs.RandomGatewayProvider
+import com.rarible.core.content.meta.loader.addressing.ConstantGatewayProvider
+import com.rarible.core.content.meta.loader.addressing.RandomGatewayProvider
 import com.rarible.core.content.meta.loader.addressing.parser.AddressParserProvider
 import com.rarible.core.content.meta.loader.addressing.parser.AddressParsingProcessor
 import com.rarible.core.content.meta.loader.addressing.parser.ArweaveAddressParser

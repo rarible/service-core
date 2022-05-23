@@ -12,10 +12,10 @@ fun String.isValidUrl(): Boolean =
 
 fun String.removeLeadingSlashes(): String {
     var result = this
-    while (result.startsWith('/')) {
-        result = result.trimStart('/')
+    while (result.startsWith(SLASH)) {
+        result = result.trimStart(SLASH)
     }
     return result
 }
 
-const val SLASH = "/"
+const val SLASH = '/'

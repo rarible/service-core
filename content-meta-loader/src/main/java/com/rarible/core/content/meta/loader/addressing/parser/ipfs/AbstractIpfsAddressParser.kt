@@ -1,6 +1,8 @@
 package com.rarible.core.content.meta.loader.addressing.parser.ipfs
 
 import com.rarible.core.content.meta.loader.addressing.IpfsUrl
+import com.rarible.core.content.meta.loader.addressing.IpfsUrl.Companion.IPFS_PREFIX
+import com.rarible.core.content.meta.loader.addressing.SLASH
 import com.rarible.core.content.meta.loader.addressing.parser.AddressParser
 import com.rarible.core.content.meta.loader.addressing.removeLeadingSlashes
 
@@ -30,7 +32,7 @@ class AbstractIpfsAddressParser : AddressParser<IpfsUrl> {
                 return IpfsUrl(
                     origin = url,
                     originalGateway = null, // Because URI like ipfs://Qmlalala
-                    path = "/ipfs/$path"
+                    path = "$SLASH$path"
                 )
             }
         }
@@ -39,7 +41,6 @@ class AbstractIpfsAddressParser : AddressParser<IpfsUrl> {
     }
 
     companion object {
-        private const val IPFS_PREFIX = "ipfs:/"
         private val IPFS_PREFIXES = listOf(
             "ipfs:///ipfs/",
             "ipfs://ipfs/",

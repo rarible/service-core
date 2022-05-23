@@ -1,4 +1,4 @@
-package com.rarible.core.content.meta.loader.addressing.ipfs
+package com.rarible.core.content.meta.loader.addressing
 
 import java.util.Random
 

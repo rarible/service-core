@@ -1,6 +1,8 @@
 package com.rarible.core.content.meta.loader.addressing.parser.ipfs
 
 import com.rarible.core.content.meta.loader.addressing.IpfsUrl
+import com.rarible.core.content.meta.loader.addressing.IpfsUrl.Companion.IPFS_PATH_PART
+import com.rarible.core.content.meta.loader.addressing.SLASH
 import com.rarible.core.content.meta.loader.addressing.cid.CidValidator
 import com.rarible.core.content.meta.loader.addressing.parser.AddressParser
 import com.rarible.core.content.meta.loader.addressing.removeLeadingSlashes
@@ -20,11 +22,10 @@ class ForeignIpfsUrlAddressParser(
             return null
         }
 
-//        return "$gateway/ipfs/$pathEnd"
         return IpfsUrl(
             origin = url,
-            originalGateway = null, // TODO How to find?
-            path = "/ipfs/$pathEnd"  // TODO Remove prefix
+            originalGateway = url.substring(0, ipfsPathIndex), // TODO Test it
+            path = "$SLASH$pathEnd"
         )
     }
 
@@ -34,9 +35,5 @@ class ForeignIpfsUrlAddressParser(
             return null
         }
         return ipfsPathIndex
-    }
-
-    companion object {
-        const val IPFS_PATH_PART = "/ipfs/"
     }
 }

@@ -2,8 +2,10 @@ package com.rarible.core.content.meta.loader.addressing.resolver
 
 import com.rarible.core.content.meta.loader.addressing.ArweaveUrl
 import com.rarible.core.content.meta.loader.addressing.RawCidAddress
+import com.rarible.core.content.meta.loader.addressing.SLASH
 import com.rarible.core.content.meta.loader.addressing.SimpleHttpUrl
-import com.rarible.core.content.meta.loader.addressing.ipfs.GatewayProvider
+import com.rarible.core.content.meta.loader.addressing.GatewayProvider
+import com.rarible.core.content.meta.loader.addressing.IpfsUrl.Companion.IPFS
 
 interface GatewayResolver<T> {
 
@@ -31,15 +33,22 @@ class RawCidGatewayResolver(
 ) : GatewayResolver<RawCidAddress> {
 
     override fun resolveInnerAddress(url: RawCidAddress): String =
-        url.resolveWithGateway(innerGatewaysProvider.getGateway())
+        resolveWithGateway(url, innerGatewaysProvider.getGateway())
 
     override fun resolvePublicAddress(url: RawCidAddress): String =
-        url.resolveWithGateway(publicGatewayProvider.getGateway())
+        resolveWithGateway(url, publicGatewayProvider.getGateway())
+
+    private fun resolveWithGateway(address: RawCidAddress, gateway: String): String =  // TODO Add test
+        if (address.additionalPath != null) {
+            "$gateway$SLASH$IPFS$SLASH${address.cid}$SLASH${address.additionalPath}"
+        } else {
+            "$gateway$SLASH$IPFS$SLASH${address.cid}"
+        }
 }
 
 class ArweaveGatewayResolver : GatewayResolver<ArweaveUrl> {
 
-    override fun resolveInnerAddress(url: ArweaveUrl): String = url.resolveWithOriginalGateway()
+    override fun resolveInnerAddress(url: ArweaveUrl): String = "${url.originalGateway}${url.path}"
 
-    override fun resolvePublicAddress(url: ArweaveUrl): String = url.resolveWithOriginalGateway()
+    override fun resolvePublicAddress(url: ArweaveUrl): String = "${url.originalGateway}${url.path}"
 }
