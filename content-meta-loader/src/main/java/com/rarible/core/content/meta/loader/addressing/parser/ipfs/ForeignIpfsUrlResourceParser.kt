@@ -2,7 +2,6 @@ package com.rarible.core.content.meta.loader.addressing.parser.ipfs
 
 import com.rarible.core.content.meta.loader.addressing.IpfsUrl
 import com.rarible.core.content.meta.loader.addressing.IpfsUrl.Companion.IPFS_PATH_PART
-import com.rarible.core.content.meta.loader.addressing.SLASH
 import com.rarible.core.content.meta.loader.addressing.cid.CidValidator
 import com.rarible.core.content.meta.loader.addressing.parser.UrlResourceParser
 import com.rarible.core.content.meta.loader.addressing.removeLeadingSlashes
@@ -18,7 +17,7 @@ class ForeignIpfsUrlResourceParser(
         val pathEnd = url.substring(ipfsPathIndex + IPFS_PATH_PART.length).removeLeadingSlashes()
 
         // Works for CID v1.0
-        val cid = pathEnd.substringBefore(SLASH)
+        val cid = pathEnd.substringBefore('/')
         if (!cidOneValidator.isCid(cid)) {
             return null
         }

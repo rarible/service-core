@@ -39,7 +39,7 @@ class RawCidGatewayResolver(
 
     private fun resolveWithGateway(address: Cid, gateway: String): String =  // TODO Add test
         if (address.additionalPath != null) {
-            "$gateway/$IPFS/${address.cid}/${address.additionalPath}"
+            "$gateway/$IPFS/${address.cid}${address.additionalPath}"
         } else {
             "$gateway/$IPFS/${address.cid}"
         }

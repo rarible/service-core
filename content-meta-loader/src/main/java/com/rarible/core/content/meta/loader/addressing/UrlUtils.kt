@@ -12,11 +12,8 @@ fun String.isHttpUrl(): Boolean =
 
 fun String.removeLeadingSlashes(): String {
     var result = this
-    while (result.startsWith(SLASH)) {
-        result = result.trimStart(SLASH)
+    while (result.startsWith('/')) {
+        result = result.trimStart('/')
     }
     return result
 }
-
-// TODO remove
-const val SLASH = '/'
