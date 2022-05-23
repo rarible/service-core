@@ -5,37 +5,38 @@ import com.rarible.core.meta.resource.parser.ipfs.AbstractIpfsUrlResourceParser
 import com.rarible.core.meta.resource.parser.ipfs.ForeignIpfsUrlResourceParser
 
 class UrlResourceProcessor(
-    private val addressParserProvider: UrlResourceParserProvider
+    private val urlResourceParserProvider: UrlResourceParserProvider
 ) {
 
-    fun parse(address: String): UrlResource? {
-        for (parser in addressParserProvider.addressParsers) {
-            val resourceAddress = parser.parse(address.trim())
-            if (resourceAddress != null) {
-                return resourceAddress
+    fun parse(link: String): UrlResource? {
+        for (parser in urlResourceParserProvider.urlResourceParsers) {
+            val urlResource = parser.parse(link.trim())
+            if (urlResource != null) {
+                return urlResource
             }
         }
         return null
     }
 }
 
-class UrlResourceParserProvider(
+interface UrlResourceParserProvider {
+    val urlResourceParsers: List<UrlResourceParser<UrlResource>>
+}
+
+class DefaultUrlResourceParserProvider(
+    abstractIpfsUrlResourceParser: AbstractIpfsUrlResourceParser,
+    foreignIpfsUrlResourceParser: ForeignIpfsUrlResourceParser,
     arweaveUrlParser: ArweaveUrlResourceParser,
-    abstractIpfsAddressParser: AbstractIpfsUrlResourceParser,
-    foreignIpfsUrlAddressParser: ForeignIpfsUrlResourceParser,
-    rawCidAddressParser: CidUrlResourceParser,
     httpUrlParser: HttpUrlResourceParser,
-    customParsersPackage: List<UrlResourceParser<UrlResource>> = emptyList()
-) {
+    cidUrlResourceParser: CidUrlResourceParser
+) : UrlResourceParserProvider {
 
-    private val defaultAddressParsers: List<UrlResourceParser<UrlResource>> =
+    override val urlResourceParsers: List<UrlResourceParser<UrlResource>> =
         listOf(
+            abstractIpfsUrlResourceParser,
+            foreignIpfsUrlResourceParser,
             arweaveUrlParser,
-            abstractIpfsAddressParser,
-            foreignIpfsUrlAddressParser,
-            rawCidAddressParser,
-            httpUrlParser
+            httpUrlParser,
+            cidUrlResourceParser
         )
-
-    val addressParsers = customParsersPackage.ifEmpty { defaultAddressParsers }
 }

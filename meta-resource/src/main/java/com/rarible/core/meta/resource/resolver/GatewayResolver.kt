@@ -5,25 +5,20 @@ import com.rarible.core.meta.resource.Cid
 import com.rarible.core.meta.resource.GatewayProvider
 import com.rarible.core.meta.resource.HttpUrl
 import com.rarible.core.meta.resource.IpfsUrl.Companion.IPFS
+import com.rarible.core.meta.resource.UrlResource
 
-interface GatewayResolver<T> {
-
-    /**
-     * Used only for internal operations, such urls should NOT be stored anywhere
-     */
-    fun resolveInnerAddress(address: T): String
+interface GatewayResolver<T : UrlResource> {
 
     /**
-     * Used to build url exposed to the DB cache or API responses
+     * Private: Used only for internal operations, such urls should NOT be stored anywhere
+     * Public:  Used to build url exposed to the DB cache or API responses
      */
-    fun resolvePublicAddress(address: T): String
+    fun resolveLink(resource: T, isPublic: Boolean): String
 }
 
 class SimpleHttpGatewayResolver : GatewayResolver<HttpUrl> {
 
-    override fun resolveInnerAddress(address: HttpUrl): String = address.original
-
-    override fun resolvePublicAddress(address: HttpUrl): String = address.original
+    override fun resolveLink(resource: HttpUrl, isPublic: Boolean): String = resource.original
 }
 
 class RawCidGatewayResolver(
@@ -31,30 +26,22 @@ class RawCidGatewayResolver(
     private val innerGatewaysProvider: GatewayProvider
 ) : GatewayResolver<Cid> {
 
-    override fun resolveInnerAddress(address: Cid): String =
-        resolveWithGateway(address, innerGatewaysProvider.getGateway())
-
-    override fun resolvePublicAddress(address: Cid): String =
-        resolveWithGateway(address, publicGatewayProvider.getGateway())
-
-    private fun resolveWithGateway(address: Cid, gateway: String): String =  // TODO Add test
-        if (address.additionalPath != null) {
-            "$gateway/$IPFS/${address.cid}${address.additionalPath}"
+    override fun resolveLink(resource: Cid, isPublic: Boolean): String {
+        val gateway = if (isPublic) publicGatewayProvider.getGateway() else innerGatewaysProvider.getGateway()
+        return if (resource.additionalPath != null) {
+            "$gateway/$IPFS/${resource.cid}${resource.additionalPath}"
         } else {
-            "$gateway/$IPFS/${address.cid}"
+            "$gateway/$IPFS/${resource.cid}"
         }
+    }
 }
 
 class ArweaveGatewayResolver(
     private val arweaveGatewayProvider: GatewayProvider
 ) : GatewayResolver<ArweaveUrl> {
 
-    override fun resolveInnerAddress(address: ArweaveUrl): String = resolve(address)
-
-    override fun resolvePublicAddress(address: ArweaveUrl): String = resolve(address)
-
-    private fun resolve(address: ArweaveUrl): String {
-        val gateway = address.originalGateway ?: arweaveGatewayProvider.getGateway()
-        return "${gateway}${address.path}"
+    override fun resolveLink(resource: ArweaveUrl, isPublic: Boolean): String {
+        val gateway = resource.originalGateway ?: arweaveGatewayProvider.getGateway()
+        return "${gateway}${resource.path}"
     }
 }

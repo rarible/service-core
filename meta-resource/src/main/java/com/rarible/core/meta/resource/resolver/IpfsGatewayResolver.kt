@@ -12,25 +12,20 @@ class IpfsGatewayResolver(
     private val customGatewaysResolver: CustomIpfsGatewayResolver
 ) : GatewayResolver<IpfsUrl> {
 
-    /**
-     * Used only for internal operations, such urls should NOT be stored anywhere
-     */
-    override fun resolveInnerAddress(ipfsUrl: IpfsUrl): String =
-        resolveInternal(
-            ipfsUrl = ipfsUrl,
-            gateway = innerGatewaysProvider.getGateway(),
-            replaceOriginalHost = true // For internal calls original IPFS host should be replaced in order to avoid rate limit of the original gateway
-        )
-
-    /**
-     * Used to build url exposed to the DB cache or API responses
-     */
-    override fun resolvePublicAddress(address: IpfsUrl): String =
-        resolveInternal(
-            ipfsUrl = address,
-            gateway = publicGatewayProvider.getGateway(),
-            replaceOriginalHost = false // For public IPFS urls we want to keep original gateway URL (if possible)
-        )
+    override fun resolveLink(resource: IpfsUrl, isPublic: Boolean): String =
+        if (isPublic) {
+            resolveInternal(
+                ipfsUrl = resource,
+                gateway = publicGatewayProvider.getGateway(),
+                replaceOriginalHost = false // For public IPFS urls we want to keep original gateway URL (if possible)
+            )
+        } else {
+            resolveInternal(
+                ipfsUrl = resource,
+                gateway = innerGatewaysProvider.getGateway(),
+                replaceOriginalHost = true // For internal calls original IPFS host should be replaced in order to avoid rate limit of the original gateway
+            )
+        }
 
     private fun resolveInternal(ipfsUrl: IpfsUrl, gateway: String, replaceOriginalHost: Boolean): String {
         // If there is IPFS URL with one of legacy gateways, we need to replace it with actual public gateway

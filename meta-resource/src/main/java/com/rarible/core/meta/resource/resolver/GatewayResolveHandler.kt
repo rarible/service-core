@@ -16,32 +16,24 @@ class GatewayResolveHandler(
     /**
      * Used only for internal operations, such urls should NOT be stored anywhere
      */
-    fun resolveInnerAddress(url: UrlResource): String =
+    fun resolveInnerLink(url: UrlResource): String =
         resolveInternal(url = url, isPublic = false)
 
     /**
      * Used to build url exposed to the DB cache or API responses
      */
-    fun resolvePublicAddress(address: UrlResource): String =
-        resolveInternal(url = address, isPublic = true)
+    fun resolvePublicLink(resource: UrlResource): String =
+        resolveInternal(url = resource, isPublic = true)
 
     private fun resolveInternal(
         url: UrlResource,
         isPublic: Boolean
     ): String =
         when (url) {
-            is HttpUrl -> if (isPublic) simpleHttpGatewayResolver.resolvePublicAddress(
-                url
-            ) else simpleHttpGatewayResolver.resolveInnerAddress(url)
-            is IpfsUrl -> if (isPublic) ipfsGatewayResolver.resolvePublicAddress(
-                url
-            ) else ipfsGatewayResolver.resolveInnerAddress(url)
-            is Cid -> if (isPublic) rawCidGatewayResolver.resolvePublicAddress(
-                url
-            ) else rawCidGatewayResolver.resolveInnerAddress(url)
-            is ArweaveUrl -> if (isPublic) arweaveGatewayResolver.resolvePublicAddress(
-                url
-            ) else arweaveGatewayResolver.resolveInnerAddress(url)
+            is HttpUrl -> simpleHttpGatewayResolver.resolveLink(url, isPublic)
+            is IpfsUrl -> ipfsGatewayResolver.resolveLink(url, isPublic)
+            is Cid -> rawCidGatewayResolver.resolveLink(url, isPublic)
+            is ArweaveUrl -> arweaveGatewayResolver.resolveLink(url, isPublic)
             else -> throw UnsupportedOperationException("Unsupported resolving for ${url.javaClass.name}")
         }
 }

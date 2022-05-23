@@ -8,7 +8,7 @@ import com.rarible.core.meta.resource.cid.CidV1Validator
 import com.rarible.core.meta.resource.parser.ArweaveUrlResourceParser
 import com.rarible.core.meta.resource.parser.CidUrlResourceParser
 import com.rarible.core.meta.resource.parser.HttpUrlResourceParser
-import com.rarible.core.meta.resource.parser.UrlResourceParserProvider
+import com.rarible.core.meta.resource.parser.DefaultUrlResourceParserProvider
 import com.rarible.core.meta.resource.parser.UrlResourceProcessor
 import com.rarible.core.meta.resource.parser.ipfs.AbstractIpfsUrlResourceParser
 import com.rarible.core.meta.resource.parser.ipfs.ForeignIpfsUrlResourceParser
@@ -33,16 +33,16 @@ class IpfsAddressParserTest {
         innerGatewaysProvider = RandomGatewayProvider(listOf(IPFS_PUBLIC_GATEWAY))
     )
 
-    private val addressParserProvider = UrlResourceParserProvider(
+    private val defaultUrlResourceParserProvider = DefaultUrlResourceParserProvider(
         arweaveUrlParser = ArweaveUrlResourceParser(),
-        foreignIpfsUrlAddressParser = foreignIpfsUrlAddressParser,
-        abstractIpfsAddressParser = AbstractIpfsUrlResourceParser(),
-        rawCidAddressParser = CidUrlResourceParser(cidOneValidator),
+        foreignIpfsUrlResourceParser = foreignIpfsUrlAddressParser,
+        abstractIpfsUrlResourceParser = AbstractIpfsUrlResourceParser(),
+        cidUrlResourceParser = CidUrlResourceParser(cidOneValidator),
         httpUrlParser = HttpUrlResourceParser()
     )
 
     private val addressParsingProcessor = UrlResourceProcessor(
-        addressParserProvider = addressParserProvider
+        urlResourceParserProvider = defaultUrlResourceParserProvider
     )
 
     private val gatewayResolveHandler = GatewayResolveHandler(
@@ -152,11 +152,11 @@ class IpfsAddressParserTest {
 
     private fun resolvePublicHttpUrl(url: String): String {
         val resourceAddress = addressParsingProcessor.parse(url)
-        return gatewayResolveHandler.resolvePublicAddress(resourceAddress!!)
+        return gatewayResolveHandler.resolvePublicLink(resourceAddress!!)
     }
 
     private fun resolveInnerHttpUrl(url: String): String {
         val resourceAddress = addressParsingProcessor.parse(url)
-        return gatewayResolveHandler.resolveInnerAddress(resourceAddress!!)
+        return gatewayResolveHandler.resolveInnerLink(resourceAddress!!)
     }
 }
