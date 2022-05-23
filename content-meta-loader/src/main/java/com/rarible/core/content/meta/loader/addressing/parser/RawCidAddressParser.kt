@@ -7,7 +7,7 @@ import com.rarible.core.content.meta.loader.addressing.removeLeadingSlashes
 
 class RawCidAddressParser(
     private val cidOneValidator: CidValidator
-) : AddressParser {
+) : AddressParser<RawCidAddress> {
 
     override fun parse(url: String): RawCidAddress? {
         val cid = url.substringBefore(SLASH)

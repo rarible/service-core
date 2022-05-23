@@ -3,14 +3,13 @@ package com.rarible.core.content.meta.loader.ipfs
 import com.rarible.core.content.meta.loader.addressing.cid.CidOneValidator
 import com.rarible.core.content.meta.loader.addressing.ipfs.ConstantGatewayProvider
 import com.rarible.core.content.meta.loader.addressing.ipfs.RandomGatewayProvider
-import com.rarible.core.content.meta.loader.addressing.parser.AddressParserHandler
 import com.rarible.core.content.meta.loader.addressing.parser.AddressParserProvider
+import com.rarible.core.content.meta.loader.addressing.parser.AddressParsingProcessor
 import com.rarible.core.content.meta.loader.addressing.parser.ArweaveAddressParser
 import com.rarible.core.content.meta.loader.addressing.parser.HttpAddressParser
-import com.rarible.core.content.meta.loader.addressing.parser.IpfsAddressParser
 import com.rarible.core.content.meta.loader.addressing.parser.RawCidAddressParser
-import com.rarible.core.content.meta.loader.addressing.parser.ipfs.AbstractIpfsUrlChecker
-import com.rarible.core.content.meta.loader.addressing.parser.ipfs.ForeignIpfsUriChecker
+import com.rarible.core.content.meta.loader.addressing.parser.ipfs.AbstractIpfsAddressParser
+import com.rarible.core.content.meta.loader.addressing.parser.ipfs.ForeignIpfsUrlAddressParser
 import com.rarible.core.content.meta.loader.addressing.resolver.ArweaveGatewayResolver
 import com.rarible.core.content.meta.loader.addressing.resolver.GatewayResolveHandler
 import com.rarible.core.content.meta.loader.addressing.resolver.IpfsGatewayResolver
@@ -22,13 +21,8 @@ import org.junit.jupiter.api.Test
 class IpfsAddressParserTest {
 
     private val cidOneValidator = CidOneValidator()
-    private val foreignIpfsUriChecker = ForeignIpfsUriChecker(
+    private val foreignIpfsUrlAddressParser = ForeignIpfsUrlAddressParser(
         cidOneValidator = cidOneValidator
-    )
-
-    private val ipfsAddressParser = IpfsAddressParser(
-        foreignIpfsUriChecker = foreignIpfsUriChecker,
-        abstractIpfsUrlChecker = AbstractIpfsUrlChecker()
     )
 
     private val ipfsGatewayResolver = IpfsGatewayResolver(
@@ -39,12 +33,13 @@ class IpfsAddressParserTest {
 
     private val addressParserProvider = AddressParserProvider(
         arweaveUrlParser = ArweaveAddressParser(),
-        ipfsAddressParser = ipfsAddressParser,
+        foreignIpfsUrlAddressParser = foreignIpfsUrlAddressParser,
+        abstractIpfsAddressParser = AbstractIpfsAddressParser(),
         rawCidAddressParser = RawCidAddressParser(cidOneValidator),
         httpUrlParser = HttpAddressParser()
     )
 
-    private val addressParserHandler = AddressParserHandler(
+    private val addressParsingProcessor = AddressParsingProcessor(
         addressParserProvider = addressParserProvider
     )
 
@@ -160,12 +155,12 @@ class IpfsAddressParserTest {
     }
 
     private fun resolvePublicHttpUrl(url: String): String {
-        val resourceAddress = addressParserHandler.parse(url)
+        val resourceAddress = addressParsingProcessor.parse(url)
         return gatewayResolveHandler.resolvePublicAddress(resourceAddress!!)
     }
 
     private fun resolveInnerHttpUrl(url: String): String {
-        val resourceAddress = addressParserHandler.parse(url)
+        val resourceAddress = addressParsingProcessor.parse(url)
         return gatewayResolveHandler.resolveInnerAddress(resourceAddress!!)
     }
 

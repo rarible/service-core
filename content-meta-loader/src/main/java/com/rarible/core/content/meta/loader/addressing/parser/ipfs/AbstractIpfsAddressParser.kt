@@ -1,14 +1,13 @@
 package com.rarible.core.content.meta.loader.addressing.parser.ipfs
 
 import com.rarible.core.content.meta.loader.addressing.IpfsUrl
+import com.rarible.core.content.meta.loader.addressing.parser.AddressParser
 import com.rarible.core.content.meta.loader.addressing.removeLeadingSlashes
-import org.springframework.stereotype.Component
 
-@Component
-class AbstractIpfsUrlChecker {
+class AbstractIpfsAddressParser : AddressParser<IpfsUrl> {
 
     // Checking prefixed IPFS URI like ipfs://Qmlalala
-    fun check(url: String): IpfsUrl? {
+    override fun parse(url: String): IpfsUrl? {
         if (url.length < IPFS_PREFIX.length) {
             return null
         }

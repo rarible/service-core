@@ -30,7 +30,7 @@ class IpfsGatewayResolver(
             replaceOriginalHost = false // For public IPFS urls we want to keep original gateway URL (if possible)
         )
 
-    fun resolveInternal(url: IpfsUrl, gateway: String, replaceOriginalHost: Boolean): String {
+    private fun resolveInternal(url: IpfsUrl, gateway: String, replaceOriginalHost: Boolean): String {
         // If there is IPFS URL with one of legacy gateways, we need to replace it with actual public gateway
         for (legacy in customGatewaysResolver.getAllGateways()) {
             if (url.originalGateway == legacy) {

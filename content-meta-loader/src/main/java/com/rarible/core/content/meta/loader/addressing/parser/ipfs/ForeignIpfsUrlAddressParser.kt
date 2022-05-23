@@ -1,17 +1,16 @@
 package com.rarible.core.content.meta.loader.addressing.parser.ipfs
 
-import com.rarible.core.content.meta.loader.addressing.removeLeadingSlashes
 import com.rarible.core.content.meta.loader.addressing.IpfsUrl
 import com.rarible.core.content.meta.loader.addressing.cid.CidValidator
-import org.springframework.stereotype.Component
+import com.rarible.core.content.meta.loader.addressing.parser.AddressParser
+import com.rarible.core.content.meta.loader.addressing.removeLeadingSlashes
 
-@Component
-class ForeignIpfsUriChecker(
+class ForeignIpfsUrlAddressParser(
     val cidOneValidator: CidValidator
-) {
+) : AddressParser<IpfsUrl> {
 
     // Checking if foreign IPFS url contains /ipfs/ like http://ipfs.io/ipfs/lalala
-    fun check(url: String): IpfsUrl? {
+    override fun parse(url: String): IpfsUrl? {
         val ipfsPathIndex = getIpfsPathIndex(url) ?: return null
         // TODO Should check url.isValidUrl() ?
 
@@ -29,7 +28,7 @@ class ForeignIpfsUriChecker(
         )
     }
 
-    fun getIpfsPathIndex(url: String): Int? {
+    private fun getIpfsPathIndex(url: String): Int? {
         val ipfsPathIndex = url.lastIndexOf(IPFS_PATH_PART)
         if (ipfsPathIndex < 0) {
             return null

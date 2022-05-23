@@ -1,8 +1,10 @@
 package com.rarible.core.content.meta.loader.addressing.parser
 
 import com.rarible.core.content.meta.loader.addressing.ResourceAddress
+import com.rarible.core.content.meta.loader.addressing.parser.ipfs.AbstractIpfsAddressParser
+import com.rarible.core.content.meta.loader.addressing.parser.ipfs.ForeignIpfsUrlAddressParser
 
-class AddressParserHandler(
+class AddressParsingProcessor(
     private val addressParserProvider: AddressParserProvider
 ) {
 
@@ -19,16 +21,18 @@ class AddressParserHandler(
 
 class AddressParserProvider(
     arweaveUrlParser: ArweaveAddressParser,
-    ipfsAddressParser: IpfsAddressParser,
+    abstractIpfsAddressParser: AbstractIpfsAddressParser,
+    foreignIpfsUrlAddressParser: ForeignIpfsUrlAddressParser,
     rawCidAddressParser: RawCidAddressParser,
     httpUrlParser: HttpAddressParser,
-    customParsersPackage: List<AddressParser> = emptyList()
+    customParsersPackage: List<AddressParser<ResourceAddress>> = emptyList()
 ) {
 
-    private val defaultAddressParsers: List<AddressParser> =
+    private val defaultAddressParsers: List<AddressParser<ResourceAddress>> =
         listOf(
             arweaveUrlParser,
-            ipfsAddressParser,
+            abstractIpfsAddressParser,
+            foreignIpfsUrlAddressParser,
             rawCidAddressParser,
             httpUrlParser
         )

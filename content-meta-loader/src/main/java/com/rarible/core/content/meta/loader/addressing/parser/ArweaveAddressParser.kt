@@ -2,7 +2,7 @@ package com.rarible.core.content.meta.loader.addressing.parser
 
 import com.rarible.core.content.meta.loader.addressing.ArweaveUrl
 
-class ArweaveAddressParser : AddressParser {
+class ArweaveAddressParser : AddressParser<ArweaveUrl> {
 
     override fun parse(url: String): ArweaveUrl? =
         when {
