@@ -10,7 +10,7 @@ class AddressParsingProcessor(
 
     fun parse(address: String): ResourceAddress? {
         for (parser in addressParserProvider.addressParsers) {
-            val resourceAddress = parser.parse(address)
+            val resourceAddress = parser.parse(address.trim())
             if (resourceAddress != null) {
                 return resourceAddress
             }

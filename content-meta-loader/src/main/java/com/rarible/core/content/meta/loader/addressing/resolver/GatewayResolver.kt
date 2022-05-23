@@ -12,19 +12,19 @@ interface GatewayResolver<T> {
     /**
      * Used only for internal operations, such urls should NOT be stored anywhere
      */
-    fun resolveInnerAddress(url: T): String
+    fun resolveInnerAddress(address: T): String
 
     /**
      * Used to build url exposed to the DB cache or API responses
      */
-    fun resolvePublicAddress(url: T): String
+    fun resolvePublicAddress(address: T): String
 }
 
 class SimpleHttpGatewayResolver : GatewayResolver<SimpleHttpUrl> {
 
-    override fun resolveInnerAddress(url: SimpleHttpUrl): String = url.origin
+    override fun resolveInnerAddress(address: SimpleHttpUrl): String = address.origin
 
-    override fun resolvePublicAddress(url: SimpleHttpUrl): String = url.origin
+    override fun resolvePublicAddress(address: SimpleHttpUrl): String = address.origin
 }
 
 class RawCidGatewayResolver(
@@ -32,11 +32,11 @@ class RawCidGatewayResolver(
     private val innerGatewaysProvider: GatewayProvider
 ) : GatewayResolver<RawCidAddress> {
 
-    override fun resolveInnerAddress(url: RawCidAddress): String =
-        resolveWithGateway(url, innerGatewaysProvider.getGateway())
+    override fun resolveInnerAddress(address: RawCidAddress): String =
+        resolveWithGateway(address, innerGatewaysProvider.getGateway())
 
-    override fun resolvePublicAddress(url: RawCidAddress): String =
-        resolveWithGateway(url, publicGatewayProvider.getGateway())
+    override fun resolvePublicAddress(address: RawCidAddress): String =
+        resolveWithGateway(address, publicGatewayProvider.getGateway())
 
     private fun resolveWithGateway(address: RawCidAddress, gateway: String): String =  // TODO Add test
         if (address.additionalPath != null) {
@@ -48,7 +48,7 @@ class RawCidGatewayResolver(
 
 class ArweaveGatewayResolver : GatewayResolver<ArweaveUrl> {
 
-    override fun resolveInnerAddress(url: ArweaveUrl): String = "${url.originalGateway}${url.path}"
+    override fun resolveInnerAddress(address: ArweaveUrl): String = "${address.originalGateway}${address.path}"
 
-    override fun resolvePublicAddress(url: ArweaveUrl): String = "${url.originalGateway}${url.path}"
+    override fun resolvePublicAddress(address: ArweaveUrl): String = "${address.originalGateway}${address.path}"
 }

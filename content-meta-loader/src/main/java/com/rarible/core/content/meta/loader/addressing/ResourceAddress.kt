@@ -6,12 +6,7 @@ abstract class ResourceAddress {
 
 data class SimpleHttpUrl(
     override val origin: String
-) : ResourceAddress() {
-
-    companion object {
-        const val PREFIX = "http"
-    }
-}
+) : ResourceAddress()
 
 data class RawCidAddress(
     override val origin: String,
@@ -27,7 +22,7 @@ abstract class SplitUrl : ResourceAddress() {
 data class IpfsUrl(
     override val origin: String,
     override val originalGateway: String?,
-    override val path: String  // TODO Maybe add RawCidAddress here?
+    override val path: String
 ) : SplitUrl() {
 
     companion object {

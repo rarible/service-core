@@ -8,17 +8,18 @@ import com.rarible.core.content.meta.loader.addressing.parser.AddressParser
 import com.rarible.core.content.meta.loader.addressing.removeLeadingSlashes
 
 class ForeignIpfsUrlAddressParser(
-    val cidOneValidator: CidValidator
+    private val cidOneValidator: CidValidator
 ) : AddressParser<IpfsUrl> {
 
     // Checking if foreign IPFS url contains /ipfs/ like http://ipfs.io/ipfs/lalala
     override fun parse(url: String): IpfsUrl? {
         val ipfsPathIndex = getIpfsPathIndex(url) ?: return null
-        // TODO Should check url.isValidUrl() ?
 
         val pathEnd = url.substring(ipfsPathIndex + IPFS_PATH_PART.length).removeLeadingSlashes()
-        // Works only for IPFS CIDs
-        if (!cidOneValidator.isCid(pathEnd.substringBefore("/"))) {  // TODO Maybe add check into AbstractIpfsUrlChecker ?
+
+        // Works for CID v1.0
+        val cid = pathEnd.substringBefore(SLASH)
+        if (!cidOneValidator.isCid(cid)) {
             return null
         }
 

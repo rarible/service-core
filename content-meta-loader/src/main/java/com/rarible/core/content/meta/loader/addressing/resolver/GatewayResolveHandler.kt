@@ -16,14 +16,14 @@ class GatewayResolveHandler(
     /**
      * Used only for internal operations, such urls should NOT be stored anywhere
      */
-    fun resolveInnerAddress(url: ResourceAddress): String =
-        resolveInternal(url = url, isPublic = false)
+    fun resolveInnerAddress(address: ResourceAddress): String =
+        resolveInternal(url = address, isPublic = false)
 
     /**
      * Used to build url exposed to the DB cache or API responses
      */
-    fun resolvePublicAddress(url: ResourceAddress): String =
-        resolveInternal(url = url, isPublic = true)
+    fun resolvePublicAddress(address: ResourceAddress): String =
+        resolveInternal(url = address, isPublic = true)
 
     private fun resolveInternal(
         url: ResourceAddress,

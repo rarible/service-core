@@ -28,7 +28,6 @@ class AbstractIpfsAddressParser : AddressParser<IpfsUrl> {
         for (prefix in IPFS_PREFIXES) {
             if (lowerCaseIpfsPrefixUri.startsWith(prefix)) {
                 val path = lowerCaseIpfsPrefixUri.substring(prefix.length).removeLeadingSlashes()
-//                return "$gateway/ipfs/$path"
                 return IpfsUrl(
                     origin = url,
                     originalGateway = null, // Because URI like ipfs://Qmlalala

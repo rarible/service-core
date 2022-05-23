@@ -23,8 +23,6 @@ class GatewayProviderTest {
     companion object {
         private const val GATEWAY_ONE = "https://ipfs1.io"
         private const val GATEWAY_TWO = "https://ipfs2.io"
-        private const val GATEWAY_THREE = "https://ipfs3.io"
-        private const val GATEWAY_FOUR = "https://ipfs4.io"
         private const val PREDEFINED_IPFS_GATEWAYS = "$GATEWAY_ONE, $GATEWAY_TWO"
     }
 }
