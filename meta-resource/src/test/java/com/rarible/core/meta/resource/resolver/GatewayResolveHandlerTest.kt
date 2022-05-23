@@ -1,9 +1,12 @@
-package com.rarible.core.meta.resource
+package com.rarible.core.meta.resource.resolver
 
-import com.rarible.core.meta.resource.AddressingTestData.CID
-import com.rarible.core.meta.resource.AddressingTestData.IPFS_CUSTOM_GATEWAY
-import com.rarible.core.meta.resource.AddressingTestData.IPFS_PUBLIC_GATEWAY
+import com.rarible.core.meta.resource.ResourceTestData.CID
+import com.rarible.core.meta.resource.ResourceTestData.IPFS_CUSTOM_GATEWAY
+import com.rarible.core.meta.resource.ResourceTestData.IPFS_PUBLIC_GATEWAY
 import com.rarible.core.meta.resource.ArweaveUrl.Companion.ARWEAVE_GATEWAY
+import com.rarible.core.meta.resource.ConstantGatewayProvider
+import com.rarible.core.meta.resource.LegacyIpfsGatewaySubstitutor
+import com.rarible.core.meta.resource.RandomGatewayProvider
 import com.rarible.core.meta.resource.cid.CidV1Validator
 import com.rarible.core.meta.resource.parser.ArweaveUrlResourceParser
 import com.rarible.core.meta.resource.parser.CidUrlResourceParser
@@ -12,36 +15,31 @@ import com.rarible.core.meta.resource.parser.DefaultUrlResourceParserProvider
 import com.rarible.core.meta.resource.parser.UrlResourceProcessor
 import com.rarible.core.meta.resource.parser.ipfs.AbstractIpfsUrlResourceParser
 import com.rarible.core.meta.resource.parser.ipfs.ForeignIpfsUrlResourceParser
-import com.rarible.core.meta.resource.resolver.ArweaveGatewayResolver
-import com.rarible.core.meta.resource.resolver.GatewayResolveHandler
-import com.rarible.core.meta.resource.resolver.IpfsGatewayResolver
-import com.rarible.core.meta.resource.resolver.RawCidGatewayResolver
-import com.rarible.core.meta.resource.resolver.SimpleHttpGatewayResolver
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
-class IpfsAddressParserTest {
+class GatewayResolveHandlerTest {
 
     private val cidOneValidator = CidV1Validator()
-    private val foreignIpfsUrlAddressParser = ForeignIpfsUrlResourceParser(
+    private val foreignIpfsUrlResourceParser = ForeignIpfsUrlResourceParser(
         cidOneValidator = cidOneValidator
     )
 
     private val ipfsGatewayResolver = IpfsGatewayResolver(
-        customGatewaysResolver = LegacyIpfsGatewaySubstitutor(listOf(IPFS_CUSTOM_GATEWAY)),
         publicGatewayProvider = ConstantGatewayProvider(IPFS_PUBLIC_GATEWAY),
-        innerGatewaysProvider = RandomGatewayProvider(listOf(IPFS_PUBLIC_GATEWAY))
+        innerGatewaysProvider = RandomGatewayProvider(listOf(IPFS_PUBLIC_GATEWAY)),
+        customGatewaysResolver = LegacyIpfsGatewaySubstitutor(listOf(IPFS_CUSTOM_GATEWAY))
     )
 
     private val defaultUrlResourceParserProvider = DefaultUrlResourceParserProvider(
         arweaveUrlParser = ArweaveUrlResourceParser(),
-        foreignIpfsUrlResourceParser = foreignIpfsUrlAddressParser,
+        foreignIpfsUrlResourceParser = foreignIpfsUrlResourceParser,
         abstractIpfsUrlResourceParser = AbstractIpfsUrlResourceParser(),
         cidUrlResourceParser = CidUrlResourceParser(cidOneValidator),
         httpUrlParser = HttpUrlResourceParser()
     )
 
-    private val addressParsingProcessor = UrlResourceProcessor(
+    private val urlResourceProcessor = UrlResourceProcessor(
         urlResourceParserProvider = defaultUrlResourceParserProvider
     )
 
@@ -151,12 +149,12 @@ class IpfsAddressParserTest {
     }
 
     private fun resolvePublicHttpUrl(url: String): String {
-        val resourceAddress = addressParsingProcessor.parse(url)
-        return gatewayResolveHandler.resolvePublicLink(resourceAddress!!)
+        val urlResource = urlResourceProcessor.parse(url)
+        return gatewayResolveHandler.resolvePublicLink(urlResource!!)
     }
 
     private fun resolveInnerHttpUrl(url: String): String {
-        val resourceAddress = addressParsingProcessor.parse(url)
-        return gatewayResolveHandler.resolveInnerLink(resourceAddress!!)
+        val urlResource = urlResourceProcessor.parse(url)
+        return gatewayResolveHandler.resolveInnerLink(urlResource!!)
     }
 }

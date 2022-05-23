@@ -1,13 +1,13 @@
 package com.rarible.core.meta.resource.parser.ipfs
 
-import com.rarible.core.meta.resource.AddressingTestData.CID
+import com.rarible.core.meta.resource.ResourceTestData.CID
 import com.rarible.core.meta.resource.IpfsUrl
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
-class AbstractIpfsAddressParserTest {
+class AbstractIpfsUrlResourceParseTest {
 
-    private val abstractIpfsAddressParser = AbstractIpfsUrlResourceParser()
+    private val abstractIpfsUrlResourceParser = AbstractIpfsUrlResourceParser()
 
     @Test
     fun `IPFS urls with ipfs path and broken slashes`() {
@@ -24,12 +24,12 @@ class AbstractIpfsAddressParserTest {
 
     @Test
     fun `IPFS urls is too short`() {
-        assertThat(abstractIpfsAddressParser.parse("ip")).isNull()
+        assertThat(abstractIpfsUrlResourceParser.parse("ip")).isNull()
     }
 
     @Test
     fun `IPFS prefix not found`() {
-        assertThat(abstractIpfsAddressParser.parse("ipffs:/ipfs/${CID}")).isNull()
+        assertThat(abstractIpfsUrlResourceParser.parse("ipffs:/ipfs/${CID}")).isNull()
     }
 
     @Test
@@ -50,7 +50,7 @@ class AbstractIpfsAddressParserTest {
     }
 
     private fun assertIpfsUrl(url: String, expectedPath: String) {
-        val result = abstractIpfsAddressParser.parse(url)
+        val result = abstractIpfsUrlResourceParser.parse(url)
         assertThat(result).isEqualTo(
             IpfsUrl(
                 original = url,

@@ -29,15 +29,13 @@ class IpfsGatewayResolver(
 
     private fun resolveInternal(ipfsUrl: IpfsUrl, gateway: String, replaceOriginalHost: Boolean): String {
         // If there is IPFS URL with one of legacy gateways, we need to replace it with actual public gateway
-        customGatewaysResolver.getUrlResource(ipfsUrl, gateway, replaceOriginalHost)?.let { return it }
+        customGatewaysResolver.getResourceLink(ipfsUrl, gateway, replaceOriginalHost)?.let { return it }
 
         // If URL is valid, and we want to keep original IPFS gateway, return 'as is'
-        if (!replaceOriginalHost && ipfsUrl.original.isHttpUrl()) {
-            return ipfsUrl.original
+        return if (!replaceOriginalHost && ipfsUrl.original.isHttpUrl()) {
+            ipfsUrl.original
+        } else {
+            "$gateway/$IPFS${ipfsUrl.path}"
         }
-
-        return resolveWithGateway(ipfsUrl, gateway)
     }
-
-    private fun resolveWithGateway(url: IpfsUrl, gateway: String): String = "$gateway/$IPFS${url.path}"
 }
