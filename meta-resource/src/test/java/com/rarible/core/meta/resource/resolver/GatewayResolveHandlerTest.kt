@@ -1,21 +1,25 @@
 package com.rarible.core.meta.resource.resolver
 
-import com.rarible.core.meta.resource.ResourceTestData.CID
-import com.rarible.core.meta.resource.ResourceTestData.IPFS_CUSTOM_GATEWAY
-import com.rarible.core.meta.resource.ResourceTestData.IPFS_PUBLIC_GATEWAY
+import com.rarible.core.meta.resource.ArweaveUrl
 import com.rarible.core.meta.resource.ArweaveUrl.Companion.ARWEAVE_GATEWAY
 import com.rarible.core.meta.resource.ConstantGatewayProvider
 import com.rarible.core.meta.resource.LegacyIpfsGatewaySubstitutor
 import com.rarible.core.meta.resource.RandomGatewayProvider
+import com.rarible.core.meta.resource.ResourceTestData.CID
+import com.rarible.core.meta.resource.ResourceTestData.IPFS_CUSTOM_GATEWAY
+import com.rarible.core.meta.resource.ResourceTestData.IPFS_PUBLIC_GATEWAY
+import com.rarible.core.meta.resource.UrlResource
 import com.rarible.core.meta.resource.cid.CidV1Validator
 import com.rarible.core.meta.resource.parser.ArweaveUrlResourceParser
 import com.rarible.core.meta.resource.parser.CidUrlResourceParser
-import com.rarible.core.meta.resource.parser.HttpUrlResourceParser
 import com.rarible.core.meta.resource.parser.DefaultUrlResourceParserProvider
+import com.rarible.core.meta.resource.parser.HttpUrlResourceParser
 import com.rarible.core.meta.resource.parser.UrlResourceProcessor
 import com.rarible.core.meta.resource.parser.ipfs.AbstractIpfsUrlResourceParser
 import com.rarible.core.meta.resource.parser.ipfs.ForeignIpfsUrlResourceParser
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 
 class GatewayResolveHandlerTest {
@@ -61,8 +65,6 @@ class GatewayResolveHandlerTest {
     fun `foreign ipfs urls - replaced by public gateway`() {
         // Broken IPFS URL
         assertFixedIpfsUrl("htt://mypinata.com/ipfs/$CID", CID)
-        // Relative IPFS path
-//        assertFixedIpfsUrl("/ipfs/$CID/abc .png", "$CID/abc%20.png")   //SPACE
 
         // Abstract IPFS urls with /ipfs/ path and broken slashes
         assertFixedIpfsUrl("ipfs:/ipfs/$CID", CID)
@@ -111,7 +113,7 @@ class GatewayResolveHandlerTest {
 
     @Test
     fun `single sid`() {
-//        assertFixedIpfsUrl(CID, CID)
+        assertFixedIpfsUrl(CID, CID)
         assertFixedIpfsUrl("$CID/532.json", "$CID/532.json")
     }
 
@@ -125,16 +127,46 @@ class GatewayResolveHandlerTest {
     }
 
     @Test
-    fun `some ipfs path`() {
-        val path = "///hel lo.png"
-//        assertThat(container.resolvePublicHttpUrl(path))              //SPACE
-//            .isEqualTo("${IPFS_PUBLIC_GATEWAY}/hel%20lo.png")
-    }
-
-    @Test
     fun `replace legacy`() {
         assertThat(resolveInnerHttpUrl("$IPFS_CUSTOM_GATEWAY/ipfs/$CID"))
             .isEqualTo("$IPFS_PUBLIC_GATEWAY/ipfs/$CID")
+    }
+
+    @Test
+    fun `Thrown Unsupported Exception`() {
+        val thrown = assertThrows(
+            UnsupportedOperationException::class.java,
+            { gatewayResolveHandler.resolveInnerLink(UnsupportedResource("test")) },
+            "UnsupportedOperationException error was expected"
+        )
+
+        assertEquals("Unsupported resolving for com.rarible.core.meta.resource.resolver.UnsupportedResource", thrown.message)
+    }
+
+    @Test
+    fun `Arweave full link`() {
+        assertThat(
+            gatewayResolveHandler.resolvePublicLink(
+                ArweaveUrl(
+                    original = "ar://lVS0SkeSF8_alma1ayYMZcH9VSMLrmhAmikrDyshUcg",
+                    originalGateway = null,
+                    path = "/lVS0SkeSF8_alma1ayYMZcH9VSMLrmhAmikrDyshUcg"
+                )
+            )
+        ).isEqualTo("https://arweave.net/lVS0SkeSF8_alma1ayYMZcH9VSMLrmhAmikrDyshUcg")
+    }
+
+    @Test
+    fun `Arweave shortlink link`() {
+        assertThat(
+            gatewayResolveHandler.resolvePublicLink(
+                ArweaveUrl(
+                    original = "https://arweave.net/lVS0SkeSF8_alma1ayYMZcH9VSMLrmhAmikrDyshUcg",
+                    originalGateway = "https://arweave.net",
+                    path = "/lVS0SkeSF8_alma1ayYMZcH9VSMLrmhAmikrDyshUcg"
+                )
+            )
+        ).isEqualTo("https://arweave.net/lVS0SkeSF8_alma1ayYMZcH9VSMLrmhAmikrDyshUcg")
     }
 
     private fun assertFixedIpfsUrl(url: String, expectedPath: String) {
@@ -158,3 +190,5 @@ class GatewayResolveHandlerTest {
         return gatewayResolveHandler.resolveInnerLink(urlResource!!)
     }
 }
+
+class UnsupportedResource(override val original: String) : UrlResource()
