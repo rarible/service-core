@@ -17,3 +17,5 @@ fun String.removeLeadingSlashes(): String {
     }
     return result
 }
+
+fun URL.extension(): String = this.toExternalForm().substringAfterLast(".")

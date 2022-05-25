@@ -4,10 +4,8 @@ import com.rarible.core.common.nowMillis
 import com.rarible.core.meta.resource.detector.ContentBytes
 import com.rarible.core.meta.resource.detector.ContentMeta
 import com.rarible.core.meta.resource.detector.MimeType
-import com.rarible.core.meta.resource.detector.core.ExifDetector
-import com.rarible.core.meta.resource.detector.core.HtmlDetector
-import com.rarible.core.meta.resource.detector.core.PngDetector
-import com.rarible.core.meta.resource.detector.core.SvgDetector
+import com.rarible.core.meta.resource.detector.core.ContentMetaDetectProcessor
+import com.rarible.core.meta.resource.extension
 import org.slf4j.LoggerFactory
 import java.net.URL
 import java.time.Duration
@@ -16,7 +14,8 @@ import java.time.Instant
 class ContentMetaReceiver(
     private val contentReceiver: ContentReceiver,
     private val maxBytes: Int,
-    private val contentReceiverMetrics: ContentReceiverMetrics
+    private val contentReceiverMetrics: ContentReceiverMetrics,
+    private val contentMetaDetectProcessor: ContentMetaDetectProcessor
 ) {
 
     @Suppress("BlockingMethodInNonBlockingContext")
@@ -74,12 +73,8 @@ class ContentMetaReceiver(
 
         contentReceiverMetrics.receivedBytes(contentBytes.bytes.size)
 
-        // HTML should be BEFORE SVG since svg could be a part of HTML document  // TODO add provider
-        HtmlDetector.detect(contentBytes)?.let { return it }
-        SvgDetector.detect(contentBytes)?.let { return it }
-
-        PngDetector.detect(contentBytes)?.let { return it }
-        ExifDetector.detect(contentBytes)?.let { return it }
+        contentMetaDetectProcessor.detect(contentBytes)
+            ?.let { return it }
 
         return getFallbackContentMeta(url, contentBytes)
     }
@@ -174,8 +169,6 @@ class ContentMetaReceiver(
             return null
         }
 
-        private fun URL.extension(): String = this.toExternalForm().substringAfterLast(".")
-
         private fun logPrefix(url: URL): String = "Content meta by $url"
 
         private fun spent(duration: Duration): String {
@@ -185,7 +178,5 @@ class ContentMetaReceiver(
         private fun spent(from: Instant): String {
             return Duration.between(from, nowMillis()).presentableSlow(slowThreshold)
         }
-
     }
-
 }

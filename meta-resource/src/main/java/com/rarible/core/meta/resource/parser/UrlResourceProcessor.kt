@@ -5,11 +5,11 @@ import com.rarible.core.meta.resource.parser.ipfs.AbstractIpfsUrlResourceParser
 import com.rarible.core.meta.resource.parser.ipfs.ForeignIpfsUrlResourceParser
 
 class UrlResourceProcessor(
-    private val urlResourceParserProvider: UrlResourceParserProvider
+    private val provider: UrlResourceParserProvider
 ) {
 
     fun parse(link: String): UrlResource? {
-        for (parser in urlResourceParserProvider.urlResourceParsers) {
+        for (parser in provider.parsers) {
             val urlResource = parser.parse(link.trim())
             if (urlResource != null) {
                 return urlResource
@@ -20,7 +20,7 @@ class UrlResourceProcessor(
 }
 
 interface UrlResourceParserProvider {
-    val urlResourceParsers: List<UrlResourceParser<UrlResource>>
+    val parsers: List<UrlResourceParser<UrlResource>>
 }
 
 class DefaultUrlResourceParserProvider(
@@ -31,7 +31,7 @@ class DefaultUrlResourceParserProvider(
     cidUrlResourceParser: CidUrlResourceParser
 ) : UrlResourceParserProvider {
 
-    override val urlResourceParsers: List<UrlResourceParser<UrlResource>> =
+    override val parsers: List<UrlResourceParser<UrlResource>> =
         listOf(
             abstractIpfsUrlResourceParser,
             foreignIpfsUrlResourceParser,

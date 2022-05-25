@@ -7,24 +7,24 @@ import org.junit.jupiter.api.Test
 
 class EmbeddedBase64DetectorTest {
 
-    private val embeddedBase64Detector = EmbeddedBase64Detector()
+    private val detector = EmbeddedBase64Detector
 
     @Test
     fun `is base64 url`() {
-        assertThat(embeddedBase64Detector.canDecode(BASE_64)).isTrue
-        assertThat(embeddedBase64Detector.canDecode("https://some.data.com/ipfs/abc/image.png")).isFalse
+        assertThat(detector.isDetected(BASE_64)).isTrue
+        assertThat(detector.isDetected("https://some.data.com/ipfs/abc/image.png")).isFalse
     }
 
     @Test
     fun `get base64 image parts`() {
-        assertThat(embeddedBase64Detector.getData(BASE_64)).isEqualTo("abc")
-        assertThat(embeddedBase64Detector.getMimeType(BASE_64)).isEqualTo(MimeType.PNG_IMAGE.value)
+        assertThat(detector.getData(BASE_64)).isEqualTo("abc")
+        assertThat(detector.getMimeType(BASE_64)).isEqualTo(MimeType.PNG_IMAGE.value)
     }
 
     @Test
     fun `get base64 image test text type`() {
-        assertThat(embeddedBase64Detector.getData(BASE_64_TEXT_TYPE)).isEqualTo("abc")
-        assertThat(embeddedBase64Detector.getMimeType(BASE_64_TEXT_TYPE)).isEqualTo(MimeType.HTML_TEXT.value)
+        assertThat(detector.getData(BASE_64_TEXT_TYPE)).isEqualTo("abc")
+        assertThat(detector.getMimeType(BASE_64_TEXT_TYPE)).isEqualTo(MimeType.HTML_TEXT.value)
     }
 
     companion object {

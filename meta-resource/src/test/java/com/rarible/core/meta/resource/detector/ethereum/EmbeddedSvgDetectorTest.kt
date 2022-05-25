@@ -9,29 +9,29 @@ import java.nio.file.Paths
 
 class EmbeddedSvgDetectorTest {
 
-    private val embeddedSvgDetector = EmbeddedSvgDetector()
+    private val detector = EmbeddedSvgDetector
 
     @Test
     fun `svg detector do not react to strings without svg tag`() {
-        assertThat(embeddedSvgDetector.canDecode("url")).isFalse
+        assertThat(detector.isDetected("url")).isFalse
     }
 
     @Test
     fun `svg detector is able to recognize svg tag`() {
-        assertThat(embeddedSvgDetector.canDecode(SVG_URL)).isTrue
+        assertThat(detector.isDetected(SVG_URL)).isTrue
     }
 
     @Test
     fun `get svg image parts`() {
-        assertThat(embeddedSvgDetector.getData(SVG_URL)).isEqualTo(DECODED_SVG)
-        assertThat(embeddedSvgDetector.getMimeType(SVG_URL)).isEqualTo(MimeType.SVG_XML_IMAGE.value)
+        assertThat(detector.getData(SVG_URL)).isEqualTo(DECODED_SVG)
+        assertThat(detector.getMimeType(SVG_URL)).isEqualTo(MimeType.SVG_XML_IMAGE.value)
     }
 
     @Test
     fun `can decode svg images`() {
         val svg = String(Files.readAllBytes(Paths.get(this::class.java.getResource("/meta/resource/detector/ethereum/test.svg").toURI())));
-        assertThat(embeddedSvgDetector.canDecode(svg)).isTrue
-        assertThat(embeddedSvgDetector.getData(svg)).isNotEmpty
+        assertThat(detector.isDetected(svg)).isTrue
+        assertThat(detector.getData(svg)).isNotEmpty
     }
 
     companion object {
