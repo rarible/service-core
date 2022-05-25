@@ -1,7 +1,7 @@
 package com.rarible.core.meta.resource.detector.new
 
-import com.rarible.core.meta.resource.detector.core.ContentBytes
-import com.rarible.core.meta.resource.detector.core.ContentMeta
+import com.rarible.core.meta.resource.detector.ContentBytes
+import com.rarible.core.meta.resource.detector.ContentMeta
 
 interface ContentDetector {
     fun detect(contentBytes: ContentBytes): ContentMeta?

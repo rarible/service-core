@@ -1,11 +1,13 @@
 package com.rarible.core.content.meta.loader
 
 import com.rarible.core.common.nowMillis
-import com.rarible.core.content.meta.loader.detector.ExifDetector
-import com.rarible.core.content.meta.loader.detector.HtmlDetector
-import com.rarible.core.content.meta.loader.detector.PngDetector
-import com.rarible.core.content.meta.loader.detector.SvgDetector
-import com.rarible.core.meta.resource.detector.new.MimeType
+import com.rarible.core.meta.resource.detector.ContentBytes
+import com.rarible.core.meta.resource.detector.ContentMeta
+import com.rarible.core.meta.resource.detector.MimeType
+import com.rarible.core.meta.resource.detector.core.ExifDetector
+import com.rarible.core.meta.resource.detector.core.HtmlDetector
+import com.rarible.core.meta.resource.detector.core.PngDetector
+import com.rarible.core.meta.resource.detector.core.SvgDetector
 import org.slf4j.LoggerFactory
 import java.net.URL
 import java.time.Duration

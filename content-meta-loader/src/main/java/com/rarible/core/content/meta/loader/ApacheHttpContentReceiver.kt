@@ -1,5 +1,6 @@
 package com.rarible.core.content.meta.loader
 
+import com.rarible.core.meta.resource.detector.ContentBytes
 import kotlinx.coroutines.future.await
 import org.apache.http.HttpResponse
 import org.apache.http.HttpVersion

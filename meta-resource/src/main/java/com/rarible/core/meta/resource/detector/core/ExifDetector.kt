@@ -21,6 +21,8 @@ import com.drew.metadata.photoshop.PsdHeaderDirectory
 import com.drew.metadata.png.PngDirectory
 import com.drew.metadata.wav.WavDirectory
 import com.drew.metadata.webp.WebpDirectory
+import com.rarible.core.meta.resource.detector.ContentBytes
+import com.rarible.core.meta.resource.detector.ContentMeta
 import org.slf4j.LoggerFactory
 import java.net.URL
 

@@ -1,4 +1,4 @@
-package com.rarible.core.meta.resource.detector.core
+package com.rarible.core.meta.resource.detector
 
 import java.net.URL
 
@@ -12,7 +12,7 @@ data class ContentBytes(
 
     companion object {
 
-        internal val EMPTY = ContentBytes(
+        val EMPTY = ContentBytes(
             URL("http://localhost"),
             ByteArray(0),
             null,

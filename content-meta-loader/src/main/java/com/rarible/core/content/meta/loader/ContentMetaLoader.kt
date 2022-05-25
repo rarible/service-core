@@ -6,6 +6,7 @@ import com.google.common.net.InternetDomainName
 import com.rarible.core.client.WebClientHelper
 import com.rarible.core.common.blockingToMono
 import com.rarible.core.logging.LoggingUtils
+import com.rarible.core.meta.resource.detector.ContentMeta
 import com.sun.imageio.plugins.bmp.BMPMetadata
 import com.sun.imageio.plugins.gif.GIFImageMetadata
 import com.sun.imageio.plugins.jpeg.JPEGMetadata

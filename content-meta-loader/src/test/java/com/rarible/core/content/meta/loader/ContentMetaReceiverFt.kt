@@ -1,5 +1,6 @@
 package com.rarible.core.content.meta.loader
 
+import com.rarible.core.meta.resource.detector.ContentMeta
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals

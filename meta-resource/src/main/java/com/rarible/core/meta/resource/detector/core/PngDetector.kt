@@ -4,7 +4,9 @@ import com.drew.imaging.png.PngChunk
 import com.drew.imaging.png.PngChunkType
 import com.drew.imaging.png.PngHeader
 import com.drew.lang.SequentialByteArrayReader
-import com.rarible.core.meta.resource.detector.new.MimeType
+import com.rarible.core.meta.resource.detector.ContentBytes
+import com.rarible.core.meta.resource.detector.ContentMeta
+import com.rarible.core.meta.resource.detector.MimeType
 import org.slf4j.LoggerFactory
 
 /**

@@ -1,7 +1,9 @@
 package com.rarible.core.meta.resource.detector.core
 
 import com.google.common.primitives.Bytes
-import com.rarible.core.meta.resource.detector.new.MimeType
+import com.rarible.core.meta.resource.detector.ContentBytes
+import com.rarible.core.meta.resource.detector.ContentMeta
+import com.rarible.core.meta.resource.detector.MimeType
 import org.slf4j.LoggerFactory
 
 object HtmlDetector : ContentMetaDetector {
