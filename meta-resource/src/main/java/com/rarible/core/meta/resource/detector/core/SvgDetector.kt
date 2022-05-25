@@ -20,7 +20,7 @@ object SvgDetector : ContentMetaDetector {
         val url = contentBytes.url
 
         val result = ContentMeta(
-            type = MimeType.SVG_IMAGE.value,
+            type = MimeType.SVG_XML_IMAGE.value,
             width = 192,
             height = 192,
             size = contentBytes.contentLength

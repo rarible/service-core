@@ -7,6 +7,7 @@ import com.rarible.core.client.WebClientHelper
 import com.rarible.core.common.blockingToMono
 import com.rarible.core.logging.LoggingUtils
 import com.rarible.core.meta.resource.detector.ContentMeta
+import com.rarible.core.meta.resource.detector.MimeType
 import com.sun.imageio.plugins.bmp.BMPMetadata
 import com.sun.imageio.plugins.gif.GIFImageMetadata
 import com.sun.imageio.plugins.jpeg.JPEGMetadata
@@ -58,31 +59,31 @@ class ContentMetaLoader(
             val typeByExtension = extensionMapping[extension]
             when {
                 typeByExtension != null -> ContentMeta(typeByExtension).toMono()
-                extension == "svg" -> ContentMeta("image/svg+xml", 192, 192).toMono()
+                extension == "svg" -> ContentMeta(MimeType.SVG_XML_IMAGE.value, 192, 192).toMono()
                 else -> {
                     getMetadata(url)
                         .flatMap { (width, height, metadata, contentLength) ->
                             when (metadata) {
                                 is GIFImageMetadata -> ContentMeta(
-                                    type = "image/gif",
+                                    type = MimeType.GIF_IMAGE.value,
                                     width = metadata.imageWidth,
                                     height = metadata.imageHeight,
                                     size = contentLength
                                 ).toMono()
                                 is JPEGMetadata -> ContentMeta(
-                                    type = "image/jpeg",
+                                    type = MimeType.JPEG_IMAGE.value,
                                     width = width,
                                     height = height,
                                     size = contentLength
                                 ).toMono()
                                 is BMPMetadata -> ContentMeta(
-                                    type = "image/bmp",
+                                    type = MimeType.BMP_IMAGE.value,
                                     width = width,
                                     height = height,
                                     size = contentLength
                                 ).toMono()
                                 is PNGMetadata -> ContentMeta(
-                                    type = "image/png",
+                                    type = MimeType.PNG_IMAGE.value,
                                     width = width,
                                     height = height,
                                     size = contentLength
@@ -92,10 +93,10 @@ class ContentMetaLoader(
                         }
                         .switchIfEmpty {
                             when {
-                                url.endsWith(".gif") -> ContentMeta("image/gif").toMono()
-                                url.endsWith(".jpg") -> ContentMeta("image/jpeg").toMono()
-                                url.endsWith(".jpeg") -> ContentMeta("image/jpeg").toMono()
-                                url.endsWith(".png") -> ContentMeta("image/png").toMono()
+                                url.endsWith(".gif") -> ContentMeta(MimeType.GIF_IMAGE.value).toMono()
+                                url.endsWith(".jpg") -> ContentMeta(MimeType.JPEG_IMAGE.value).toMono()
+                                url.endsWith(".jpeg") -> ContentMeta(MimeType.JPEG_IMAGE.value).toMono()
+                                url.endsWith(".png") -> ContentMeta(MimeType.PNG_IMAGE.value).toMono()
                                 else -> getMimeType(url)
                                     .map { ContentMeta(it) }
                             }
@@ -207,16 +208,15 @@ class ContentMetaLoader(
         const val OPENSEA_DOMAIN = "opensea.io"
 
         val DEFAULT_MAPPING = mapOf(
-            "mp4" to "video/mp4",
-            "webm" to "video/webm",
-            "mp3" to "audio/mp3",
-            "wav" to "audio/wav",
-            "flac" to "audio/flac",
-            "mpga" to "audio/mpeg",
+            "mp4" to MimeType.MP4_VIDEO.value,
+            "webm" to MimeType.WEBM_VIDEO.value,
+            "mp3" to MimeType.MP3_AUDIO.value,
+            "wav" to MimeType.WAV_AUDIO.value,
+            "flac" to MimeType.FLAC_AUDIO.value,
+            "mpga" to MimeType.MPEG_AUDIO.value,
             // See https://www.khronos.org/registry/glTF/specs/2.0/glTF-2.0.pdf
-            "gltf" to "model/gltf+json",
-            "glb" to "model/gltf-binary"
+            "gltf" to MimeType.GLTF_JSON_MODEL.value,
+            "glb" to MimeType.GLTF_BINARY_MODEL.value
         )
-
     }
 }

@@ -7,7 +7,7 @@ enum class MimeType(
 
     PNG_IMAGE("image/png"),
     APNG_IMAGE("image/apng"),
-    SVG_IMAGE("image/svg+xml"),
+    SVG_XML_IMAGE("image/svg+xml"),
     JPEG_IMAGE("image/jpeg"),
     GIF_IMAGE("image/gif"),
     BMP_IMAGE("image/bmp"),

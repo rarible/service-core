@@ -1,5 +1,6 @@
 package com.rarible.core.meta.resource.detector.ethereum
 
+import com.rarible.core.meta.resource.detector.MimeType
 import com.rarible.core.meta.resource.detector.embedded.EmbeddedBase64Detector
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -17,13 +18,13 @@ class EmbeddedBase64DetectorTest {
     @Test
     fun `get base64 image parts`() {
         assertThat(embeddedBase64Detector.getData(BASE_64)).isEqualTo("abc")
-        assertThat(embeddedBase64Detector.getMimeType(BASE_64)).isEqualTo("image/png")
+        assertThat(embeddedBase64Detector.getMimeType(BASE_64)).isEqualTo(MimeType.PNG_IMAGE.value)
     }
 
     @Test
     fun `get base64 image test text type`() {
         assertThat(embeddedBase64Detector.getData(BASE_64_TEXT_TYPE)).isEqualTo("abc")
-        assertThat(embeddedBase64Detector.getMimeType(BASE_64_TEXT_TYPE)).isEqualTo("text/html")
+        assertThat(embeddedBase64Detector.getMimeType(BASE_64_TEXT_TYPE)).isEqualTo(MimeType.HTML_TEXT.value)
     }
 
     companion object {

@@ -28,7 +28,7 @@ class EmbeddedSvgDetector : EmbeddedContentDetector {
     }
 
     override fun getMimeType(url: String): String {
-        return MimeType.SVG_IMAGE.value
+        return MimeType.SVG_XML_IMAGE.value
     }
 
     override fun getDecodedData(url: String): ByteArray? {
