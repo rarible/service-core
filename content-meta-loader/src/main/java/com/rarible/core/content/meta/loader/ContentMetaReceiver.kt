@@ -5,6 +5,7 @@ import com.rarible.core.content.meta.loader.detector.ExifDetector
 import com.rarible.core.content.meta.loader.detector.HtmlDetector
 import com.rarible.core.content.meta.loader.detector.PngDetector
 import com.rarible.core.content.meta.loader.detector.SvgDetector
+import com.rarible.core.meta.resource.detector.new.MimeType
 import org.slf4j.LoggerFactory
 import java.net.URL
 import java.time.Duration
@@ -15,8 +16,6 @@ class ContentMetaReceiver(
     private val maxBytes: Int,
     private val contentReceiverMetrics: ContentReceiverMetrics
 ) {
-
-    private val logger = LoggerFactory.getLogger(javaClass)
 
     @Suppress("BlockingMethodInNonBlockingContext")
     suspend fun receive(url: String): ContentMeta? {
@@ -53,36 +52,6 @@ class ContentMetaReceiver(
         return result
     }
 
-    private fun getFallbackContentMeta(url: URL, contentBytes: ContentBytes?): ContentMeta? {
-        val contentType = contentBytes?.contentType
-        if (contentType != null && knownMediaTypePrefixes.any { contentType.startsWith(it) }) {
-            val fallback = ContentMeta(
-                type = contentType,
-                size = contentBytes.contentLength
-            )
-            logger.info("${logPrefix(url)}: falling back by mimeType from the HTTP headers to $fallback")
-            return fallback
-        }
-        val extension = url.toExternalForm().substringAfterLast(".", "")
-        val mimeType = extensionMapping[extension]
-        if (mimeType != null) {
-            val fallback = ContentMeta(
-                type = mimeType,
-                size = contentBytes?.contentLength
-            )
-            logger.info("${logPrefix(url)}: falling back by extension to $fallback")
-            return fallback
-        }
-        logger.warn("${logPrefix(url)}: cannot fall back (contentType = $contentType, extension = $extension)")
-        return null
-    }
-
-    private fun getPredefinedContentMeta(url: URL): ContentMeta? {
-        val extension = url.toExternalForm().substringAfterLast(".")
-        val mediaType = ignoredExtensions[extension] ?: return null
-        return ContentMeta(mediaType)
-    }
-
     private suspend fun doReceive(url: URL): ContentMeta? {
         val startLoading = nowMillis()
 
@@ -103,7 +72,7 @@ class ContentMetaReceiver(
 
         contentReceiverMetrics.receivedBytes(contentBytes.bytes.size)
 
-        // HTML should be BEFORE SVG since svg could be a part of HTML document
+        // HTML should be BEFORE SVG since svg could be a part of HTML document  // TODO add provider
         HtmlDetector.detect(contentBytes)?.let { return it }
         SvgDetector.detect(contentBytes)?.let { return it }
 
@@ -111,36 +80,6 @@ class ContentMetaReceiver(
         ExifDetector.detect(contentBytes)?.let { return it }
 
         return getFallbackContentMeta(url, contentBytes)
-    }
-
-    private companion object {
-
-        private val slowThreshold = Duration.ofSeconds(1)
-
-        val ignoredExtensions = mapOf(
-            "mp3" to "audio/mp3",
-            "wav" to "audio/wav",
-            "flac" to "audio/flac",
-            "mpga" to "audio/mpeg",
-
-            "gltf" to "model/gltf+json",
-            "glb" to "model/gltf-binary"
-        )
-
-        val extensionMapping = mapOf(
-            "png" to "image/png",
-            "jpg" to "image/jpeg",
-            "jpeg" to "image/jpeg",
-            "gif" to "image/gif",
-            "bmp" to "image/bmp",
-            "webp" to "image/webp",
-            "mp4" to "video/mp4",
-            "webm" to "video/webm",
-            "avi" to "video/x-msvideo",
-            "mpeg" to "video/mpeg"
-        )
-
-        val knownMediaTypePrefixes = listOf("image/", "video/", "audio/", "model/")
     }
 
     private fun countResult(contentMeta: ContentMeta?) {
@@ -161,13 +100,90 @@ class ContentMetaReceiver(
         }
     }
 
-    private fun logPrefix(url: URL): String = "Content meta by $url"
+    private companion object {
 
-    private fun spent(duration: Duration): String {
-        return duration.presentableSlow(slowThreshold)
+        private val logger = LoggerFactory.getLogger(javaClass)
+
+        private val slowThreshold = Duration.ofSeconds(1)
+
+        private val ignoredExtensions = mapOf(
+            "mp3" to MimeType.MP3_AUDIO,
+            "wav" to MimeType.WAV_AUDIO,
+            "flac" to MimeType.FLAC_AUDIO,
+            "mpga" to MimeType.MPEG_AUDIO,
+            "gltf" to MimeType.GLTF_JSON_MODEL,
+            "glb" to MimeType.GLTF_BINARY_MODEL
+        )
+
+        private val extensionMapping = mapOf(
+            "png" to MimeType.PNG_IMAGE,
+            "jpg" to MimeType.JPEG_IMAGE,
+            "jpeg" to MimeType.JPEG_IMAGE,
+            "gif" to MimeType.GIF_IMAGE,
+            "bmp" to MimeType.BMP_IMAGE,
+            "webp" to MimeType.WEBP_IMAGE,
+            "mp4" to MimeType.MP4_VIDEO,
+            "webm" to MimeType.WEBM_VIDEO,
+            "avi" to MimeType.X_MSVIDEO_VIDEO,
+            "mpeg" to MimeType.MPEG_VIDEO
+        )
+
+        private val knownMediaTypePrefixes = listOf("image/", "video/", "audio/", "model/")
+
+        private fun getPredefinedContentMeta(url: URL): ContentMeta? {
+            val mediaType = ignoredExtensions[url.extension()] ?: return null
+            return ContentMeta(mediaType.value)
+        }
+
+        private fun getFallbackContentMeta(url: URL, contentBytes: ContentBytes?): ContentMeta? {
+            resolveByHttpContentType(url, contentBytes)
+                ?.let { return it }
+
+            resolveByUrlExtension(url, contentBytes)
+                ?.let { return it }
+
+            logger.warn("${logPrefix(url)}: cannot fall back (contentType = ${contentBytes?.contentType}, extension = ${url.extension()})")
+            return null
+        }
+
+        private fun resolveByHttpContentType(url: URL, contentBytes: ContentBytes?): ContentMeta? {
+            val contentType = contentBytes?.contentType
+            if (contentType != null && knownMediaTypePrefixes.any { contentType.startsWith(it) }) {
+                val fallback = ContentMeta(
+                    type = contentType,
+                    size = contentBytes.contentLength
+                )
+                logger.info("${logPrefix(url)}: falling back by mimeType from the HTTP headers to $fallback")
+                return fallback
+            }
+            return null
+        }
+
+        private fun resolveByUrlExtension(url: URL, contentBytes: ContentBytes?): ContentMeta? {
+            val mimeType = extensionMapping[url.extension()]
+            if (mimeType != null) {
+                val fallback = ContentMeta(
+                    type = mimeType.value,
+                    size = contentBytes?.contentLength
+                )
+                logger.info("${logPrefix(url)}: falling back by extension to $fallback")
+                return fallback
+            }
+            return null
+        }
+
+        private fun URL.extension(): String = this.toExternalForm().substringAfterLast(".")
+
+        private fun logPrefix(url: URL): String = "Content meta by $url"
+
+        private fun spent(duration: Duration): String {
+            return duration.presentableSlow(slowThreshold)
+        }
+
+        private fun spent(from: Instant): String {
+            return Duration.between(from, nowMillis()).presentableSlow(slowThreshold)
+        }
+
     }
 
-    private fun spent(from: Instant): String {
-        return Duration.between(from, nowMillis()).presentableSlow(slowThreshold)
-    }
 }
