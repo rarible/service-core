@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test
 class GatewayResolverTest {
 
     private val simpleHttpGatewayResolver = SimpleHttpGatewayResolver()
-    private val rawCidGatewayResolver = RawCidGatewayResolver(
+    private val ipfsCidGatewayResolver = IpfsCidGatewayResolver(
         publicGatewayProvider = ConstantGatewayProvider(IPFS_PUBLIC_GATEWAY),
         innerGatewaysProvider = RandomGatewayProvider(listOf(IPFS_PRIVATE_GATEWAY)),
     )
@@ -66,11 +66,11 @@ class GatewayResolverTest {
     @Test
     fun `RawCidGatewayResolver resolve public without additional path`() {
         assertThat(
-            rawCidGatewayResolver.resolveLink(
+            ipfsCidGatewayResolver.resolveLink(
                 resource = Cid(
                     original = CID,
                     cid = CID,
-                    additionalPath = null
+                    subPath = null
                 ),
                 isPublic = true
             )
@@ -80,11 +80,11 @@ class GatewayResolverTest {
     @Test
     fun `RawCidGatewayResolver resolve public with additional path`() {
         assertThat(
-            rawCidGatewayResolver.resolveLink(
+            ipfsCidGatewayResolver.resolveLink(
                 resource = Cid(
                     original = CID,
                     cid = CID,
-                    additionalPath = "/5032.json"
+                    subPath = "/5032.json"
                 ),
                 isPublic = true
             )
@@ -94,11 +94,11 @@ class GatewayResolverTest {
     @Test
     fun `RawCidGatewayResolver resolve inner without additional path`() {
         assertThat(
-            rawCidGatewayResolver.resolveLink(
+            ipfsCidGatewayResolver.resolveLink(
                 resource = Cid(
                     original = CID,
                     cid = CID,
-                    additionalPath = null
+                    subPath = null
                 ),
                 isPublic = false
             )
@@ -108,11 +108,11 @@ class GatewayResolverTest {
     @Test
     fun `RawCidGatewayResolver resolve inner with additional path`() {
         assertThat(
-            rawCidGatewayResolver.resolveLink(
+            ipfsCidGatewayResolver.resolveLink(
                 resource = Cid(
                     original = CID,
                     cid = CID,
-                    additionalPath = "/5032.json"
+                    subPath = "/5032.json"
                 ),
                 isPublic = false
             )

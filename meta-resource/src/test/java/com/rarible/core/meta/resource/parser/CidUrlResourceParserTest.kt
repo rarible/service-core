@@ -25,7 +25,7 @@ class CidUrlResourceParserTest {
             Cid(
                 original = CID,
                 cid = CID,
-                additionalPath = null
+                subPath = null
             )
         )
     }
@@ -36,7 +36,7 @@ class CidUrlResourceParserTest {
             Cid(
                 original = "$CID/5103.json",
                 cid = CID,
-                additionalPath = "/5103.json"
+                subPath = "/5103.json"
             )
         )
     }

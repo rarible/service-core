@@ -6,9 +6,9 @@ import com.rarible.core.meta.resource.HttpUrl
 import com.rarible.core.meta.resource.IpfsUrl
 import com.rarible.core.meta.resource.UrlResource
 
-class GatewayResolveHandler(
+class UrlResolver(
     private val ipfsGatewayResolver: IpfsGatewayResolver,
-    private val rawCidGatewayResolver: RawCidGatewayResolver,
+    private val ipfsCidGatewayResolver: IpfsCidGatewayResolver,
     private val arweaveGatewayResolver: ArweaveGatewayResolver,
     private val simpleHttpGatewayResolver: SimpleHttpGatewayResolver
 ) {
@@ -32,7 +32,7 @@ class GatewayResolveHandler(
         when (url) {
             is HttpUrl -> simpleHttpGatewayResolver.resolveLink(url, isPublic)
             is IpfsUrl -> ipfsGatewayResolver.resolveLink(url, isPublic)
-            is Cid -> rawCidGatewayResolver.resolveLink(url, isPublic)
+            is Cid -> ipfsCidGatewayResolver.resolveLink(url, isPublic)
             is ArweaveUrl -> arweaveGatewayResolver.resolveLink(url, isPublic)
             else -> throw UnsupportedOperationException("Unsupported resolving for ${url.javaClass.name}")
         }

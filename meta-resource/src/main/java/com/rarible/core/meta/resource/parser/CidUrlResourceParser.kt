@@ -13,7 +13,7 @@ class CidUrlResourceParser(
             return Cid(
                 original = url,
                 cid = cid,
-                additionalPath = url.substring(cid.length).ifEmpty { null }
+                subPath = url.substring(cid.length).ifEmpty { null }
             )
         }
         return null

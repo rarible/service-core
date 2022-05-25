@@ -21,15 +21,15 @@ class SimpleHttpGatewayResolver : GatewayResolver<HttpUrl> {
     override fun resolveLink(resource: HttpUrl, isPublic: Boolean): String = resource.original
 }
 
-class RawCidGatewayResolver(
+class IpfsCidGatewayResolver(
     private val publicGatewayProvider: GatewayProvider,
     private val innerGatewaysProvider: GatewayProvider
 ) : GatewayResolver<Cid> {
 
     override fun resolveLink(resource: Cid, isPublic: Boolean): String {
         val gateway = if (isPublic) publicGatewayProvider.getGateway() else innerGatewaysProvider.getGateway()
-        return if (resource.additionalPath != null) {
-            "$gateway/$IPFS/${resource.cid}${resource.additionalPath}"
+        return if (resource.subPath != null) {
+            "$gateway/$IPFS/${resource.cid}${resource.subPath}"
         } else {
             "$gateway/$IPFS/${resource.cid}"
         }

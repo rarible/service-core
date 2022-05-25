@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 
-class GatewayResolveHandlerTest {
+class UrlResolverTest {
 
     private val cidOneValidator = CidV1Validator()
     private val foreignIpfsUrlResourceParser = ForeignIpfsUrlResourceParser(
@@ -47,9 +47,9 @@ class GatewayResolveHandlerTest {
         urlResourceParserProvider = defaultUrlResourceParserProvider
     )
 
-    private val gatewayResolveHandler = GatewayResolveHandler(
+    private val urlResolver = UrlResolver(
         ipfsGatewayResolver = ipfsGatewayResolver,
-        rawCidGatewayResolver = RawCidGatewayResolver(
+        ipfsCidGatewayResolver = IpfsCidGatewayResolver(
             publicGatewayProvider = ConstantGatewayProvider(IPFS_PUBLIC_GATEWAY),
             innerGatewaysProvider = RandomGatewayProvider(listOf(IPFS_PUBLIC_GATEWAY))
         ),
@@ -136,7 +136,7 @@ class GatewayResolveHandlerTest {
     fun `Thrown Unsupported Exception`() {
         val thrown = assertThrows(
             UnsupportedOperationException::class.java,
-            { gatewayResolveHandler.resolveInnerLink(UnsupportedResource("test")) },
+            { urlResolver.resolveInnerLink(UnsupportedResource("test")) },
             "UnsupportedOperationException error was expected"
         )
 
@@ -146,7 +146,7 @@ class GatewayResolveHandlerTest {
     @Test
     fun `Arweave full link`() {
         assertThat(
-            gatewayResolveHandler.resolvePublicLink(
+            urlResolver.resolvePublicLink(
                 ArweaveUrl(
                     original = "ar://lVS0SkeSF8_alma1ayYMZcH9VSMLrmhAmikrDyshUcg",
                     originalGateway = null,
@@ -159,7 +159,7 @@ class GatewayResolveHandlerTest {
     @Test
     fun `Arweave shortlink link`() {
         assertThat(
-            gatewayResolveHandler.resolvePublicLink(
+            urlResolver.resolvePublicLink(
                 ArweaveUrl(
                     original = "https://arweave.net/lVS0SkeSF8_alma1ayYMZcH9VSMLrmhAmikrDyshUcg",
                     originalGateway = "https://arweave.net",
@@ -182,12 +182,12 @@ class GatewayResolveHandlerTest {
 
     private fun resolvePublicHttpUrl(url: String): String {
         val urlResource = urlResourceProcessor.parse(url)
-        return gatewayResolveHandler.resolvePublicLink(urlResource!!)
+        return urlResolver.resolvePublicLink(urlResource!!)
     }
 
     private fun resolveInnerHttpUrl(url: String): String {
         val urlResource = urlResourceProcessor.parse(url)
-        return gatewayResolveHandler.resolveInnerLink(urlResource!!)
+        return urlResolver.resolveInnerLink(urlResource!!)
     }
 }
 

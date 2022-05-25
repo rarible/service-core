@@ -12,7 +12,7 @@ data class HttpUrl(
 data class Cid(
     override val original: String,
     val cid: String,
-    val additionalPath: String?
+    val subPath: String?
 ) : UrlResource()
 
 abstract class GatewayUrl : UrlResource() {
