@@ -37,7 +37,7 @@
     </distributionManagement>
 
     <properties>
-        <revision>2.3.79</revision>
+        <revision>2.3.80</revision>
         <logback.version>1.2.11</logback.version>
         <logstash-encoder.version>7.0.1</logstash-encoder.version>
         <testcontainers.version>1.16.2</testcontainers.version>
@@ -221,11 +221,6 @@
             <dependency>
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-apm-starter</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.rarible.core</groupId>
-                <artifactId>rarible-core-github-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>
