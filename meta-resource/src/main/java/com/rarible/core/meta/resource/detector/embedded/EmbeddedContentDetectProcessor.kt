@@ -1,11 +1,11 @@
 package com.rarible.core.meta.resource.detector.embedded
 
 class EmbeddedContentDetectProcessor(
-    private val provider: DefaultEmbeddedContentDetectorProvider
+    private val provider: DefaultEmbeddedContentDecoderProvider
 ) {
 
-    fun detect(url: String): EmbeddedContent? {
-        for (detector in provider.detectors) {
+    fun decode(url: String): EmbeddedContent? {
+        for (detector in provider.decoders) {
             detector.getEmbeddedContent(url)
                 ?.let { return it }
         }
@@ -13,18 +13,18 @@ class EmbeddedContentDetectProcessor(
     }
 }
 
-interface EmbeddedContentDetectorProvider {
-    val detectors: List<EmbeddedContentDetector>
+interface EmbeddedContentDecoderProvider {
+    val decoders: List<EmbeddedContentDecoder>
 }
 
-class DefaultEmbeddedContentDetectorProvider(
-    embeddedBase64Detector: EmbeddedBase64Detector,
-    embeddedSvgDetector: EmbeddedSvgDetector
-) : EmbeddedContentDetectorProvider {
+class DefaultEmbeddedContentDecoderProvider(
+    embeddedBase64Decoder: EmbeddedBase64Decoder,
+    embeddedSvgDecoder: EmbeddedSvgDecoder
+) : EmbeddedContentDecoderProvider {
 
-    override val detectors: List<EmbeddedContentDetector> =
+    override val decoders: List<EmbeddedContentDecoder> =
         listOf(
-            embeddedBase64Detector,
-            embeddedSvgDetector
+            embeddedBase64Decoder,
+            embeddedSvgDecoder
         )
 }

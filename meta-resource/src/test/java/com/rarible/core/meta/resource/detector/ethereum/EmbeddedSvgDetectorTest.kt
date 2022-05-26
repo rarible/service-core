@@ -1,7 +1,7 @@
 package com.rarible.core.meta.resource.detector.ethereum
 
 import com.rarible.core.meta.resource.detector.MimeType
-import com.rarible.core.meta.resource.detector.embedded.EmbeddedSvgDetector
+import com.rarible.core.meta.resource.detector.embedded.EmbeddedSvgDecoder
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.nio.file.Files
@@ -9,7 +9,7 @@ import java.nio.file.Paths
 
 class EmbeddedSvgDetectorTest {
 
-    private val detector = EmbeddedSvgDetector
+    private val detector = EmbeddedSvgDecoder
 
     @Test
     fun `svg detector do not react to strings without svg tag`() {
@@ -23,15 +23,16 @@ class EmbeddedSvgDetectorTest {
 
     @Test
     fun `get svg image parts`() {
-        assertThat(detector.getData(SVG_URL)).isEqualTo(DECODED_SVG)
-        assertThat(detector.getMimeType(SVG_URL)).isEqualTo(MimeType.SVG_XML_IMAGE.value)
+        val content = detector.getEmbeddedContent(SVG_URL)
+        assertThat(content?.mimyType).isEqualTo(MimeType.SVG_XML_IMAGE.value)
+        assertThat(content?.content?.decodeToString()).isEqualTo(DECODED_SVG)
     }
 
     @Test
     fun `can decode svg images`() {
         val svg = String(Files.readAllBytes(Paths.get(this::class.java.getResource("/meta/resource/detector/ethereum/test.svg").toURI())));
         assertThat(detector.isDetected(svg)).isTrue
-        assertThat(detector.getData(svg)).isNotEmpty
+        assertThat(detector.getEmbeddedContent(svg)?.content?.decodeToString()).isNotEmpty
     }
 
     companion object {
