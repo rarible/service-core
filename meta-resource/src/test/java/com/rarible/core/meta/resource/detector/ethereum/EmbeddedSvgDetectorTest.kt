@@ -1,6 +1,5 @@
 package com.rarible.core.meta.resource.detector.ethereum
 
-import com.rarible.core.meta.resource.detector.MimeType
 import com.rarible.core.meta.resource.detector.embedded.EmbeddedSvgDecoder
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -22,15 +21,8 @@ class EmbeddedSvgDetectorTest {
     }
 
     @Test
-    fun `get svg image parts`() {
-        val content = detector.getEmbeddedContent(SVG_URL)
-        assertThat(content?.mimyType).isEqualTo(MimeType.SVG_XML_IMAGE.value)
-        assertThat(content?.content?.decodeToString()).isEqualTo(DECODED_SVG)
-    }
-
-    @Test
     fun `can decode svg images`() {
-        val svg = String(Files.readAllBytes(Paths.get(this::class.java.getResource("/meta/resource/detector/ethereum/test.svg").toURI())));
+        val svg = String(Files.readAllBytes(Paths.get(this::class.java.getResource("/meta/resource/detector/ethereum/test.svg").toURI())))
         assertThat(detector.isDetected(svg)).isTrue
         assertThat(detector.getEmbeddedContent(svg)?.content?.decodeToString()).isNotEmpty
     }

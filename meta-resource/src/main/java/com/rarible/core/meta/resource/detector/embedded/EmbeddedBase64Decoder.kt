@@ -1,8 +1,6 @@
 package com.rarible.core.meta.resource.detector.embedded
 
-import com.rarible.core.meta.resource.detector.extractDecodedData
-import com.rarible.core.meta.resource.detector.extractMimeType
-import com.rarible.core.meta.resource.detector.getMarkerIndex
+import com.rarible.core.meta.resource.detector.Base64Utils
 
 /**
  * Parser/Detector for URLs in meta like "https://rarible.mypinata.cloud/data:image/png;base64,iVBORw0KGgoAAAANS..."
@@ -10,15 +8,15 @@ import com.rarible.core.meta.resource.detector.getMarkerIndex
 object EmbeddedBase64Decoder : EmbeddedContentDecoder {
 
     override fun isDetected(url: String): Boolean {
-        return getMarkerIndex(url) >= 0
+        return Base64Utils.containsBase64Marker(url)
     }
 
     override fun getEmbeddedContent(url: String): EmbeddedContent? {
         if (!isDetected(url)) return null
 
         return EmbeddedContent(
-            mimyType = extractMimeType(url),
-            content = extractDecodedData(url)
+            mimyType = Base64Utils.extractMimeType(url),
+            content = Base64Utils.extractDecodedData(url)
         )
     }
 }
