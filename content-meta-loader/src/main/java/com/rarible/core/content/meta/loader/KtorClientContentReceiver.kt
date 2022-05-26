@@ -1,5 +1,6 @@
 package com.rarible.core.content.meta.loader
 
+import com.rarible.core.meta.resource.detector.ContentBytes
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*

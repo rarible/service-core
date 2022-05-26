@@ -1,4 +1,4 @@
-package com.rarible.core.content.meta.loader
+package com.rarible.core.meta.resource.detector
 
 data class ContentMeta(
     val type: String,

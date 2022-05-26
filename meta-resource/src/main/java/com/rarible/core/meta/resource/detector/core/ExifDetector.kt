@@ -1,4 +1,4 @@
-package com.rarible.core.content.meta.loader.detector
+package com.rarible.core.meta.resource.detector.core
 
 import com.drew.imaging.ImageMetadataReader
 import com.drew.metadata.Directory
@@ -21,8 +21,8 @@ import com.drew.metadata.photoshop.PsdHeaderDirectory
 import com.drew.metadata.png.PngDirectory
 import com.drew.metadata.wav.WavDirectory
 import com.drew.metadata.webp.WebpDirectory
-import com.rarible.core.content.meta.loader.ContentBytes
-import com.rarible.core.content.meta.loader.ContentMeta
+import com.rarible.core.meta.resource.detector.ContentBytes
+import com.rarible.core.meta.resource.detector.ContentMeta
 import org.slf4j.LoggerFactory
 import java.net.URL
 

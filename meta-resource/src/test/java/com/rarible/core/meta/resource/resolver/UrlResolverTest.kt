@@ -44,7 +44,7 @@ class UrlResolverTest {
     )
 
     private val urlResourceProcessor = UrlResourceProcessor(
-        urlResourceParserProvider = defaultUrlResourceParserProvider
+        provider = defaultUrlResourceParserProvider
     )
 
     private val urlResolver = UrlResolver(
@@ -58,8 +58,6 @@ class UrlResolverTest {
         ),
         simpleHttpGatewayResolver = SimpleHttpGatewayResolver()
     )
-
-    // TODO Test for Arveawe
 
     @Test
     fun `foreign ipfs urls - replaced by public gateway`() {

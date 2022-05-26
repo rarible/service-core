@@ -1,11 +1,12 @@
-package com.rarible.core.content.meta.loader.detector
+package com.rarible.core.meta.resource.detector.core
 
 import com.drew.imaging.png.PngChunk
 import com.drew.imaging.png.PngChunkType
 import com.drew.imaging.png.PngHeader
 import com.drew.lang.SequentialByteArrayReader
-import com.rarible.core.content.meta.loader.ContentBytes
-import com.rarible.core.content.meta.loader.ContentMeta
+import com.rarible.core.meta.resource.detector.ContentBytes
+import com.rarible.core.meta.resource.detector.ContentMeta
+import com.rarible.core.meta.resource.detector.MimeType
 import org.slf4j.LoggerFactory
 
 /**
@@ -29,7 +30,7 @@ object PngDetector : ContentMetaDetector {
 
         var imageWidth = 0
         var imageHeight = 0
-        var imageType = "image/png"
+        var imageType = MimeType.PNG_IMAGE
         while (true) {
             val chunkDataLength = runCatching { reader.int32 }.getOrNull() ?: return null
             if (chunkDataLength < 0) {
@@ -45,7 +46,7 @@ object PngDetector : ContentMetaDetector {
                     imageHeight = pngHeader.imageHeight
                 }
                 ACTL_CHUNK_TYPE -> {
-                    imageType = "image/apng"
+                    imageType = MimeType.APNG_IMAGE
                     runCatching { reader.skip(chunkDataLength.toLong()) }.getOrNull() ?: return null
                 }
                 PngChunkType.IDAT -> break
@@ -57,7 +58,7 @@ object PngDetector : ContentMetaDetector {
             runCatching { reader.skip(4) }.getOrNull() ?: return null // skipping checksum
         }
         val result = ContentMeta(
-            type = imageType,
+            type = imageType.value,
             width = imageWidth,
             height = imageHeight,
             size = contentBytes.contentLength

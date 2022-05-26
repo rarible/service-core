@@ -1,7 +1,7 @@
-package com.rarible.core.content.meta.loader.detector
+package com.rarible.core.meta.resource.detector.core
 
-import com.rarible.core.content.meta.loader.ContentBytes
-import com.rarible.core.content.meta.loader.ContentMeta
+import com.rarible.core.meta.resource.detector.ContentBytes
+import com.rarible.core.meta.resource.detector.ContentMeta
 import java.net.URL
 
 interface ContentMetaDetector {
