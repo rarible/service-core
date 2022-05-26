@@ -29,6 +29,5 @@ class EmbeddedSvgDetectorTest {
 
     companion object {
         private const val SVG_URL = "https://some.data.com/data:image/svg+xml;utf8,<svg%20class='nft'><rect%20class='c217'%20x='10'%20y='12'%20width='2'%20height='1' fill:%23AAAAAA/></svg>"
-        private const val DECODED_SVG = "<svg class='nft'><rect class='c217' x='10' y='12' width='2' height='1' fill:#AAAAAA/></svg>"
     }
 }
