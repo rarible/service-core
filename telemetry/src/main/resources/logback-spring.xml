@@ -10,7 +10,7 @@
             <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
                 <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
                     <layout class="com.batch.escalog.LogFmtLayout">
-                        <Fields>time, level, msg, error, thread, package, module, mdc, custom</Fields>
+                        <Fields>level, msg, error, thread, package, module, mdc, custom</Fields>
                     </layout>
                 </encoder>
             </appender>
