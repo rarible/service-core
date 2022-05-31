@@ -22,4 +22,6 @@ object Base64Utils {
     fun extractEncodedData(url: String) = url.substring(getMarkerIndex(url) + BASE_64_MARKER.length).trim()
 
     fun extractDecodedData(url: String): ByteArray = Base64.decodeBase64(extractEncodedData(url))
+
+    fun base64MimeToBytes(data: String): ByteArray = java.util.Base64.getMimeDecoder().decode(data.toByteArray()) // TODO Change?
 }

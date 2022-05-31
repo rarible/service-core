@@ -16,24 +16,24 @@ class UrlResolver(
     /**
      * Used only for internal operations, such urls should NOT be stored anywhere
      */
-    fun resolveInnerLink(url: UrlResource): String =
-        resolveInternal(url = url, isPublic = false)
+    fun resolveInnerLink(resource: UrlResource): String =
+        resolveInternal(resource = resource, isPublic = false)
 
     /**
      * Used to build url exposed to the DB cache or API responses
      */
     fun resolvePublicLink(resource: UrlResource): String =
-        resolveInternal(url = resource, isPublic = true)
+        resolveInternal(resource = resource, isPublic = true)
 
     private fun resolveInternal(
-        url: UrlResource,
+        resource: UrlResource,
         isPublic: Boolean
     ): String =
-        when (url) {
-            is HttpUrl -> simpleHttpGatewayResolver.resolveLink(url, isPublic)
-            is IpfsUrl -> ipfsGatewayResolver.resolveLink(url, isPublic)
-            is Cid -> ipfsCidGatewayResolver.resolveLink(url, isPublic)
-            is ArweaveUrl -> arweaveGatewayResolver.resolveLink(url, isPublic)
-            else -> throw UnsupportedOperationException("Unsupported resolving for ${url.javaClass.name}")
+        when (resource) {
+            is HttpUrl -> simpleHttpGatewayResolver.resolveLink(resource, isPublic)
+            is IpfsUrl -> ipfsGatewayResolver.resolveLink(resource, isPublic)
+            is Cid -> ipfsCidGatewayResolver.resolveLink(resource, isPublic)
+            is ArweaveUrl -> arweaveGatewayResolver.resolveLink(resource, isPublic)
+            else -> throw UnsupportedOperationException("Unsupported resolving for ${resource.javaClass.name}")
         }
 }

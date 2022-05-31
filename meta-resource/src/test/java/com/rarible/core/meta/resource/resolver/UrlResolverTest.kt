@@ -7,6 +7,7 @@ import com.rarible.core.meta.resource.LegacyIpfsGatewaySubstitutor
 import com.rarible.core.meta.resource.RandomGatewayProvider
 import com.rarible.core.meta.resource.ResourceTestData.CID
 import com.rarible.core.meta.resource.ResourceTestData.IPFS_CUSTOM_GATEWAY
+import com.rarible.core.meta.resource.ResourceTestData.IPFS_PRIVATE_GATEWAY
 import com.rarible.core.meta.resource.ResourceTestData.IPFS_PUBLIC_GATEWAY
 import com.rarible.core.meta.resource.UrlResource
 import com.rarible.core.meta.resource.cid.CidV1Validator
@@ -14,7 +15,7 @@ import com.rarible.core.meta.resource.parser.ArweaveUrlResourceParser
 import com.rarible.core.meta.resource.parser.CidUrlResourceParser
 import com.rarible.core.meta.resource.parser.DefaultUrlResourceParserProvider
 import com.rarible.core.meta.resource.parser.HttpUrlResourceParser
-import com.rarible.core.meta.resource.parser.UrlResourceProcessor
+import com.rarible.core.meta.resource.parser.UrlResourceParsingProcessor
 import com.rarible.core.meta.resource.parser.ipfs.AbstractIpfsUrlResourceParser
 import com.rarible.core.meta.resource.parser.ipfs.ForeignIpfsUrlResourceParser
 import org.assertj.core.api.Assertions.assertThat
@@ -31,7 +32,7 @@ class UrlResolverTest {
 
     private val ipfsGatewayResolver = IpfsGatewayResolver(
         publicGatewayProvider = ConstantGatewayProvider(IPFS_PUBLIC_GATEWAY),
-        innerGatewaysProvider = RandomGatewayProvider(listOf(IPFS_PUBLIC_GATEWAY)),
+        innerGatewaysProvider = RandomGatewayProvider(listOf(IPFS_PRIVATE_GATEWAY)),
         customGatewaysResolver = LegacyIpfsGatewaySubstitutor(listOf(IPFS_CUSTOM_GATEWAY))
     )
 
@@ -43,7 +44,7 @@ class UrlResolverTest {
         httpUrlParser = HttpUrlResourceParser()
     )
 
-    private val urlResourceProcessor = UrlResourceProcessor(
+    private val urlResourceParsingProcessor = UrlResourceParsingProcessor(
         provider = defaultUrlResourceParserProvider
     )
 
@@ -106,7 +107,7 @@ class UrlResolverTest {
     fun `foreign ipfs urls - replaced by internal gateway`() {
         val result = resolveInnerHttpUrl("https://dweb.link/ipfs/$CID/1.png")
         assertThat(result)
-            .isEqualTo("$IPFS_PUBLIC_GATEWAY/ipfs/$CID/1.png")
+            .isEqualTo("$IPFS_PRIVATE_GATEWAY/ipfs/$CID/1.png")
     }
 
     @Test
@@ -127,7 +128,7 @@ class UrlResolverTest {
     @Test
     fun `replace legacy`() {
         assertThat(resolveInnerHttpUrl("$IPFS_CUSTOM_GATEWAY/ipfs/$CID"))
-            .isEqualTo("$IPFS_PUBLIC_GATEWAY/ipfs/$CID")
+            .isEqualTo("$IPFS_PRIVATE_GATEWAY/ipfs/$CID")
     }
 
     @Test
@@ -179,12 +180,12 @@ class UrlResolverTest {
     }
 
     private fun resolvePublicHttpUrl(url: String): String {
-        val urlResource = urlResourceProcessor.parse(url)
+        val urlResource = urlResourceParsingProcessor.parse(url)
         return urlResolver.resolvePublicLink(urlResource!!)
     }
 
     private fun resolveInnerHttpUrl(url: String): String {
-        val urlResource = urlResourceProcessor.parse(url)
+        val urlResource = urlResourceParsingProcessor.parse(url)
         return urlResolver.resolveInnerLink(urlResource!!)
     }
 }

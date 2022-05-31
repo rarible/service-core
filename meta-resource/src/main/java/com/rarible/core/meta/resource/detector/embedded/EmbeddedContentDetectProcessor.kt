@@ -1,7 +1,7 @@
 package com.rarible.core.meta.resource.detector.embedded
 
 class EmbeddedContentDetectProcessor(
-    private val provider: DefaultEmbeddedContentDecoderProvider
+    private val provider: EmbeddedContentDecoderProvider
 ) {
 
     fun decode(url: String): EmbeddedContent? {

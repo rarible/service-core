@@ -60,5 +60,10 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>com.rarible.core</groupId>
+            <artifactId>rarible-core-client</artifactId>
+        </dependency>
     </dependencies>
 </project>
