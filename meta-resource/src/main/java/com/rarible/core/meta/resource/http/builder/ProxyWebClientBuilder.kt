@@ -1,6 +1,6 @@
-package com.rarible.core.meta.resource.http
+package com.rarible.core.meta.resource.http.builder
 
-import com.rarible.core.meta.resource.http.DefaultWebClientBuilder.Companion.DEFAULT_TIMEOUT
+import com.rarible.core.meta.resource.http.builder.DefaultWebClientBuilder.Companion.DEFAULT_TIMEOUT
 import io.netty.handler.timeout.ReadTimeoutHandler
 import org.springframework.http.client.reactive.ClientHttpConnector
 import org.springframework.http.client.reactive.ReactorClientHttpConnector
@@ -17,9 +17,9 @@ class ProxyWebClientBuilder(
     private val connectTimeout: Int,
     private val proxyUrl: String,
     private val followRedirect: Boolean
-) {
+) : WebClientBuilder {
 
-    fun build(): WebClient =
+    override fun build(): WebClient =
         WebClient.builder()
             .clientConnector(
                 createConnector(

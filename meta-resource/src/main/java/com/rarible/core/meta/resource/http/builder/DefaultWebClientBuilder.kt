@@ -1,4 +1,4 @@
-package com.rarible.core.meta.resource.http
+package com.rarible.core.meta.resource.http.builder
 
 import io.netty.channel.ChannelOption
 import io.netty.channel.epoll.EpollChannelOption
@@ -14,9 +14,9 @@ import java.util.concurrent.TimeUnit
 
 class DefaultWebClientBuilder(
     private val followRedirect: Boolean
-) {
+) : WebClientBuilder {
 
-    fun build(): WebClient {
+    override fun build(): WebClient {
         val defaultClient: WebClient = WebClient.builder()
             .apply {
                 it.codecs { clientCodecConfigurer ->

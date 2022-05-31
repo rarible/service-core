@@ -1,7 +1,13 @@
 package com.rarible.core.meta.resource.http
 
+import com.rarible.core.meta.resource.MetaLogger
+import kotlinx.coroutines.reactive.awaitFirstOrNull
 import org.springframework.http.HttpHeaders
+import org.springframework.http.ResponseEntity
 import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.WebClientResponseException
+import org.springframework.web.reactive.function.client.bodyToMono
+import java.time.Duration
 
 /**
  * Client responsible for making HTTP requests to external APIs.
@@ -9,45 +15,93 @@ import org.springframework.web.reactive.function.client.WebClient
  */
 
 open class ExternalHttpClient(
-    val openseaUrl: String,
-    private val openseaApiKey: String,
-    private val proxyUrl: String,
-    proxyWebClientBuilder: ProxyWebClientBuilder,
-    defaultWebClientBuilder: DefaultWebClientBuilder
+    private val defaultClient: HttpClient,
+    private val openseaClient: HttpClient,
+    private val proxyClient: HttpClient
 ) {
 
-    protected open val defaultClient: WebClient = defaultWebClientBuilder.build()
-
-    protected open val proxyClient: WebClient = proxyWebClientBuilder.build()
-
-    fun isOpensea(url: String) = url.startsWith(openseaUrl)
-
-    fun get(url: String, useProxy: Boolean = false): WebClient.ResponseSpec {
-        val requestHeadersUriSpec = when {
-            isOpensea(url) -> proxyClient.getOpensea()
-            useProxy -> proxyClient.get()
-            else -> defaultClient.get()
+    suspend fun getEntity(url: String, bodyClass: Class<*>, useProxy: Boolean = false, id: String): ResponseEntity<*>? {
+        val (responseSpec, timeout) = getResponseSpec(url, useProxy, id) ?: return null
+        return try {
+            responseSpec
+                ?.toEntity(bodyClass)
+                ?.timeout(timeout)
+                ?.awaitFirstOrNull()
+        } catch (e: Exception) {
+            MetaLogger.logMetaLoading(id, "failed to get properties by URI $url: ${e.message}", warn = true)
+            null
         }
-
-        // May throw "invalid URL" exception.
-        requestHeadersUriSpec.uri(url)
-        return requestHeadersUriSpec.retrieve()
     }
 
-    private fun WebClient.getOpensea(): WebClient.RequestHeadersUriSpec<*> {
-        val proxyGet = this.get()
-        if (openseaApiKey.isNotBlank()) {
-            proxyGet.header(X_API_KEY, openseaApiKey)
+    suspend fun getHeaders(url: String, useProxy: Boolean = false, id: String): HttpHeaders? {
+        val (responseSpec, timeout) = getResponseSpec(url, useProxy, id) ?: return null
+        return try {
+            responseSpec
+                ?.toBodilessEntity()
+                ?.timeout(timeout)
+                ?.awaitFirstOrNull()
+                ?.headers
+        } catch (e: Exception) {
+            MetaLogger.logMetaLoading(id, "failed to get properties by URI $url: ${e.message}", warn = true)
+            null
         }
-        if (proxyUrl.isNotBlank()) {
-            proxyGet.header(HttpHeaders.USER_AGENT, UserAgentGenerator.generateUserAgent())
-        }
-        return proxyGet
     }
 
-    companion object {
-        private const val X_API_KEY = "X-API-KEY"
+    suspend fun getBody(url: String, useProxy: Boolean = false, id: String): String? {
+        val (responseSpec, timeout) = getResponseSpec(url, useProxy, id) ?: return null
+        return try {
+            responseSpec
+                ?.bodyToMono<String>()
+                ?.timeout(timeout)
+                ?.awaitFirstOrNull()
+        } catch (e: Exception) {
+            MetaLogger.logMetaLoading(
+                id,
+                "failed to get properties by URI $url: ${e.message} ${getResponse(e)}",
+                warn = true
+            )
+            null
+        }
     }
+
+    suspend fun getEtag(url: String, useProxy: Boolean = false, id: String): String? =
+        getHeaders(url = url, useProxy = useProxy, id = id)
+            ?.getFirst("etag")
+            ?.replace("\"", "")
+
+    private fun getResponseSpec(
+        url: String,
+        useProxy: Boolean = false,
+        id: String
+    ): Pair<WebClient.ResponseSpec?, Duration>? {
+        if (url.isBlank()) return null
+
+        return try {
+            val client = routeClient(url, useProxy)
+            val requestHeadersUriSpec = client.getRequestHeadersUriSpec()
+
+            // May throw "invalid URL" exception.
+            requestHeadersUriSpec.uri(url)
+            Pair(requestHeadersUriSpec.retrieve(), client.timeout)
+        } catch (e: Exception) {
+            MetaLogger.logMetaLoading(id, "failed to parse URI: $url: ${e.message}", warn = true)
+            null
+        }
+    }
+
+    private fun routeClient(url: String, useProxy: Boolean = false): HttpClient =
+        when {
+            openseaClient.match(url = url, useProxy = useProxy) -> openseaClient
+            proxyClient.match(url = url, useProxy = useProxy) -> proxyClient
+            else -> defaultClient
+        }
+
+    private fun getResponse(e: Exception): String =
+        if (e is WebClientResponseException) {
+            " response: ${e.rawStatusCode}: ${e.statusText}"
+        } else {
+            ""
+        }
 }
 
 
