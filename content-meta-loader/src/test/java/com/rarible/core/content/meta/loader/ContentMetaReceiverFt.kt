@@ -2,6 +2,12 @@ package com.rarible.core.content.meta.loader
 
 import com.rarible.core.meta.resource.detector.ContentMeta
 import com.rarible.core.meta.resource.detector.MimeType
+import com.rarible.core.meta.resource.detector.core.ContentMetaDetectProcessor
+import com.rarible.core.meta.resource.detector.core.DefaultContentMetaDetectorProvider
+import com.rarible.core.meta.resource.detector.core.ExifDetector
+import com.rarible.core.meta.resource.detector.core.HtmlDetector
+import com.rarible.core.meta.resource.detector.core.PngDetector
+import com.rarible.core.meta.resource.detector.core.SvgDetector
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -29,20 +35,34 @@ class ContentMetaReceiverFt {
             keepAlive = true
         )
 
+        private val defaultContentMetaDetectorProvider = DefaultContentMetaDetectorProvider(
+            htmlDetector = HtmlDetector,
+            svgDetector = SvgDetector,
+            pngDetector = PngDetector,
+            exifDetector = ExifDetector
+        )
+
+        private val contentMetaDetectProcessor = ContentMetaDetectProcessor(
+            provider = defaultContentMetaDetectorProvider
+        )
+
         private val contentMetaKtorCioReceiver = ContentMetaReceiver(
             contentReceiver = contentKtorCioReceiver,
             maxBytes = 128 * 1024,
-            contentReceiverMetrics = contentReceiverMetrics
+            contentReceiverMetrics = contentReceiverMetrics,
+            contentMetaDetectProcessor = contentMetaDetectProcessor
         )
         private val contentMetaKtorApacheReceiver = ContentMetaReceiver(
             contentReceiver = contentKtorApacheReceiver,
             maxBytes = 128 * 1024,
-            contentReceiverMetrics = contentReceiverMetrics
+            contentReceiverMetrics = contentReceiverMetrics,
+            contentMetaDetectProcessor = contentMetaDetectProcessor
         )
         private val contentMetaApacheAsyncHttpReceiver = ContentMetaReceiver(
             contentReceiver = contentApacheAsyncHttpContentReceiver,
             maxBytes = 128 * 1024,
-            contentReceiverMetrics = contentReceiverMetrics
+            contentReceiverMetrics = contentReceiverMetrics,
+            contentMetaDetectProcessor = contentMetaDetectProcessor
         )
     }
 
@@ -169,7 +189,7 @@ class ContentMetaReceiverFt {
         )
         assertEquals(
             ContentMeta(
-                type = MimeType.HTML_TEXT.value,
+                type = MimeType.PNG_IMAGE.value,
                 width = 512,
                 height = 512,
                 size = 173580

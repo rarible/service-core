@@ -4,7 +4,7 @@ import com.rarible.core.meta.resource.UrlResource
 import com.rarible.core.meta.resource.parser.ipfs.AbstractIpfsUrlResourceParser
 import com.rarible.core.meta.resource.parser.ipfs.ForeignIpfsUrlResourceParser
 
-class UrlResourceProcessor(
+class UrlResourceParsingProcessor(
     private val provider: UrlResourceParserProvider
 ) {
 
