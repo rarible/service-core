@@ -1,6 +1,6 @@
 package com.rarible.core.meta.resource.http
 
-import com.rarible.core.meta.resource.MetaLogger
+import com.rarible.core.meta.resource.MetaLogger.logMetaLoading
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
@@ -16,8 +16,8 @@ import java.time.Duration
 
 open class ExternalHttpClient(
     private val defaultClient: HttpClient,
-    private val openseaClient: HttpClient,
-    private val proxyClient: HttpClient
+    private val proxyClient: HttpClient,
+    private val customClients: List<HttpClient>
 ) {
 
     suspend fun getEntity(url: String, bodyClass: Class<*>, useProxy: Boolean = false, id: String): ResponseEntity<*>? {
@@ -28,7 +28,7 @@ open class ExternalHttpClient(
                 ?.timeout(timeout)
                 ?.awaitFirstOrNull()
         } catch (e: Exception) {
-            MetaLogger.logMetaLoading(id, "failed to get properties by URI $url: ${e.message}", warn = true)
+            logMetaLoading(id, "failed to get properties by URI $url: ${e.message} ${getResponse(e)}", warn = true)
             null
         }
     }
@@ -42,7 +42,7 @@ open class ExternalHttpClient(
                 ?.awaitFirstOrNull()
                 ?.headers
         } catch (e: Exception) {
-            MetaLogger.logMetaLoading(id, "failed to get properties by URI $url: ${e.message}", warn = true)
+            logMetaLoading(id, "failed to get properties by URI $url: ${e.message} ${getResponse(e)}", warn = true)
             null
         }
     }
@@ -55,11 +55,7 @@ open class ExternalHttpClient(
                 ?.timeout(timeout)
                 ?.awaitFirstOrNull()
         } catch (e: Exception) {
-            MetaLogger.logMetaLoading(
-                id,
-                "failed to get properties by URI $url: ${e.message} ${getResponse(e)}",
-                warn = true
-            )
+            logMetaLoading(id, "failed to get properties by URI $url: ${e.message} ${getResponse(e)}", warn = true)
             null
         }
     }
@@ -84,17 +80,20 @@ open class ExternalHttpClient(
             requestHeadersUriSpec.uri(url)
             Pair(requestHeadersUriSpec.retrieve(), client.timeout)
         } catch (e: Exception) {
-            MetaLogger.logMetaLoading(id, "failed to parse URI: $url: ${e.message}", warn = true)
+            logMetaLoading(id, "failed to parse URI: $url: ${e.message}", warn = true)
             null
         }
     }
 
-    private fun routeClient(url: String, useProxy: Boolean = false): HttpClient =
-        when {
-            openseaClient.match(url = url, useProxy = useProxy) -> openseaClient
+    private fun routeClient(url: String, useProxy: Boolean = false): HttpClient {
+        for (client in customClients) {
+            if (client.match(url, useProxy)) return client
+        }
+        return when {
             proxyClient.match(url = url, useProxy = useProxy) -> proxyClient
             else -> defaultClient
         }
+    }
 
     private fun getResponse(e: Exception): String =
         if (e is WebClientResponseException) {
