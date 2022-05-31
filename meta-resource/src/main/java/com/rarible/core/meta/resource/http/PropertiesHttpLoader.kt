@@ -4,6 +4,7 @@ import com.rarible.core.meta.resource.MetaLogger.logMetaLoading
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import org.springframework.http.HttpHeaders
 import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.WebClientResponseException
 import org.springframework.web.reactive.function.client.bodyToMono
 import java.time.Duration
 
@@ -45,7 +46,7 @@ class PropertiesHttpLoader(
                 ?.timeout(getRequestTimeout(url))
                 ?.awaitFirstOrNull()
         } catch (e: Exception) {
-            logMetaLoading(id, "failed to get properties by URI $url: ${e.message}", warn = true)
+            logMetaLoading(id, "failed to get properties by URI $url: ${e.message} ${getResponse(e)}", warn = true)
             null
         }
 
@@ -59,7 +60,7 @@ class PropertiesHttpLoader(
     private fun getRequestTimeout(url: String) =
         if (externalHttpClient.isOpensea(url)) apiOpenseaTimeout else apiDefaultTimeout
 
-    private suspend fun getResponseSpec(url: String, useProxy: Boolean = false, id: String): WebClient.ResponseSpec? {
+    private fun getResponseSpec(url: String, useProxy: Boolean = false, id: String): WebClient.ResponseSpec? {
         if (url.isBlank()) return null
 
         return try {
@@ -67,6 +68,14 @@ class PropertiesHttpLoader(
         } catch (e: Exception) {
             logMetaLoading(id, "failed to parse URI: $url: ${e.message}", warn = true)
             null
+        }
+    }
+
+    private fun getResponse(e: Exception) {
+        if (e is WebClientResponseException) {
+            " response: ${e.rawStatusCode}: ${e.statusText}"
+        } else {
+            ""
         }
     }
 }
