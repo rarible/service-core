@@ -13,26 +13,26 @@ class LegacyIpfsGatewaySubstitutorTest {
 
     @Test
     fun `originalGateway is legacy`() {
-        val link = legacyIpfsGatewaySubstitutor.getResourceLink(
+        val url = legacyIpfsGatewaySubstitutor.getResourceUrl(
             ipfsUrl = IpfsUrl(
                 original = "$IPFS_CUSTOM_GATEWAY/ipfs/$CID",
                 originalGateway = IPFS_CUSTOM_GATEWAY,
-                path = "/$CID"
+                path = CID
             ),
             gateway = IPFS_PUBLIC_GATEWAY,
             replaceOriginalHost = true
         )
-        assertThat(link).isEqualTo("$IPFS_PUBLIC_GATEWAY/ipfs/$CID")
+        assertThat(url).isEqualTo("$IPFS_PUBLIC_GATEWAY/ipfs/$CID")
     }
 
     @Test
     fun `originalGateway is not legacy`() {
         assertThat(
-            legacyIpfsGatewaySubstitutor.getResourceLink(
+            legacyIpfsGatewaySubstitutor.getResourceUrl(
                 ipfsUrl = IpfsUrl(
                     original = "$ORIGINAL_GATEWAY/ipfs/$CID",
                     originalGateway = ORIGINAL_GATEWAY,
-                    path = "/$CID"
+                    path = CID
                 ),
                 gateway = IPFS_PUBLIC_GATEWAY,
                 replaceOriginalHost = true

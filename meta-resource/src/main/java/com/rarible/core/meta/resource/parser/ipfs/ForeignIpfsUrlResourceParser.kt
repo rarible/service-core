@@ -2,12 +2,13 @@ package com.rarible.core.meta.resource.parser.ipfs
 
 import com.rarible.core.meta.resource.IpfsUrl
 import com.rarible.core.meta.resource.IpfsUrl.Companion.IPFS_PATH_PART
+import com.rarible.core.meta.resource.cid.CidV1Validator
 import com.rarible.core.meta.resource.cid.CidValidator
 import com.rarible.core.meta.resource.parser.UrlResourceParser
 import com.rarible.core.meta.resource.removeLeadingSlashes
 
 class ForeignIpfsUrlResourceParser(
-    private val cidOneValidator: CidValidator
+    private val cidValidator: CidValidator = CidV1Validator
 ) : UrlResourceParser<IpfsUrl> {
 
     // Checking if foreign IPFS url contains /ipfs/ like http://ipfs.io/ipfs/lalala
@@ -18,14 +19,14 @@ class ForeignIpfsUrlResourceParser(
 
         // Works for CID v1.0
         val cid = pathEnd.substringBefore('/')
-        if (!cidOneValidator.isCid(cid)) {
+        if (!cidValidator.isCid(cid)) {
             return null
         }
 
         return IpfsUrl(
             original = url,
             originalGateway = url.substring(0, ipfsPathIndex), // TODO Test it
-            path = "/$pathEnd"
+            path = pathEnd
         )
     }
 

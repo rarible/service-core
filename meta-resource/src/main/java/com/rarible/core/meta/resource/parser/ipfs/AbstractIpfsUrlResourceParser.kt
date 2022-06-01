@@ -30,7 +30,7 @@ class AbstractIpfsUrlResourceParser : UrlResourceParser<IpfsUrl> {
                 return IpfsUrl(
                     original = url,
                     originalGateway = null, // Because URI like ipfs://Qmlalala
-                    path = "/$path"
+                    path = path
                 )
             }
         }

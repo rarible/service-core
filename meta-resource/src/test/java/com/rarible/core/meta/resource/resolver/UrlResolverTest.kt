@@ -1,23 +1,18 @@
 package com.rarible.core.meta.resource.resolver
 
-import com.rarible.core.meta.resource.ArweaveUrl
-import com.rarible.core.meta.resource.ArweaveUrl.Companion.ARWEAVE_GATEWAY
 import com.rarible.core.meta.resource.ConstantGatewayProvider
+import com.rarible.core.meta.resource.HttpUrl
+import com.rarible.core.meta.resource.IpfsUrl
 import com.rarible.core.meta.resource.LegacyIpfsGatewaySubstitutor
 import com.rarible.core.meta.resource.RandomGatewayProvider
+import com.rarible.core.meta.resource.ResourceTestData
 import com.rarible.core.meta.resource.ResourceTestData.CID
 import com.rarible.core.meta.resource.ResourceTestData.IPFS_CUSTOM_GATEWAY
 import com.rarible.core.meta.resource.ResourceTestData.IPFS_PRIVATE_GATEWAY
 import com.rarible.core.meta.resource.ResourceTestData.IPFS_PUBLIC_GATEWAY
+import com.rarible.core.meta.resource.SchemaUrl
 import com.rarible.core.meta.resource.UrlResource
-import com.rarible.core.meta.resource.cid.CidV1Validator
-import com.rarible.core.meta.resource.parser.ArweaveUrlResourceParser
-import com.rarible.core.meta.resource.parser.CidUrlResourceParser
-import com.rarible.core.meta.resource.parser.DefaultUrlResourceParserProvider
-import com.rarible.core.meta.resource.parser.HttpUrlResourceParser
-import com.rarible.core.meta.resource.parser.UrlResourceParsingProcessor
-import com.rarible.core.meta.resource.parser.ipfs.AbstractIpfsUrlResourceParser
-import com.rarible.core.meta.resource.parser.ipfs.ForeignIpfsUrlResourceParser
+import com.rarible.core.meta.resource.parser.UrlParser
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -25,40 +20,23 @@ import org.junit.jupiter.api.Test
 
 class UrlResolverTest {
 
-    private val cidOneValidator = CidV1Validator()
-    private val foreignIpfsUrlResourceParser = ForeignIpfsUrlResourceParser(
-        cidOneValidator = cidOneValidator
-    )
-
     private val ipfsGatewayResolver = IpfsGatewayResolver(
         publicGatewayProvider = ConstantGatewayProvider(IPFS_PUBLIC_GATEWAY),
-        innerGatewaysProvider = RandomGatewayProvider(listOf(IPFS_PRIVATE_GATEWAY)),
+        internalGatewayProvider = RandomGatewayProvider(listOf(IPFS_PRIVATE_GATEWAY)),
         customGatewaysResolver = LegacyIpfsGatewaySubstitutor(listOf(IPFS_CUSTOM_GATEWAY))
     )
 
-    private val defaultUrlResourceParserProvider = DefaultUrlResourceParserProvider(
-        arweaveUrlParser = ArweaveUrlResourceParser(),
-        foreignIpfsUrlResourceParser = foreignIpfsUrlResourceParser,
-        abstractIpfsUrlResourceParser = AbstractIpfsUrlResourceParser(),
-        cidUrlResourceParser = CidUrlResourceParser(cidOneValidator),
-        httpUrlParser = HttpUrlResourceParser()
-    )
+    private val urlParser = UrlParser()
+    private val urlResolver = UrlResolver(ipfsGatewayResolver)
 
-    private val urlResourceParsingProcessor = UrlResourceParsingProcessor(
-        provider = defaultUrlResourceParserProvider
-    )
-
-    private val urlResolver = UrlResolver(
-        ipfsGatewayResolver = ipfsGatewayResolver,
-        ipfsCidGatewayResolver = IpfsCidGatewayResolver(
-            publicGatewayProvider = ConstantGatewayProvider(IPFS_PUBLIC_GATEWAY),
-            innerGatewaysProvider = RandomGatewayProvider(listOf(IPFS_PUBLIC_GATEWAY))
-        ),
-        arweaveGatewayResolver = ArweaveGatewayResolver(
-            arweaveGatewayProvider = ConstantGatewayProvider(ARWEAVE_GATEWAY)
-        ),
-        simpleHttpGatewayResolver = SimpleHttpGatewayResolver()
-    )
+    @Test
+    fun `SimpleHttpGatewayResolver happy path`() {
+        assertThat(
+            urlResolver.resolvePublicUrl(
+                resource = HttpUrl(original = "${ResourceTestData.ORIGINAL_GATEWAY}/ipfs/${CID}")
+            )
+        ).isEqualTo("${ResourceTestData.ORIGINAL_GATEWAY}/ipfs/${CID}")
+    }
 
     @Test
     fun `foreign ipfs urls - replaced by public gateway`() {
@@ -135,7 +113,7 @@ class UrlResolverTest {
     fun `Thrown Unsupported Exception`() {
         val thrown = assertThrows(
             UnsupportedOperationException::class.java,
-            { urlResolver.resolveInnerLink(UnsupportedResource("test")) },
+            { urlResolver.resolveInternalUrl(UnsupportedResource("test")) },
             "UnsupportedOperationException error was expected"
         )
 
@@ -143,29 +121,69 @@ class UrlResolverTest {
     }
 
     @Test
-    fun `Arweave full link`() {
+    fun `arweave full url`() {
         assertThat(
-            urlResolver.resolvePublicLink(
-                ArweaveUrl(
+            urlResolver.resolvePublicUrl(
+                SchemaUrl(
                     original = "ar://lVS0SkeSF8_alma1ayYMZcH9VSMLrmhAmikrDyshUcg",
-                    originalGateway = null,
-                    path = "/lVS0SkeSF8_alma1ayYMZcH9VSMLrmhAmikrDyshUcg"
+                    gateway = "https://arweave.net",
+                    path = "lVS0SkeSF8_alma1ayYMZcH9VSMLrmhAmikrDyshUcg",
+                    schema = "ar"
                 )
             )
         ).isEqualTo("https://arweave.net/lVS0SkeSF8_alma1ayYMZcH9VSMLrmhAmikrDyshUcg")
     }
 
     @Test
-    fun `Arweave shortlink link`() {
+    fun `RawCidGatewayResolver resolve public without additional path`() {
         assertThat(
-            urlResolver.resolvePublicLink(
-                ArweaveUrl(
-                    original = "https://arweave.net/lVS0SkeSF8_alma1ayYMZcH9VSMLrmhAmikrDyshUcg",
-                    originalGateway = "https://arweave.net",
-                    path = "/lVS0SkeSF8_alma1ayYMZcH9VSMLrmhAmikrDyshUcg"
+            urlResolver.resolvePublicUrl(
+                resource = IpfsUrl(
+                    original = CID,
+                    path = CID,
+                    originalGateway = null
                 )
             )
-        ).isEqualTo("https://arweave.net/lVS0SkeSF8_alma1ayYMZcH9VSMLrmhAmikrDyshUcg")
+        ).isEqualTo("$IPFS_PUBLIC_GATEWAY/ipfs/$CID")
+    }
+
+    @Test
+    fun `RawCidGatewayResolver resolve public with additional path`() {
+        assertThat(
+            urlResolver.resolvePublicUrl(
+                resource = IpfsUrl(
+                    original = "$CID/5032.json",
+                    path = "$CID/5032.json",
+                    originalGateway = null
+                )
+            )
+        ).isEqualTo("$IPFS_PUBLIC_GATEWAY/ipfs/$CID/5032.json")
+    }
+
+    @Test
+    fun `RawCidGatewayResolver resolve internal without additional path`() {
+        assertThat(
+            urlResolver.resolveInternalUrl(
+                resource = IpfsUrl(
+                    original = CID,
+                    path = CID,
+                    originalGateway = null
+                )
+            )
+        ).isEqualTo("$IPFS_PRIVATE_GATEWAY/ipfs/$CID")
+    }
+
+    @Test
+    fun `RawCidGatewayResolver resolve internal with additional path`() {
+        assertThat(
+            urlResolver.resolveInternalUrl(
+                resource = IpfsUrl(
+                    original = "$CID/5032.json",
+                    path = "$CID/5032.json",
+                    originalGateway = null
+                )
+            )
+        ).isEqualTo("$IPFS_PRIVATE_GATEWAY/ipfs/$CID/5032.json")
     }
 
     private fun assertFixedIpfsUrl(url: String, expectedPath: String) {
@@ -180,13 +198,13 @@ class UrlResolverTest {
     }
 
     private fun resolvePublicHttpUrl(url: String): String {
-        val urlResource = urlResourceParsingProcessor.parse(url)
-        return urlResolver.resolvePublicLink(urlResource!!)
+        val urlResource = urlParser.parse(url)
+        return urlResolver.resolvePublicUrl(urlResource!!)
     }
 
     private fun resolveInnerHttpUrl(url: String): String {
-        val urlResource = urlResourceParsingProcessor.parse(url)
-        return urlResolver.resolveInnerLink(urlResource!!)
+        val urlResource = urlParser.parse(url)
+        return urlResolver.resolveInternalUrl(urlResource!!)
     }
 }
 

@@ -1,15 +1,16 @@
 package com.rarible.core.meta.resource.parser
 
+import com.rarible.core.meta.resource.IpfsUrl
 import com.rarible.core.meta.resource.ResourceTestData.CID
 import com.rarible.core.meta.resource.ResourceTestData.INVALID_CID
-import com.rarible.core.meta.resource.Cid
 import com.rarible.core.meta.resource.cid.CidV1Validator
+import com.rarible.core.meta.resource.parser.ipfs.CidUrlResourceParser
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
 class CidUrlResourceParserTest {
 
-    private val cidV1Validator = CidV1Validator()
+    private val cidV1Validator = CidV1Validator
     private val cidUrlResourceParser = CidUrlResourceParser(
         cidOneValidator = cidV1Validator
     )
@@ -22,10 +23,10 @@ class CidUrlResourceParserTest {
     @Test
     fun `Just valid CID`() {
         assertThat(cidUrlResourceParser.parse(CID)).isEqualTo(
-            Cid(
+            IpfsUrl(
                 original = CID,
-                cid = CID,
-                subPath = null
+                path = CID,
+                originalGateway = null
             )
         )
     }
@@ -33,10 +34,10 @@ class CidUrlResourceParserTest {
     @Test
     fun `Just valid CID and additional path`() {
         assertThat(cidUrlResourceParser.parse("$CID/5103.json")).isEqualTo(
-            Cid(
+            IpfsUrl(
                 original = "$CID/5103.json",
-                cid = CID,
-                subPath = "/5103.json"
+                path = "$CID/5103.json",
+                originalGateway = null
             )
         )
     }

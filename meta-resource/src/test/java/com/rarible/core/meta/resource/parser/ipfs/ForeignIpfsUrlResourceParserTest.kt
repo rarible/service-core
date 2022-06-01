@@ -2,16 +2,12 @@ package com.rarible.core.meta.resource.parser.ipfs
 
 import com.rarible.core.meta.resource.IpfsUrl
 import com.rarible.core.meta.resource.ResourceTestData.CID
-import com.rarible.core.meta.resource.cid.CidV1Validator
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
 class ForeignIpfsUrlResourceParserTest {
 
-    private val cidOneValidator = CidV1Validator()
-    private val foreignIpfsUrlResourceParser = ForeignIpfsUrlResourceParser(
-        cidOneValidator = cidOneValidator
-    )
+    private val foreignIpfsUrlResourceParser = ForeignIpfsUrlResourceParser()
 
     @Test
     fun `Regular IPFS URL`() {
@@ -20,7 +16,7 @@ class ForeignIpfsUrlResourceParserTest {
                 IpfsUrl(
                     original = "https://ipfs.io/ipfs/$CID",
                     originalGateway = "https://ipfs.io",
-                    path = "/$CID"
+                    path = CID
                 )
             )
     }
@@ -32,7 +28,7 @@ class ForeignIpfsUrlResourceParserTest {
                 IpfsUrl(
                     original = "https://ipfs.io/ipfs/something/ipfs/$CID",
                     originalGateway = "https://ipfs.io/ipfs/something",
-                    path = "/$CID"
+                    path = CID
                 )
             )
     }
