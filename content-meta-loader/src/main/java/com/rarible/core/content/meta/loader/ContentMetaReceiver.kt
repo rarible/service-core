@@ -1,11 +1,11 @@
 package com.rarible.core.content.meta.loader
 
 import com.rarible.core.common.nowMillis
-import com.rarible.core.meta.resource.detector.ContentBytes
-import com.rarible.core.meta.resource.detector.ContentMeta
-import com.rarible.core.meta.resource.detector.MimeType
-import com.rarible.core.meta.resource.detector.core.ContentMetaDetectProcessor
-import com.rarible.core.meta.resource.extension
+import com.rarible.core.meta.resource.detector.ContentDetector
+import com.rarible.core.meta.resource.model.ContentData
+import com.rarible.core.meta.resource.model.ContentMeta
+import com.rarible.core.meta.resource.model.MimeType
+import com.rarible.core.meta.resource.util.extension
 import org.slf4j.LoggerFactory
 import java.net.URL
 import java.time.Duration
@@ -15,7 +15,7 @@ class ContentMetaReceiver(
     private val contentReceiver: ContentReceiver,
     private val maxBytes: Int,
     private val contentReceiverMetrics: ContentReceiverMetrics,
-    private val contentMetaDetectProcessor: ContentMetaDetectProcessor
+    private val contentDetector: ContentDetector
 ) {
 
     @Suppress("BlockingMethodInNonBlockingContext")
@@ -65,29 +65,29 @@ class ContentMetaReceiver(
 
         logger.info(
             "${logPrefix(url)}: received content " +
-                "(bytes ${contentBytes.bytes.size}, " +
-                "content length ${contentBytes.contentLength}, " +
-                "mime type ${contentBytes.contentType}) " +
+                "(bytes ${contentBytes.data.size}, " +
+                "content length ${contentBytes.size}, " +
+                "mime type ${contentBytes.mimeType}) " +
                 "in ${spent(startLoading)}"
         )
 
-        contentReceiverMetrics.receivedBytes(contentBytes.bytes.size)
+        contentReceiverMetrics.receivedBytes(contentBytes.data.size)
 
-        contentMetaDetectProcessor.detect(contentBytes)
+        contentDetector.detect(contentBytes, url.toString())
             ?.let { return it }
 
         return getFallbackContentMeta(url, contentBytes)
     }
 
     private fun countResult(contentMeta: ContentMeta?) {
-        if (contentMeta != null && contentMeta.type.isNotBlank()) {
+        if (contentMeta != null && contentMeta.mimeType.isNotBlank()) {
             contentReceiverMetrics.receiveContentMetaTypeSuccess()
         } else {
             contentReceiverMetrics.receiveContentMetaTypeFail()
         }
         // Should be counted only for video/image, other types doesn't have width/height
         if (contentMeta != null &&
-            (contentMeta.type.startsWith("image/") || contentMeta.type.startsWith("video/"))
+            (contentMeta.mimeType.startsWith("image/") || contentMeta.mimeType.startsWith("video/"))
         ) {
             if (contentMeta.width != null && contentMeta.height != null) {
                 contentReceiverMetrics.receiveContentMetaWidthHeightSuccess()
@@ -132,23 +132,29 @@ class ContentMetaReceiver(
             return ContentMeta(mediaType.value)
         }
 
-        private fun getFallbackContentMeta(url: URL, contentBytes: ContentBytes?): ContentMeta? {
+        private fun getFallbackContentMeta(url: URL, contentBytes: ContentData?): ContentMeta? {
             resolveByHttpContentType(url, contentBytes)
                 ?.let { return it }
 
             resolveByUrlExtension(url, contentBytes)
                 ?.let { return it }
 
-            logger.warn("${logPrefix(url)}: cannot fall back (contentType = ${contentBytes?.contentType}, extension = ${url.extension()})")
+            logger.warn(
+                "${
+                    logPrefix(
+                        url
+                    )
+                }: cannot fall back (contentType = ${contentBytes?.mimeType}, extension = ${url.extension()})"
+            )
             return null
         }
 
-        private fun resolveByHttpContentType(url: URL, contentBytes: ContentBytes?): ContentMeta? {
-            val contentType = contentBytes?.contentType
+        private fun resolveByHttpContentType(url: URL, contentBytes: ContentData?): ContentMeta? {
+            val contentType = contentBytes?.mimeType
             if (contentType != null && knownMediaTypePrefixes.any { contentType.startsWith(it) }) {
                 val fallback = ContentMeta(
-                    type = contentType,
-                    size = contentBytes.contentLength
+                    mimeType = contentType,
+                    size = contentBytes.size
                 )
                 logger.info("${logPrefix(url)}: falling back by mimeType from the HTTP headers to $fallback")
                 return fallback
@@ -156,12 +162,12 @@ class ContentMetaReceiver(
             return null
         }
 
-        private fun resolveByUrlExtension(url: URL, contentBytes: ContentBytes?): ContentMeta? {
+        private fun resolveByUrlExtension(url: URL, contentBytes: ContentData?): ContentMeta? {
             val mimeType = extensionMapping[url.extension()]
             if (mimeType != null) {
                 val fallback = ContentMeta(
-                    type = mimeType.value,
-                    size = contentBytes?.contentLength
+                    mimeType = mimeType.value,
+                    size = contentBytes?.size
                 )
                 logger.info("${logPrefix(url)}: falling back by extension to $fallback")
                 return fallback

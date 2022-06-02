@@ -5,7 +5,7 @@ import com.rarible.core.meta.resource.IpfsUrl.Companion.IPFS_PATH_PART
 import com.rarible.core.meta.resource.cid.CidV1Validator
 import com.rarible.core.meta.resource.cid.CidValidator
 import com.rarible.core.meta.resource.parser.UrlResourceParser
-import com.rarible.core.meta.resource.removeLeadingSlashes
+import com.rarible.core.meta.resource.util.removeLeadingSlashes
 
 class ForeignIpfsUrlResourceParser(
     private val cidValidator: CidValidator = CidV1Validator

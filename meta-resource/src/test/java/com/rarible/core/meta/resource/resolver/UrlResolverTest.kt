@@ -1,18 +1,15 @@
 package com.rarible.core.meta.resource.resolver
 
-import com.rarible.core.meta.resource.ConstantGatewayProvider
 import com.rarible.core.meta.resource.HttpUrl
 import com.rarible.core.meta.resource.IpfsUrl
-import com.rarible.core.meta.resource.LegacyIpfsGatewaySubstitutor
-import com.rarible.core.meta.resource.RandomGatewayProvider
-import com.rarible.core.meta.resource.ResourceTestData
-import com.rarible.core.meta.resource.ResourceTestData.CID
-import com.rarible.core.meta.resource.ResourceTestData.IPFS_CUSTOM_GATEWAY
-import com.rarible.core.meta.resource.ResourceTestData.IPFS_PRIVATE_GATEWAY
-import com.rarible.core.meta.resource.ResourceTestData.IPFS_PUBLIC_GATEWAY
 import com.rarible.core.meta.resource.SchemaUrl
 import com.rarible.core.meta.resource.UrlResource
 import com.rarible.core.meta.resource.parser.UrlParser
+import com.rarible.core.meta.resource.test.ResourceTestData
+import com.rarible.core.meta.resource.test.ResourceTestData.CID
+import com.rarible.core.meta.resource.test.ResourceTestData.IPFS_CUSTOM_GATEWAY
+import com.rarible.core.meta.resource.test.ResourceTestData.IPFS_PRIVATE_GATEWAY
+import com.rarible.core.meta.resource.test.ResourceTestData.IPFS_PUBLIC_GATEWAY
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows

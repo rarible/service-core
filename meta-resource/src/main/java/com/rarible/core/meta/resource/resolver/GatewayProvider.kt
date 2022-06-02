@@ -1,6 +1,6 @@
-package com.rarible.core.meta.resource
+package com.rarible.core.meta.resource.resolver
 
-import java.util.Random
+import java.util.*
 
 interface GatewayProvider {
     fun getGateway(): String

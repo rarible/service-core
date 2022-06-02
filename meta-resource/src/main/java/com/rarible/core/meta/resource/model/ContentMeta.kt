@@ -1,7 +1,7 @@
-package com.rarible.core.meta.resource.detector
+package com.rarible.core.meta.resource.model
 
 data class ContentMeta(
-    val type: String,
+    val mimeType: String,
     val width: Int? = null,
     val height: Int? = null,
     val size: Long? = null
