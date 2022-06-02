@@ -37,6 +37,16 @@ class EmbeddedContentDetectorTest {
     }
 
     @Test
+    fun `embedded html with base64 image`() {
+        val data = "<html><svg>data:text/html;base64,a</svg></html>"
+        val content = detector.detect(data)!!
+
+        assertThat(content.meta.size).isEqualTo(47)
+        assertThat(String(content.content)).isEqualTo(data)
+        assertThat(content.meta.mimeType).isEqualTo(MimeType.HTML_TEXT.value)
+    }
+
+    @Test
     fun `embedded svg`() {
         val svg = "<svg></svg>"
         val content = detector.detect(svg)!!

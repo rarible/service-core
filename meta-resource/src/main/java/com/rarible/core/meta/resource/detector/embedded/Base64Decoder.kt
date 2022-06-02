@@ -16,6 +16,9 @@ object Base64Decoder : ContentDecoder {
         val markerIndex = data.indexOf(BASE_64_MARKER)
         if (markerIndex < 0) return null
 
+        // Case for embedded images inside HTML
+        if (data.indexOf("<") >= 0) return null
+
         val dataStartIndex = markerIndex + BASE_64_MARKER.length
         val encodedData = data.substring(dataStartIndex).trim()
         val bytes = Base64.decodeBase64(encodedData)
