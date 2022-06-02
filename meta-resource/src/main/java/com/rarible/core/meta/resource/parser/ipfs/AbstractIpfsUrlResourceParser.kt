@@ -3,7 +3,7 @@ package com.rarible.core.meta.resource.parser.ipfs
 import com.rarible.core.meta.resource.IpfsUrl
 import com.rarible.core.meta.resource.IpfsUrl.Companion.IPFS_PREFIX
 import com.rarible.core.meta.resource.parser.UrlResourceParser
-import com.rarible.core.meta.resource.removeLeadingSlashes
+import com.rarible.core.meta.resource.util.removeLeadingSlashes
 
 class AbstractIpfsUrlResourceParser : UrlResourceParser<IpfsUrl> {
 

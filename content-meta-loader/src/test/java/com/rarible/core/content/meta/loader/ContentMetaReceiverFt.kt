@@ -1,13 +1,8 @@
 package com.rarible.core.content.meta.loader
 
-import com.rarible.core.meta.resource.detector.ContentMeta
-import com.rarible.core.meta.resource.detector.MimeType
-import com.rarible.core.meta.resource.detector.core.ContentMetaDetectProcessor
-import com.rarible.core.meta.resource.detector.core.DefaultContentMetaDetectorProvider
-import com.rarible.core.meta.resource.detector.core.ExifDetector
-import com.rarible.core.meta.resource.detector.core.HtmlDetector
-import com.rarible.core.meta.resource.detector.core.PngDetector
-import com.rarible.core.meta.resource.detector.core.SvgDetector
+import com.rarible.core.meta.resource.detector.ContentDetector
+import com.rarible.core.meta.resource.model.ContentMeta
+import com.rarible.core.meta.resource.model.MimeType
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -35,34 +30,25 @@ class ContentMetaReceiverFt {
             keepAlive = true
         )
 
-        private val defaultContentMetaDetectorProvider = DefaultContentMetaDetectorProvider(
-            htmlDetector = HtmlDetector,
-            svgDetector = SvgDetector,
-            pngDetector = PngDetector,
-            exifDetector = ExifDetector
-        )
-
-        private val contentMetaDetectProcessor = ContentMetaDetectProcessor(
-            provider = defaultContentMetaDetectorProvider
-        )
+        private val contentDetector = ContentDetector()
 
         private val contentMetaKtorCioReceiver = ContentMetaReceiver(
             contentReceiver = contentKtorCioReceiver,
             maxBytes = 128 * 1024,
             contentReceiverMetrics = contentReceiverMetrics,
-            contentMetaDetectProcessor = contentMetaDetectProcessor
+            contentDetector = contentDetector
         )
         private val contentMetaKtorApacheReceiver = ContentMetaReceiver(
             contentReceiver = contentKtorApacheReceiver,
             maxBytes = 128 * 1024,
             contentReceiverMetrics = contentReceiverMetrics,
-            contentMetaDetectProcessor = contentMetaDetectProcessor
+            contentDetector = contentDetector
         )
         private val contentMetaApacheAsyncHttpReceiver = ContentMetaReceiver(
             contentReceiver = contentApacheAsyncHttpContentReceiver,
             maxBytes = 128 * 1024,
             contentReceiverMetrics = contentReceiverMetrics,
-            contentMetaDetectProcessor = contentMetaDetectProcessor
+            contentDetector = contentDetector
         )
     }
 
@@ -77,19 +63,19 @@ class ContentMetaReceiverFt {
     fun svg(receiverEnum: ContentMetaReceiversEnum) {
         val totalBytesReceived = contentReceiverMetrics.totalBytesReceived
         val meta = getContentMeta(
-            "https://storage.opensea.io/files/73df4a40af3cd70ca6800dadc493fc2c.svg",
+            "https://dev.w3.org/SVG/tools/svgweb/samples/svg-files/aa.svg",
             receiverEnum.receiver
         )
         assertEquals(
             ContentMeta(
-                type = MimeType.SVG_XML_IMAGE.value,
+                mimeType = MimeType.SVG_XML_IMAGE.value,
                 width = 192,
                 height = 192,
-                size = 350
+                size = 993
             ),
             meta
         )
-        assertEquals(totalBytesReceived + 350, contentReceiverMetrics.totalBytesReceived)
+        assertEquals(totalBytesReceived + 993, contentReceiverMetrics.totalBytesReceived)
     }
 
     @ParameterizedTest
@@ -102,7 +88,7 @@ class ContentMetaReceiverFt {
             )
         assertEquals(
             ContentMeta(
-                type = MimeType.GIF_IMAGE.value,
+                mimeType = MimeType.GIF_IMAGE.value,
                 width = 165,
                 height = 250,
                 size = 1570431
@@ -115,15 +101,15 @@ class ContentMetaReceiverFt {
     @EnumSource(ContentMetaReceiversEnum::class)
     fun mp4(receiverEnum: ContentMetaReceiversEnum) {
         val meta = getContentMeta(
-            "https://storage.opensea.io/files/3f89eab5930c7b61acb22a45412f1662.mp4",
+            "https://www.learningcontainer.com/download/sample-mp4-video-file-download-for-testing/?wpdmdl=2727&refresh=62810df6e03441652624886",
             receiverEnum.receiver
         )
         assertEquals(
             ContentMeta(
-                type = MimeType.MP4_VIDEO.value,
-                width = null,
-                height = null,
-                size = 4996096
+                mimeType = MimeType.MP4_VIDEO.value,
+                width = 320,
+                height = 240,
+                size = null
             ),
             meta
         )
@@ -139,7 +125,7 @@ class ContentMetaReceiverFt {
             )
         assertEquals(
             ContentMeta(
-                type = MimeType.MP4_VIDEO.value,
+                mimeType = MimeType.MP4_VIDEO.value,
                 width = 1280,
                 height = 700,
                 size = 43091297
@@ -157,7 +143,7 @@ class ContentMetaReceiverFt {
         )
         assertEquals(
             ContentMeta(
-                type = MimeType.JPEG_IMAGE.value,
+                mimeType = MimeType.JPEG_IMAGE.value,
                 width = 167,
                 height = 250,
                 size = 44789
@@ -172,12 +158,14 @@ class ContentMetaReceiverFt {
         val meta = getContentMeta(
             "https://ipfs.io/ipfs/QmSNhGhcBynr1s9QgPnon8HaiPzE5dKgmqSDNsNXCfDHGs/image.gif", receiverEnum.receiver
         )
-        assertEquals(ContentMeta(
-            type = MimeType.GIF_IMAGE.value,
-            width = 600,
-            height = 404,
-            size = 2559234
-        ), meta)
+        assertEquals(
+            ContentMeta(
+                mimeType = MimeType.GIF_IMAGE.value,
+                width = 600,
+                height = 404,
+                size = 2559234
+            ), meta
+        )
     }
 
     @ParameterizedTest
@@ -189,7 +177,7 @@ class ContentMetaReceiverFt {
         )
         assertEquals(
             ContentMeta(
-                type = MimeType.PNG_IMAGE.value,
+                mimeType = MimeType.PNG_IMAGE.value,
                 width = 512,
                 height = 512,
                 size = 173580
@@ -207,7 +195,7 @@ class ContentMetaReceiverFt {
         )
         assertEquals(
             ContentMeta(
-                type = MimeType.PNG_IMAGE.value,
+                mimeType = MimeType.PNG_IMAGE.value,
                 width = 4000,
                 height = 4000,
                 size = null
@@ -226,7 +214,7 @@ class ContentMetaReceiverFt {
         )
         assertEquals(
             ContentMeta(
-                type = "${MimeType.HTML_TEXT.value}; charset=utf-8",
+                mimeType = "${MimeType.HTML_TEXT.value}; charset=utf-8",
                 size = 1675
             ),
             meta

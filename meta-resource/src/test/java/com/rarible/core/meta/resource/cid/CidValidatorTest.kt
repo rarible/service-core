@@ -1,7 +1,7 @@
 package com.rarible.core.meta.resource.cid
 
-import com.rarible.core.meta.resource.ResourceTestData.CID
-import com.rarible.core.meta.resource.ResourceTestData.INVALID_CID
+import com.rarible.core.meta.resource.test.ResourceTestData.CID
+import com.rarible.core.meta.resource.test.ResourceTestData.INVALID_CID
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 

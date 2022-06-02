@@ -1,6 +1,9 @@
-package com.rarible.core.meta.resource
+package com.rarible.core.meta.resource.resolver
+
+import com.rarible.core.meta.resource.IpfsUrl
 
 interface CustomIpfsGatewayResolver {
+
     fun getResourceUrl(ipfsUrl: IpfsUrl, gateway: String, replaceOriginalHost: Boolean): String?
 }
 

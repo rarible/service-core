@@ -1,10 +1,8 @@
 package com.rarible.core.meta.resource.resolver
 
-import com.rarible.core.meta.resource.CustomIpfsGatewayResolver
-import com.rarible.core.meta.resource.GatewayProvider
 import com.rarible.core.meta.resource.IpfsUrl
 import com.rarible.core.meta.resource.IpfsUrl.Companion.IPFS
-import com.rarible.core.meta.resource.isHttpUrl
+import com.rarible.core.meta.resource.util.isHttpUrl
 
 class IpfsGatewayResolver(
     private val publicGatewayProvider: GatewayProvider,

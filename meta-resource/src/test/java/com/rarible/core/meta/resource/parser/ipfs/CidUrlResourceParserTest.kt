@@ -1,10 +1,9 @@
-package com.rarible.core.meta.resource.parser
+package com.rarible.core.meta.resource.parser.ipfs
 
 import com.rarible.core.meta.resource.IpfsUrl
-import com.rarible.core.meta.resource.ResourceTestData.CID
-import com.rarible.core.meta.resource.ResourceTestData.INVALID_CID
 import com.rarible.core.meta.resource.cid.CidV1Validator
-import com.rarible.core.meta.resource.parser.ipfs.CidUrlResourceParser
+import com.rarible.core.meta.resource.test.ResourceTestData.CID
+import com.rarible.core.meta.resource.test.ResourceTestData.INVALID_CID
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
