@@ -1,4 +1,4 @@
-package com.rarible.core.meta.resource.detector
+package com.rarible.core.meta.resource.model
 
 enum class MimeType(
     val value: String

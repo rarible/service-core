@@ -1,4 +1,4 @@
-package com.rarible.core.meta.resource
+package com.rarible.core.meta.resource.test
 
 object ResourceTestData {
     const val IPFS_PUBLIC_GATEWAY = "https://ipfs.io"

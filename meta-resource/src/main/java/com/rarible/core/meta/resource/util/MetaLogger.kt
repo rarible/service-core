@@ -1,4 +1,4 @@
-package com.rarible.core.meta.resource
+package com.rarible.core.meta.resource.util
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

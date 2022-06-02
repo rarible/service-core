@@ -1,7 +1,7 @@
 package com.rarible.core.meta.resource.parser
 
 import com.rarible.core.meta.resource.HttpUrl
-import com.rarible.core.meta.resource.isHttpUrl
+import com.rarible.core.meta.resource.util.isHttpUrl
 
 class HttpUrlResourceParser : UrlResourceParser<HttpUrl> {
 

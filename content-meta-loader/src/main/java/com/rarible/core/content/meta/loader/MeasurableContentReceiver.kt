@@ -1,6 +1,6 @@
 package com.rarible.core.content.meta.loader
 
-import com.rarible.core.meta.resource.detector.ContentBytes
+import com.rarible.core.meta.resource.model.ContentData
 import io.micrometer.core.instrument.MeterRegistry
 import java.io.Closeable
 import java.net.URL
@@ -12,7 +12,7 @@ class MeasurableContentReceiver(
     private val receiveCallCounter = meterRegistry.counter("${PREFIX}_receiver_success")
     private val receiveErrorCounter = meterRegistry.counter("${PREFIX}_receiver_error")
 
-    override suspend fun receiveBytes(url: URL, maxBytes: Int): ContentBytes {
+    override suspend fun receiveBytes(url: URL, maxBytes: Int): ContentData {
         return try {
             delegate.receiveBytes(url, maxBytes).also {
                 receiveCallCounter.increment()

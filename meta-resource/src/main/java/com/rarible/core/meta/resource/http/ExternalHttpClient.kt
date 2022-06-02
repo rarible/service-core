@@ -1,6 +1,6 @@
 package com.rarible.core.meta.resource.http
 
-import com.rarible.core.meta.resource.MetaLogger.logMetaLoading
+import com.rarible.core.meta.resource.util.MetaLogger.logMetaLoading
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity

@@ -1,12 +1,12 @@
-package com.rarible.core.meta.resource.detector.core
+package com.rarible.core.meta.resource.detector
 
 import com.drew.imaging.png.PngChunk
 import com.drew.imaging.png.PngChunkType
 import com.drew.imaging.png.PngHeader
 import com.drew.lang.SequentialByteArrayReader
-import com.rarible.core.meta.resource.detector.ContentBytes
-import com.rarible.core.meta.resource.detector.ContentMeta
-import com.rarible.core.meta.resource.detector.MimeType
+import com.rarible.core.meta.resource.model.ContentData
+import com.rarible.core.meta.resource.model.ContentMeta
+import com.rarible.core.meta.resource.model.MimeType
 import org.slf4j.LoggerFactory
 
 /**
@@ -15,13 +15,12 @@ import org.slf4j.LoggerFactory
  * We need to extract width/height of PNG images by first bytes, but the `metadata-extractor` library
  * requires the PNG file to be fully read (including `PngChunkType.IEND` tag, see [com.drew.imaging.png.PngChunkReader]).
  */
-object PngDetector : ContentMetaDetector {
+object PngDetector : MediaDetector {
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    override fun detect(contentBytes: ContentBytes): ContentMeta? {
-        val url = contentBytes.url
-        val reader = SequentialByteArrayReader(contentBytes.bytes)
+    override fun detect(contentBytes: ContentData, entityId: String): ContentMeta? {
+        val reader = SequentialByteArrayReader(contentBytes.data)
         reader.isMotorolaByteOrder = true
         val prefix = runCatching { reader.getBytes(PNG_SIGNATURE_BYTES.size) }.getOrNull() ?: return null
         if (!prefix.contentEquals(PNG_SIGNATURE_BYTES)) {
@@ -58,12 +57,12 @@ object PngDetector : ContentMetaDetector {
             runCatching { reader.skip(4) }.getOrNull() ?: return null // skipping checksum
         }
         val result = ContentMeta(
-            type = imageType.value,
+            mimeType = imageType.value,
             width = imageWidth,
             height = imageHeight,
-            size = contentBytes.contentLength
+            size = contentBytes.size
         )
-        logger.info("${logPrefix(url)}: parsed PNG content meta $result")
+        logger.info("${logPrefix(entityId)}: parsed PNG content meta $result")
         return result
     }
 

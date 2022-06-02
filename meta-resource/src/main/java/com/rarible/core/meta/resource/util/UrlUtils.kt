@@ -1,4 +1,4 @@
-package com.rarible.core.meta.resource
+package com.rarible.core.meta.resource.util
 
 import java.net.URL
 

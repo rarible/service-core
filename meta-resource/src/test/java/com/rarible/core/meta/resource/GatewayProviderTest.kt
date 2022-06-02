@@ -1,6 +1,7 @@
 package com.rarible.core.meta.resource
 
-import com.rarible.core.meta.resource.ResourceTestData.IPFS_PUBLIC_GATEWAY
+import com.rarible.core.meta.resource.resolver.RandomGatewayProvider
+import com.rarible.core.meta.resource.test.ResourceTestData.IPFS_PUBLIC_GATEWAY
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
