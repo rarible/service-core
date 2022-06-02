@@ -5,10 +5,10 @@ import com.rarible.core.meta.resource.ResourceTestData.INVALID_CID
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
-class CidOneValidatorTest {
+class CidValidatorTest {
 
-    private val cidOneValidator = CidV1Validator()
-    private val legacyCidValidator = CidLegacyValidator()
+    private val cidOneValidator = CidV1Validator
+    private val legacyCidValidator = CidLegacyValidator
 
     @Test
     fun `is cid with cid one validator`() {
