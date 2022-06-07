@@ -1,9 +1,9 @@
 package com.rarible.core.meta.resource.resolver
 
-import com.rarible.core.meta.resource.HttpUrl
-import com.rarible.core.meta.resource.IpfsUrl
-import com.rarible.core.meta.resource.SchemaUrl
-import com.rarible.core.meta.resource.UrlResource
+import com.rarible.core.meta.resource.model.HttpUrl
+import com.rarible.core.meta.resource.model.IpfsUrl
+import com.rarible.core.meta.resource.model.SchemaUrl
+import com.rarible.core.meta.resource.model.UrlResource
 import com.rarible.core.meta.resource.parser.UrlParser
 import com.rarible.core.meta.resource.test.ResourceTestData
 import com.rarible.core.meta.resource.test.ResourceTestData.CID

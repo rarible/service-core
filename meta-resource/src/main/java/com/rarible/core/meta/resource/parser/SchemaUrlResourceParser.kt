@@ -1,7 +1,7 @@
 package com.rarible.core.meta.resource.parser
 
-import com.rarible.core.meta.resource.SchemaUrl
 import com.rarible.core.meta.resource.model.SchemaMapping
+import com.rarible.core.meta.resource.model.SchemaUrl
 
 class SchemaUrlResourceParser(
     schemaMappings: List<SchemaMapping> = DEFAULT_SCHEMA_MAPPING

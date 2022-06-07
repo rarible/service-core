@@ -1,4 +1,4 @@
-package com.rarible.core.meta.resource
+package com.rarible.core.meta.resource.model
 
 abstract class UrlResource {
 
@@ -14,13 +14,23 @@ data class SchemaUrl(
     val gateway: String,
     val schema: String,
     val path: String
-) : UrlResource()
+) : UrlResource() {
+
+    fun toSchemaUrl(): String {
+        return "$schema://$path"
+    }
+
+}
 
 data class IpfsUrl(
     override val original: String,
     val originalGateway: String?,
     val path: String
 ) : UrlResource() {
+
+    fun toSchemaUrl(): String {
+        return "ipfs://$path"
+    }
 
     companion object {
 

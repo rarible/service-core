@@ -1,6 +1,6 @@
 package com.rarible.core.meta.resource.parser
 
-import com.rarible.core.meta.resource.HttpUrl
+import com.rarible.core.meta.resource.model.HttpUrl
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 

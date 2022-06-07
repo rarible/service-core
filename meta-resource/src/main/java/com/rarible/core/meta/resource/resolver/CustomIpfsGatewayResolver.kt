@@ -1,6 +1,6 @@
 package com.rarible.core.meta.resource.resolver
 
-import com.rarible.core.meta.resource.IpfsUrl
+import com.rarible.core.meta.resource.model.IpfsUrl
 
 interface CustomIpfsGatewayResolver {
 

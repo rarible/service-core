@@ -1,6 +1,6 @@
 package com.rarible.core.meta.resource.resolver
 
-import com.rarible.core.meta.resource.IpfsUrl
+import com.rarible.core.meta.resource.model.IpfsUrl
 import com.rarible.core.meta.resource.test.ResourceTestData.CID
 import com.rarible.core.meta.resource.test.ResourceTestData.IPFS_CUSTOM_GATEWAY
 import com.rarible.core.meta.resource.test.ResourceTestData.IPFS_PRIVATE_GATEWAY

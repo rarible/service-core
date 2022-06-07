@@ -1,7 +1,7 @@
 package com.rarible.core.meta.resource.parser.ipfs
 
-import com.rarible.core.meta.resource.IpfsUrl
 import com.rarible.core.meta.resource.cid.CidV1Validator
+import com.rarible.core.meta.resource.model.IpfsUrl
 import com.rarible.core.meta.resource.test.ResourceTestData.CID
 import com.rarible.core.meta.resource.test.ResourceTestData.INVALID_CID
 import org.assertj.core.api.Assertions.assertThat

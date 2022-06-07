@@ -1,7 +1,7 @@
 package com.rarible.core.meta.resource.resolver
 
-import com.rarible.core.meta.resource.IpfsUrl
-import com.rarible.core.meta.resource.IpfsUrl.Companion.IPFS
+import com.rarible.core.meta.resource.model.IpfsUrl
+import com.rarible.core.meta.resource.model.IpfsUrl.Companion.IPFS
 import com.rarible.core.meta.resource.util.isHttpUrl
 
 class IpfsGatewayResolver(

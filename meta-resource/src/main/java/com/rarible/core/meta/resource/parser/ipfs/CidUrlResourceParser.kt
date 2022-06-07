@@ -1,7 +1,7 @@
 package com.rarible.core.meta.resource.parser.ipfs
 
-import com.rarible.core.meta.resource.IpfsUrl
 import com.rarible.core.meta.resource.cid.CidValidator
+import com.rarible.core.meta.resource.model.IpfsUrl
 import com.rarible.core.meta.resource.parser.UrlResourceParser
 
 class CidUrlResourceParser(

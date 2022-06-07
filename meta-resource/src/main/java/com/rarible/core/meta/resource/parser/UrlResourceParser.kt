@@ -1,6 +1,6 @@
 package com.rarible.core.meta.resource.parser
 
-import com.rarible.core.meta.resource.UrlResource
+import com.rarible.core.meta.resource.model.UrlResource
 
 interface UrlResourceParser<out T : UrlResource> {
 
