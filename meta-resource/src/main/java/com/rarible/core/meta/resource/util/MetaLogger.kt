@@ -7,7 +7,9 @@ object MetaLogger {
 
     private val itemMetaLogger: Logger = LoggerFactory.getLogger("item-meta-loading")
 
-    fun logMetaLoading(id: String, message: String, warn: Boolean = false) = itemMetaLogger.logMetaLoading(id, message, warn)
+    fun <T> logMetaLoading(id: T, message: String, warn: Boolean = false) {
+        itemMetaLogger.logMetaLoading(id.toString(), message, warn)
+    }
 
     fun Logger.logMetaLoading(id: String, message: String, warn: Boolean = false) {
         val logMessage = "Meta of $id: $message"
