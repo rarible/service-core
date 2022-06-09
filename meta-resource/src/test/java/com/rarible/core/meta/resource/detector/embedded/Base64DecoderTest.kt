@@ -28,6 +28,12 @@ class Base64DecoderTest {
         assertThat(content?.data?.decodeToString()).isEqualTo("abc")
     }
 
+    @Test
+    fun `base64 inside of html`() {
+        val content = detector.decode("<html><img source=\"data:image/png;base64,YWJj\"></html>")
+        assertThat(content).isNull()
+    }
+
     companion object {
 
         private const val BASE_64 = "https://some.data.com/data:image/png;base64,YWJj"

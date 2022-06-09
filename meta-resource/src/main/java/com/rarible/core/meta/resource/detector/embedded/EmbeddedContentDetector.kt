@@ -8,7 +8,7 @@ import kotlin.math.min
 
 class EmbeddedContentDetector(
     private val contentDetector: ContentDetector = ContentDetector(),
-    private val contentDecoders: List<ContentDecoder> = listOf(Base64Decoder)
+    private val contentDecoders: List<ContentDecoder> = listOf(Base64Decoder, SvgDecoder)
 ) {
 
     fun detect(data: String): EmbeddedContent? {
