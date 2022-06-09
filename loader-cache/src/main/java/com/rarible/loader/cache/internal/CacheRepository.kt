@@ -3,6 +3,7 @@ package com.rarible.loader.cache.internal
 import com.rarible.loader.cache.CacheType
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingleOrNull
+import org.springframework.data.domain.Sort
 import org.springframework.data.mongodb.core.ReactiveMongoOperations
 import org.springframework.data.mongodb.core.find
 import org.springframework.data.mongodb.core.findById
@@ -38,6 +39,24 @@ class CacheRepository(
 
     suspend fun <T> getAll(type: CacheType, keys: List<String>): List<MongoCacheEntry<T>> {
         val query = Query(Criteria("_id").inValues(keys))
+        return mongo.find<MongoCacheEntry<T>>(query, getCacheCollection(type))
+            .collectList()
+            .awaitSingle()
+    }
+
+    suspend fun <T> findAll(
+        type: CacheType,
+        fromId: String?,
+        limit: Int
+    ): List<MongoCacheEntry<T>> {
+        val criteria = fromId?.let {
+            Criteria.where("_id").gt(it)
+        } ?: Criteria()
+
+        val query = Query(criteria)
+            .with(Sort.by("_id"))
+            .limit(limit)
+
         return mongo.find<MongoCacheEntry<T>>(query, getCacheCollection(type))
             .collectList()
             .awaitSingle()

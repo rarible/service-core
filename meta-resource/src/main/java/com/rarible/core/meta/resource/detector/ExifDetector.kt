@@ -34,7 +34,8 @@ object ExifDetector : MediaDetector {
         val metadata = try {
             ImageMetadataReader.readMetadata(bytes.inputStream())
         } catch (e: Exception) {
-            logger.warn("${logPrefix(entityId)}: failed to extract metadata by ${bytes.size} bytes", e)
+            // Too many logs
+            // logger.warn("${logPrefix(entityId)}: failed to extract metadata by ${bytes.size} bytes", e)
             return null
         }
         var mimeType: String? = null
