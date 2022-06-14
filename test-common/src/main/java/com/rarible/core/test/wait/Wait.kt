@@ -1,7 +1,6 @@
 package com.rarible.core.test.wait
 
 import kotlinx.coroutines.time.delay
-import java.lang.AssertionError
 import java.time.Duration
 
 object Wait {
@@ -27,6 +26,18 @@ object Wait {
         timeout: Duration = Duration.ofSeconds(5),
         runnable: suspend () -> Unit
     ) {
+        return waitAssertWithCheckInterval(
+            checkInterval = Duration.ofMillis(500),
+            timeout = timeout,
+            runnable = runnable
+        )
+    }
+
+    suspend fun waitAssertWithCheckInterval(
+        checkInterval: Duration = Duration.ofMillis(500),
+        timeout: Duration = Duration.ofSeconds(5),
+        runnable: suspend () -> Unit
+    ) {
         val maxTime = System.currentTimeMillis() + timeout.toMillis()
         while (true) {
             try {
@@ -39,7 +50,7 @@ object Wait {
                             throw e
                         }
                         try {
-                            delay(Duration.ofMillis(500))
+                            delay(checkInterval)
                         } catch (ignore: InterruptedException) {
                         }
                     }

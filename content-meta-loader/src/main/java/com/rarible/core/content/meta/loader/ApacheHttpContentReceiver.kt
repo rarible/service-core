@@ -1,5 +1,6 @@
 package com.rarible.core.content.meta.loader
 
+import com.rarible.core.meta.resource.model.ContentData
 import kotlinx.coroutines.future.await
 import org.apache.http.HttpResponse
 import org.apache.http.HttpVersion
@@ -50,7 +51,7 @@ class ApacheHttpContentReceiver(
         client
     }
 
-    override suspend fun receiveBytes(url: URL, maxBytes: Int): ContentBytes {
+    override suspend fun receiveBytes(url: URL, maxBytes: Int): ContentData {
         val request = HttpGet(url.toURI())
         val config: RequestConfig = RequestConfig.custom()
             .setSocketTimeout(timeout)
@@ -60,14 +61,14 @@ class ApacheHttpContentReceiver(
 
         request.config = config;
 
-        val promise = CompletableFuture<ContentBytes>().exceptionally { throwable ->
+        val promise = CompletableFuture<ContentData>().exceptionally { throwable ->
             if ((throwable is CancellationException || throwable.cause is CancellationException)) {
                 request.abortedSafely()
             }
             null
         }
         val callback = HttpResponseFutureCallback(promise, request)
-        val consumerCallback = HttpAsyncResponseConsumerCallback(url, promise, request, maxBytes)
+        val consumerCallback = HttpAsyncResponseConsumerCallback(promise, request, maxBytes)
         client.execute(HttpAsyncMethods.create(request), consumerCallback, callback)
         return promise.await()
     }
@@ -77,13 +78,12 @@ class ApacheHttpContentReceiver(
     }
 
     private class HttpAsyncResponseConsumerCallback(
-        private val url: URL,
-        private val promise: CompletableFuture<ContentBytes>,
+        private val promise: CompletableFuture<ContentData>,
         private val request: HttpUriRequest,
         maxBytes: Int
     ) : AsyncByteConsumer<HttpResponse>(maxBytes) {
 
-        private val contentBytes = AtomicReference(ContentBytes.EMPTY)
+        private val contentBytes = AtomicReference(ContentData.EMPTY)
         private val result = AtomicReference(EMPTY_HTTP_RESPONSE)
         private val byteBuffer = ByteBuffer.allocate(maxBytes)
 
@@ -93,14 +93,14 @@ class ApacheHttpContentReceiver(
                 val entity = response.entity
                 val code = response.statusLine.statusCode
                 if (entity != null && code == 200) {
-                    val contentLength = entity.contentLength
-                    val contentType = entity.contentType?.value
+                    val size = entity.contentLength
+                    val mimeType = entity.contentType?.value
 
-                    contentBytes.set(ContentBytes.EMPTY.copy(
-                        url = url,
-                        contentType = contentType,
-                        contentLength = contentLength.takeUnless { it < 0 }
-                    ))
+                    contentBytes.set(
+                        ContentData.EMPTY.copy(
+                            mimeType = mimeType,
+                            size = size.takeUnless { it < 0 }
+                        ))
                 } else {
                     completeExceptionally(IOException("No response entity, http code=$code"))
                 }
@@ -112,7 +112,7 @@ class ApacheHttpContentReceiver(
         override fun onByteReceived(buf: ByteBuffer, ioControl: IOControl) {
             byteBuffer.put(buf.array(), 0, minOf(buf.limit(), byteBuffer.remaining()))
             val currentContentBytes = contentBytes.get()
-            contentBytes.set(currentContentBytes.copy(bytes = byteBuffer.array().copyOf(byteBuffer.position())))
+            contentBytes.set(currentContentBytes.copy(data = byteBuffer.array().copyOf(byteBuffer.position())))
 
             if (byteBuffer.remaining() == 0) {
                 complete()
@@ -136,12 +136,12 @@ class ApacheHttpContentReceiver(
     }
 
     private class HttpResponseFutureCallback(
-        private val promise: CompletableFuture<ContentBytes>,
+        private val promise: CompletableFuture<ContentData>,
         private val request: HttpUriRequest
     ) : FutureCallback<HttpResponse> {
 
         override fun completed(httpResponse: HttpResponse) {
-            if (promise.isDone.not()) promise.complete(ContentBytes.EMPTY)
+            if (promise.isDone.not()) promise.complete(ContentData.EMPTY)
         }
 
         override fun failed(ex: Exception) {

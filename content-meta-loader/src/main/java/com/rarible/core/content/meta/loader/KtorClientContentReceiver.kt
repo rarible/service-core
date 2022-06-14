@@ -1,5 +1,6 @@
 package com.rarible.core.content.meta.loader
 
+import com.rarible.core.meta.resource.model.ContentData
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
@@ -13,16 +14,16 @@ abstract class KtorClientContentReceiver : ContentReceiver {
 
     protected abstract val client: HttpClient
 
-    override suspend fun receiveBytes(url: URL, maxBytes: Int): ContentBytes {
+    override suspend fun receiveBytes(url: URL, maxBytes: Int): ContentData {
         return client.get<HttpStatement>(url).execute { httpResponse ->
             val channel: ByteReadChannel = httpResponse.receive()
-            val bytes = try {
+            val data = try {
                 channel.readRemaining(maxBytes.toLong()).readBytes()
             } finally {
                 channel.cancel()
             }
-            val contentType = httpResponse.contentType().toString()
-            ContentBytes(url, bytes, contentType, httpResponse.contentLength())
+            val mimeType = httpResponse.contentType().toString()
+            ContentData(data, mimeType, httpResponse.contentLength())
         }
     }
 
