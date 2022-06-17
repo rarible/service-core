@@ -7,7 +7,7 @@ import org.springframework.web.server.ServerWebExchange
 import org.springframework.web.server.WebFilter
 import org.springframework.web.server.WebFilterChain
 import reactor.core.publisher.Mono
-import java.util.*
+import java.util.UUID
 
 class LoggingContextFilter : WebFilter {
     override fun filter(ex: ServerWebExchange, chain: WebFilterChain): Mono<Void> {
@@ -35,6 +35,6 @@ fun MultiValueMap<String, String>.toLoggingContext(): Map<String, String> {
     }
 }
 
-const val TRACE_ID = "traceId"
+const val TRACE_ID = "trace-id"
 private const val X_LOG = "x-log-"
 private val CONVERTER = CaseFormat.LOWER_HYPHEN.converterTo(CaseFormat.LOWER_CAMEL)
