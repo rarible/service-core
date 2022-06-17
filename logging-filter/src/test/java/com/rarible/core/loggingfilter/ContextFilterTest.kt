@@ -10,12 +10,11 @@ class ContextFilterTest {
         val headers = HttpHeaders()
         headers["X-LOG-TEST-NAME"] = listOf("value1")
         headers["X-L-TEST-NAME"] = listOf("value1")
-        headers["X-LOG-TRACE-ID"] = listOf("simple")
 
         val result = headers.toLoggingContext()
         val test = mapOf(
             "testName" to "value1",
-            "traceId" to "simple"
+            TRACE_ID to result[TRACE_ID]
         )
         assertThat(result)
             .isEqualTo(test)
@@ -28,8 +27,7 @@ class ContextFilterTest {
         headers["X-L-TEST-NAME"] = listOf("value1")
 
         val result = headers.toLoggingContext()
-        assertThat(result.containsKey("traceId"))
-        println(result.get("traceId"))
+        assertThat(result.containsKey(TRACE_ID)).isTrue
     }
 
 }
