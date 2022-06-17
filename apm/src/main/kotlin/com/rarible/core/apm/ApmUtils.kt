@@ -19,7 +19,7 @@ import reactor.util.context.Context
 import java.util.Optional
 import kotlin.coroutines.coroutineContext
 
-const val TRACE_ID = "trace-id"
+const val TRACE_ID = "trace.id"
 
 suspend fun <T> withSpan(
     info: SpanInfo,

@@ -35,6 +35,6 @@ fun MultiValueMap<String, String>.toLoggingContext(): Map<String, String> {
     }
 }
 
-const val TRACE_ID = "trace-id"
+const val TRACE_ID = "trace.id"
 private const val X_LOG = "x-log-"
 private val CONVERTER = CaseFormat.LOWER_HYPHEN.converterTo(CaseFormat.LOWER_CAMEL)
