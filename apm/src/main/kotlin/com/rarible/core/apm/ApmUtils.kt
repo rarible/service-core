@@ -13,12 +13,13 @@ import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.reactor.ReactorContext
 import kotlinx.coroutines.withContext
-import org.slf4j.LoggerFactory
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.util.context.Context
 import java.util.Optional
 import kotlin.coroutines.coroutineContext
+
+const val TRACE_ID = "trace.id"
 
 suspend fun <T> withSpan(
     info: SpanInfo,
@@ -196,7 +197,7 @@ private fun <T> Mono<out Span>.using(mono: Mono<T>): Mono<T> {
                     }
                 }
                     .contextWrite { it.put(ApmContext.Key, ApmContext(span)) }
-                    .loggerContext("trace.id", span.traceId)
+                    .loggerContext(TRACE_ID, span.traceId)
             } else {
                 mono
             }
@@ -214,7 +215,7 @@ private fun <T> Mono<out Span>.usingFlux(flux: Flux<T>): Flux<T> {
                     .doOnError { span.captureException(it.cause) }
                     .doOnComplete { span.end() }
                     .contextWrite { it.put(ApmContext.Key, ApmContext(span)) }
-                    .loggerContext("trace.id", span.traceId)
+                    .loggerContext(TRACE_ID, span.traceId)
             } else {
                 flux
             }
