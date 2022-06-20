@@ -2,6 +2,7 @@
 <configuration>
     <springProperty name="LOGSTASH_TCP_SOCKET_ENABLED" source="logging.logstash.tcp-socket.enabled" defaultValue="false"/>
     <springProperty name="LOG_FMT_ENABLED" source="logging.logfmt.enabled" defaultValue="false"/>
+    <springProperty name="LOG_JSON_ENABLED" source="logging.logjson.enabled" defaultValue="false"/>
 
     <include resource="org/springframework/boot/logging/logback/defaults.xml" />
 
@@ -19,23 +20,40 @@
             </root>
         </then>
         <else>
-            <include resource="org/springframework/boot/logging/logback/console-appender.xml" />
-
-            <if condition='property("LOGSTASH_TCP_SOCKET_ENABLED").contains("true")'>
+            <if condition='property("LOG_JSON_ENABLED").contains("true")'>
                 <then>
-                    <include resource="com/rarible/logging/logstash/logstash-tcp-socket-appender.xml"/>
+                    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+                        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+                            <layout class="ch.qos.logback.contrib.json.classic.JsonLayout">
+                                <timestampFormat>yyyy-MM-dd'T'HH:mm:ss.SSS</timestampFormat>
+                                <timestampFormatTimezoneId>Etc/UTC</timestampFormatTimezoneId>
+                            </layout>
+                        </encoder>
+                    </appender>
+                    <root level="INFO">
+                        <appender-ref ref="CONSOLE" />
+                    </root>
                 </then>
+                <else>
+                    <include resource="org/springframework/boot/logging/logback/console-appender.xml" />
+
+                    <if condition='property("LOGSTASH_TCP_SOCKET_ENABLED").contains("true")'>
+                        <then>
+                            <include resource="com/rarible/logging/logstash/logstash-tcp-socket-appender.xml"/>
+                        </then>
+                    </if>
+
+                    <root level="INFO">
+                        <if condition='property("LOGSTASH_TCP_SOCKET_ENABLED").contains("true")'>
+                            <then>
+                                <appender-ref ref="STASH" />
+                            </then>
+                        </if>
+
+                        <appender-ref ref="CONSOLE" />
+                    </root>
+                </else>
             </if>
-
-            <root level="INFO">
-                <if condition='property("LOGSTASH_TCP_SOCKET_ENABLED").contains("true")'>
-                    <then>
-                        <appender-ref ref="STASH" />
-                    </then>
-                </if>
-
-                <appender-ref ref="CONSOLE" />
-            </root>
         </else>
     </if>
 </configuration>
