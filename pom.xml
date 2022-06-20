@@ -37,7 +37,7 @@
     </distributionManagement>
 
     <properties>
-        <revision>2.4.10</revision>
+        <revision>2.4.9</revision>
         <logback.version>1.2.11</logback.version>
         <logstash-encoder.version>7.0.1</logstash-encoder.version>
         <testcontainers.version>1.16.2</testcontainers.version>
@@ -226,11 +226,11 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-<<<<<<< HEAD
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-meta-resource</artifactId>
                 <version>${project.version}</version>
-=======
+            </dependency>
+            <dependency>
                 <groupId>com.batch.escalog</groupId>
                 <artifactId>escalog</artifactId>
                 <version>${escalog.version}</version>
@@ -244,7 +244,6 @@
                 <groupId>ch.qos.logback.contrib</groupId>
                 <artifactId>logback-json-classic</artifactId>
                 <version>${logback-jackson.version}</version>
->>>>>>> release/2.3
             </dependency>
         </dependencies>
     </dependencyManagement>
