@@ -27,7 +27,7 @@ logging:
     tcp-socket:
       enabled: false
       destinations: logstash:4560
-  logftm:
+  logfmt:
     enabled: true
 
 management:
