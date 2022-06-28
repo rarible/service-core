@@ -20,6 +20,7 @@ class CidValidatorTest {
         assertThat(
             cidOneValidator.isCid("f01701220c3c4733ec8affd06cf9e9ff50ffc6bcd2ec85a6170004bb709669c31de94391a")
         ).isTrue
+        assertThat(cidOneValidator.isCid("false")).isFalse
         // TODO Add more cases
     }
 
@@ -30,6 +31,9 @@ class CidValidatorTest {
         assertThat(legacyCidValidator.isCid("bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi")).isTrue
         assertThat(legacyCidValidator.isCid("bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuyl%abf3oclgtqy55fbzdi")).isFalse
         assertThat(legacyCidValidator.isCid("3")).isFalse
-        assertThat(legacyCidValidator.isCid("f01701220c3c4733ec8affd06cf9e9ff50ffc6bcd2ec85a6170004bb709669c31de94391a")).isTrue
+        assertThat(
+            legacyCidValidator.isCid("f01701220c3c4733ec8affd06cf9e9ff50ffc6bcd2ec85a6170004bb709669c31de94391a")
+        ).isTrue
+        assertThat(legacyCidValidator.isCid("false")).isFalse
     }
 }
