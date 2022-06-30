@@ -65,7 +65,7 @@ open class ExternalHttpClient(
             ?.getFirst("etag")
             ?.replace("\"", "")
 
-    private fun getResponseSpec(
+    fun getResponseSpec(
         url: String,
         useProxy: Boolean = false,
         id: String
