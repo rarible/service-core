@@ -97,7 +97,10 @@ open class ExternalHttpClient(
 
     private fun getResponse(e: Exception): String =
         if (e is WebClientResponseException) {
-            " response: ${e.rawStatusCode}: ${e.statusText}"
+            val headers = e.headers.entries.joinToString("; ") { h ->
+                "${h.key}=${h.value.joinToString(", ")}"
+            }
+            " response: ${e.rawStatusCode}: ${e.statusText}, (headers: $headers)"
         } else {
             ""
         }
