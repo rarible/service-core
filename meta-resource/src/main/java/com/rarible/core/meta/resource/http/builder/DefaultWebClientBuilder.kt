@@ -4,6 +4,7 @@ import io.netty.channel.ChannelOption
 import io.netty.channel.epoll.EpollChannelOption
 import io.netty.handler.timeout.ReadTimeoutHandler
 import io.netty.handler.timeout.WriteTimeoutHandler
+import org.springframework.http.HttpHeaders
 import org.springframework.http.client.reactive.ReactorClientHttpConnector
 import org.springframework.util.unit.DataSize
 import org.springframework.web.reactive.function.client.WebClient
@@ -13,7 +14,8 @@ import java.time.Duration
 import java.util.concurrent.TimeUnit
 
 class DefaultWebClientBuilder(
-    private val followRedirect: Boolean
+    private val followRedirect: Boolean,
+    private val defaultHeaders: HttpHeaders = HttpHeaders()
 ) : WebClientBuilder {
 
     override fun build(): WebClient {
@@ -56,11 +58,13 @@ class DefaultWebClientBuilder(
                     .followRedirect(followRedirect)
                 val connector = ReactorClientHttpConnector(client)
                 it.clientConnector(connector)
+                it.defaultHeaders { headers -> headers.addAll(defaultHeaders) }
             }.build()
         return defaultClient
     }
 
     companion object {
+
         val DEFAULT_MAX_BODY_SIZE = DataSize.ofMegabytes(10).toBytes().toInt()
         val DEFAULT_TIMEOUT: Duration = Duration.ofSeconds(60)
         val DEFAULT_TIMEOUT_MILLIS: Long = DEFAULT_TIMEOUT.toMillis()
