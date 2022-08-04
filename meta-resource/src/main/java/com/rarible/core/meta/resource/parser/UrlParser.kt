@@ -13,7 +13,19 @@ class UrlParser(
 ) {
 
     fun parse(url: String): UrlResource? {
-        val sanitized = url.trim()
+        val sanitized = sanitize(url)
         return resourceParsers.firstNotNullOfOrNull { it.parse(sanitized) }
+    }
+
+    private fun sanitize(url: String): String {
+        var result = url.trim()
+        while (result.length > 1 && result.first() == result.last() && QUOTES.contains(result.first())) {
+            result = result.substring(1, result.length - 1)
+        }
+        return result
+    }
+
+    companion object {
+        private val QUOTES = setOf('"', '\'')
     }
 }
