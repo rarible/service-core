@@ -10,10 +10,7 @@ class KafkaTestContainer {
     }
 
     companion object {
-        val KAFKA__IMAGE: DockerImageName = if (System.getProperty("os.arch") == "aarch64")
-            DockerImageName.parse("ghcr.io/arm64-compat/confluentinc/cp-kafka:7.1.1").asCompatibleSubstituteFor("confluentinc/cp-kafka")
-        else
-            DockerImageName.parse("confluentinc/cp-kafka:6.1.1")
+        val KAFKA__IMAGE: DockerImageName = DockerImageName.parse("confluentinc/cp-kafka:7.2.1")
 
         @JvmStatic
         private val kafka: KafkaContainer by lazy {
