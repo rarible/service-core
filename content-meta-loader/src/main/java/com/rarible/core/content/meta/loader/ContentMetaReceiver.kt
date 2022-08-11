@@ -74,7 +74,7 @@ class ContentMetaReceiver(
         contentReceiverMetrics.receivedBytes(contentBytes.data.size)
 
         contentDetector.detect(contentBytes, url.toString())
-            ?.let { return it }
+            ?.let { return it.copy(available = true) }
 
         return getFallbackContentMeta(url, contentBytes)
     }
