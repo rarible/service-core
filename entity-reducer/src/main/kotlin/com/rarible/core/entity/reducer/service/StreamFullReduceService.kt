@@ -24,10 +24,10 @@ open class StreamFullReduceService<Id, Event, E : Identifiable<Id>>(
             val prevEntity = entity
             val currentEntity = if (prevEntity == null || prevEntity.id != id) {
                 if (prevEntity != null) {
-                    entityService.update(prevEntity)
-                    emit(prevEntity)
+                    emit(entityService.update(prevEntity))
                 }
-                templateProvider.getEntityTemplate(id)
+                val version = entityService.get(id)?.version
+                templateProvider.getEntityTemplate(id, version)
             } else {
                 prevEntity
             }
@@ -35,8 +35,7 @@ open class StreamFullReduceService<Id, Event, E : Identifiable<Id>>(
         }
         val lastEntity = entity
         if (lastEntity != null) {
-            entityService.update(lastEntity)
-            emit(lastEntity)
+            emit(entityService.update(lastEntity))
         }
     }
 }

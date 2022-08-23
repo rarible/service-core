@@ -42,7 +42,8 @@ internal class EventReduceServiceTest {
         val expectedEntity1 = Erc20Balance(
             revertableEvents = emptyList(),
             balance = 3,
-            id = entityId1
+            id = entityId1,
+            version = 1
         )
 
         val entityId2 = randomLong()
@@ -61,7 +62,8 @@ internal class EventReduceServiceTest {
         val expectedEntity2 = Erc20Balance(
             revertableEvents = emptyList(),
             balance = 3,
-            id = entityId2
+            id = entityId2,
+            version = 1
         )
 
         eventReduceService.reduceAll((events1 + events2))

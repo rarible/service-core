@@ -35,7 +35,7 @@ class EventReduceService<Id, Event, E : Identifiable<Id>>(
     private suspend fun reduce(id: Id, events: List<Event>): E {
         return optimisticLock {
             val entity = withSpan(name = "get", labels = listOf("id" to id.toString())) {
-                entityService.get(id) ?: templateProvider.getEntityTemplate(id)
+                entityService.get(id) ?: templateProvider.getEntityTemplate(id, version = null)
             }
             val result = withSpan(name = "reduce", labels = listOf("id" to id.toString())) {
                 events.fold(entity) { e, event ->

@@ -17,8 +17,8 @@ class Erc20BalanceService : EntityService<Long, Erc20Balance> {
     }
 
     override suspend fun update(entity: Erc20Balance): Erc20Balance {
-        storage[entity.id] = entity
+        storage[entity.id] = entity.copy(version = (entity.version ?: 0L) + 1L)
         updateCount.getAndIncrement()
-        return entity
+        return storage[entity.id] ?: error("Unexpected state")
     }
 }

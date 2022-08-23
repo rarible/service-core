@@ -47,6 +47,31 @@ internal class StreamFullReduceServiceTest {
         assertThat(entityService.getUpdateCount()).isEqualTo(1)
     }
 
+    @Test
+    fun `should make full reduce of existed single entity`() = runBlocking<Unit> {
+        val entityService = Erc20BalanceService()
+        val task = createStreamReduceService(entityService)
+        val exitedEntity = Erc20Balance(id = 28, balance = 100, revertableEvents = emptyList(), version = 100)
+        entityService.update(exitedEntity)
+
+        val entityId = exitedEntity.id
+        val events = listOf(
+            Erc20BalanceEvent(
+                block = 1,
+                value = 1,
+                entityId = entityId
+            )
+        )
+        val updatedEntity = mutableListOf<Erc20Balance>()
+        task.reduce(events.asFlow()).collect { entity ->
+            assertThat(entity.id).isEqualTo(exitedEntity.id)
+            assertThat(entity.balance).isEqualTo(1)
+            assertThat(entity.revertableEvents).isEqualTo(events)
+            assertThat(entity.version).isEqualTo(102)
+            updatedEntity.add(entity)
+        }
+        assertThat(updatedEntity).hasSize(1)
+    }
 
     @Test
     fun `should make full reduce of many entities`() = runBlocking<Unit> {
