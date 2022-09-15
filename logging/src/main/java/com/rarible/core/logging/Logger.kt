@@ -6,6 +6,7 @@ import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 import kotlin.reflect.full.companionObject
 
+@Deprecated("Affects performance. Use LoggerFactory.getLogger")
 class Logger<in R : Any> : ReadOnlyProperty<R, Logger> {
     override fun getValue(thisRef: R, property: KProperty<*>): Logger
         = LoggerFactory.getLogger(getClassForLogging(thisRef.javaClass))
