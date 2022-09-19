@@ -19,7 +19,7 @@ class WebRequestClientTagContributor(
 ) : WebFluxTagsContributor {
 
     override fun httpRequestTags(exchange: ServerWebExchange?, ex: Throwable?): MutableIterable<Tag>? {
-        exchange ?: return null
+        exchange ?: return toClientTag(OTHER)
 
         val clientName = exchange.request.headers.getFirst(clientNameHeader)
         clientName?.let { return toClientTag(it) }

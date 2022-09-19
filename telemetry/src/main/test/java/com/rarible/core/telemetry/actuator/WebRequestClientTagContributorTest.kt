@@ -26,6 +26,12 @@ class WebRequestClientTagContributorTest {
     }
 
     @Test
+    fun `client name without server exchange`() {
+        val tag = contributor.httpRequestTags(null, null)!!.first()
+        assertThat(tag.value).isEqualTo("other")
+    }
+
+    @Test
     fun `client name filtered from header`() {
         val exchange = createExchange(clientName = "not-rarible")
         val tag = contributor.httpRequestTags(exchange, null)!!.first()
