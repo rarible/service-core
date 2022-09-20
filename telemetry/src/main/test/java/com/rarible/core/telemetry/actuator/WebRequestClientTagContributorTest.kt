@@ -12,10 +12,17 @@ class WebRequestClientTagContributorTest {
     private val contributor = WebRequestClientTagContributor()
 
     @Test
-    fun `client name taken from header`() {
+    fun `client name taken from header - rarible`() {
         val exchange = createExchange(clientName = "rarible")
         val tag = contributor.httpRequestTags(exchange, null)!!.first()
         assertThat(tag.value).isEqualTo("rarible")
+    }
+
+    @Test
+    fun `client name taken from header - rarible protocol`() {
+        val exchange = createExchange(clientName = "rarible-protocol")
+        val tag = contributor.httpRequestTags(exchange, null)!!.first()
+        assertThat(tag.value).isEqualTo("rarible-protocol")
     }
 
     @Test
