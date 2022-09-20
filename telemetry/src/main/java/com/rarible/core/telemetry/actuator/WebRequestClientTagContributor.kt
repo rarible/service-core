@@ -12,13 +12,13 @@ import org.springframework.web.server.ServerWebExchange
  */
 class WebRequestClientTagContributor(
     private val clientNameHeader: String = "x-rarible-client",
-    // By default, we're tracking only 'rarible' client, all others will be tagged as 'other'
+    // By default, we're tracking only 'rarible'/'rarible-protocol' clients, all others will be tagged as 'other'
     private val clientNameFilter: (String) -> Boolean = { isAcceptableClientName(it) },
     // Default simple implementation to detect requests from marketplace by origin
     private val clientNameExtractor: (String) -> String? = { origin -> getClientNameFromOrigin(origin) }
 ) : WebFluxTagsContributor {
 
-    override fun httpRequestTags(exchange: ServerWebExchange?, ex: Throwable?): MutableIterable<Tag>? {
+    override fun httpRequestTags(exchange: ServerWebExchange?, ex: Throwable?): MutableIterable<Tag> {
         exchange ?: return toClientTag(OTHER)
 
         val clientName = exchange.request.headers.getFirst(clientNameHeader)
