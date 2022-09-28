@@ -4,6 +4,7 @@ import com.rarible.core.daemon.DaemonWorkerProperties
 import com.rarible.core.daemon.sequential.SequentialDaemonWorker
 import io.micrometer.core.instrument.MeterRegistry
 import kotlinx.coroutines.CompletionHandler
+import kotlinx.coroutines.time.delay
 
 class JobDaemonWorker(
     private val jobHandler: JobHandler,
@@ -15,5 +16,6 @@ class JobDaemonWorker(
 
     override suspend fun handle() {
         jobHandler.handle()
+        delay(pollingPeriod)
     }
 }
