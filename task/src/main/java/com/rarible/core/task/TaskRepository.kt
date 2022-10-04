@@ -13,4 +13,5 @@ interface TaskRepository : ReactiveCrudRepository<Task, String> {
     fun findByTypeAndParam(type: String, param: String): Mono<Task>
     fun findByRunning(running: Boolean): Flux<Task>
     fun findByRunningAndLastStatus(running: Boolean, lastStatus: TaskStatus): Flux<Task>
+    fun findByTypeAndParamRegex(running: Boolean, paramRegex: String): Flux<Task>
 }
