@@ -5,7 +5,6 @@ import com.rarible.core.apm.CaptureTransaction
 import com.rarible.core.apm.SpanInfo
 import com.rarible.core.apm.withSpan
 import com.rarible.core.apm.withTransaction
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.aopalliance.intercept.MethodInterceptor
 import org.aopalliance.intercept.MethodInvocation
 import org.springframework.util.ClassUtils
@@ -108,7 +107,6 @@ class MonoSpanInvocationHandler(
             override val info: SpanInfo
         ) : AbstractSpanMethod() {
 
-            @ExperimentalCoroutinesApi
             override fun invoke(invocation: MethodInvocation): Any? {
                 return invocation.runCoroutine {
                     withSpan(info) {
@@ -122,7 +120,6 @@ class MonoSpanInvocationHandler(
             override val info: SpanInfo
         ) : AbstractSpanMethod() {
 
-            @ExperimentalCoroutinesApi
             override fun invoke(invocation: MethodInvocation): Any? {
                 return invocation.runCoroutine {
                     withTransaction(info.name) {
