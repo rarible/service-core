@@ -23,12 +23,13 @@
             <if condition='property("LOG_JSON_ENABLED").contains("true")'>
                 <then>
                     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-                        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
-                            <layout class="ch.qos.logback.contrib.json.classic.JsonLayout">
-                                <timestampFormat>yyyy-MM-dd'T'HH:mm:ss.SSS</timestampFormat>
-                                <timestampFormatTimezoneId>Etc/UTC</timestampFormatTimezoneId>
-                            </layout>
-                        </encoder>
+                        <layout class="ch.qos.logback.contrib.json.classic.JsonLayout">
+                            <jsonFormatter class="ch.qos.logback.contrib.jackson.JacksonJsonFormatter">
+                                <prettyPrint>false</prettyPrint>
+                            </jsonFormatter>
+                            <timestampFormat>yyyy-MM-dd'T'HH:mm:ss.SSS</timestampFormat>
+                            <timestampFormatTimezoneId>Etc/UTC</timestampFormatTimezoneId>
+                        </layout>
                     </appender>
                     <root level="INFO">
                         <appender-ref ref="CONSOLE" />
