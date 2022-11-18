@@ -23,7 +23,7 @@
             <if condition='property("LOG_JSON_ENABLED").contains("true")'>
                 <then>
                     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-                        <layout class="ch.qos.logback.contrib.json.classic.JsonLayout">
+                        <layout class="com.rarible.core.telemetry.logging.JsonLogLayout">
                             <jsonFormatter class="ch.qos.logback.contrib.jackson.JacksonJsonFormatter">
                                 <prettyPrint>false</prettyPrint>
                             </jsonFormatter>
