@@ -14,15 +14,20 @@ class JsonLogLayout : JsonLayout() {
         add("level", includeLevel, event.level.toString().lowercase(), map)
         add("thread", includeThreadName, event.threadName, map)
         add("msg", includeFormattedMessage, event.formattedMessage, map)
-        addMap("mdc", includeMDC, event.mdcPropertyMap, map)
         addPackageAndClassName(event, map)
+        addMdc(event, map)
         addThrowableInfo("error", includeException, event, map)
         return map
     }
 
+    private fun addMdc(event: ILoggingEvent, map: Map<String, Any>) {
+        if (includeMDC && event.mdcPropertyMap != null)
+            event.mdcPropertyMap?.forEach { add(it.key, true, it.value, map) }
+    }
+
     // Works only if we're using full class names in Logger name
-    private fun addPackageAndClassName(iLoggingEvent: ILoggingEvent, map: Map<String, Any>) {
-        val className = iLoggingEvent.loggerName
+    private fun addPackageAndClassName(event: ILoggingEvent, map: Map<String, Any>) {
+        val className = event.loggerName
         val lastPointPosition = className.lastIndexOf('.')
         if (lastPointPosition < 0) {
             add("module", includeLoggerName, className, map)
