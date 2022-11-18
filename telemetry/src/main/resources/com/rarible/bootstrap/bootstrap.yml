@@ -28,6 +28,8 @@ logging:
       enabled: false
       destinations: logstash:4560
   logfmt:
+    enabled: false
+  logjson:
     enabled: true
 
 management:
