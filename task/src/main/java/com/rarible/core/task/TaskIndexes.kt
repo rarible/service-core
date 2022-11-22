@@ -27,7 +27,7 @@ class TaskIndexes(
             .on(Task::lastStatus.name, Sort.Direction.ASC)
             .background()
 
-        private val BY_COLLECTION_DEFINITION: Index = Index()
+        private val TYPE_AND_PARAM_UINQUE: Index = Index()
             .on(Task::type.name, Sort.Direction.ASC)
             .on(Task::param.name, Sort.Direction.ASC)
             .unique()
@@ -35,7 +35,7 @@ class TaskIndexes(
 
         private val ALL_INDEXES = listOf(
             RUNNING_AND_STATUS,
-            BY_COLLECTION_DEFINITION,
+            TYPE_AND_PARAM_UINQUE,
         )
     }
 
