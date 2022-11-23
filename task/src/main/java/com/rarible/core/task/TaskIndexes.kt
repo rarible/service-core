@@ -1,6 +1,7 @@
 package com.rarible.core.task
 
 import kotlinx.coroutines.reactive.awaitFirst
+import kotlinx.coroutines.runBlocking
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.event.EventListener
 import org.springframework.data.domain.Sort
@@ -14,7 +15,7 @@ class TaskIndexes(
 ) {
 
     @EventListener(ApplicationReadyEvent::class)
-    suspend fun createIndexes() {
+    fun createIndexes() = runBlocking {
         ALL_INDEXES.forEach { index ->
             mongo.indexOps("task").ensureIndex(index).awaitFirst()
         }
