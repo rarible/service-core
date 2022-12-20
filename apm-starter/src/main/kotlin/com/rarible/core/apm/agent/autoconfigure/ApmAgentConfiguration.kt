@@ -22,12 +22,14 @@ class ApmAgentConfiguration(
         val server = properties.server.toASCIIString()
         val packages = properties.packages ?: error("Application package name must be defined")
 
+        // see https://www.elastic.co/guide/en/apm/agent/java/master/config-core.html
         val settings = mapOf<String, String>(
             SERVER_URL_PROPERTY to server,
             APPLICATION_PACKAGES_PROPERTY to packages,
             SERVICE_NAME_PROPERTY to applicationInfo.serviceName,
             ENVIRONMENT_PROPERTY to environmentInfo.name,
-            INSTRUMENT_PROPERTY to properties.instrument.toString()
+            INSTRUMENT_PROPERTY to properties.instrument.toString(),
+            TRANSACTION_SAMPLE_RATE to properties.sampling.toString()
         )
         ElasticApmAttacher.attach(settings)
     }
@@ -38,5 +40,6 @@ class ApmAgentConfiguration(
         private const val ENVIRONMENT_PROPERTY = "environment"
         private const val APPLICATION_PACKAGES_PROPERTY = "application_packages"
         private const val INSTRUMENT_PROPERTY = "instrument"
+        private const val TRANSACTION_SAMPLE_RATE = "transaction_sample_rate"
     }
 }
