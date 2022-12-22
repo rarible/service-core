@@ -10,7 +10,7 @@ class KafkaTestContainer {
     }
 
     companion object {
-        val KAFKA__IMAGE: DockerImageName = DockerImageName.parse("confluentinc/cp-kafka:7.2.1")
+        val KAFKA__IMAGE: DockerImageName = DockerImageName.parse("confluentinc/cp-kafka:7.0.7")
 
         @JvmStatic
         private val kafka: KafkaContainer by lazy {
