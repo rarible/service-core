@@ -19,8 +19,7 @@ class ElasticsearchTestContainer {
 
     companion object {
         val ELASTIC_SEARCH__IMAGE: DockerImageName =
-            DockerImageName.parse("elasticsearch:7.17.8")
-                .asCompatibleSubstituteFor("docker.elastic.co/elasticsearch/elasticsearch")
+            DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch:7.17.8")
 
         @JvmStatic
         private val elasticsearch: ElasticsearchContainer by lazy {
