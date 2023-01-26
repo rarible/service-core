@@ -1,10 +1,15 @@
 package com.rarible.core.entity.reducer.service
 
-import com.rarible.core.entity.reducer.service.model.Erc20BalanceEvent
+import com.rarible.core.common.nowMillis
 import com.rarible.core.entity.reducer.service.model.Erc20Balance
-import io.mockk.*
+import com.rarible.core.entity.reducer.service.model.Erc20BalanceEvent
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
 internal class RevertedEntityReducerTest {
@@ -14,16 +19,22 @@ internal class RevertedEntityReducerTest {
 
     @Test
     fun `should apply event`() = runBlocking<Unit> {
-        val events = listOf(Erc20BalanceEvent(block = 1), Erc20BalanceEvent(block = 2))
+        val date1 = nowMillis().minusSeconds(1)
+        val date2 = nowMillis()
+        val events = listOf(
+            Erc20BalanceEvent(block = 1, date = date1),
+            Erc20BalanceEvent(block = 2, date = date2)
+        )
         val entity = Erc20Balance(id = 0, balance = 1, revertableEvents = events)
-        val revertEvent = Erc20BalanceEvent(block = 2)
+        val expectedEvent = events[0]
+        val revertEvent = events[1]
 
         every { eventRevertPolicy.wasApplied(events, revertEvent) } returns true
         every { eventRevertPolicy.reduce(events, revertEvent) } returns events - revertEvent
         coEvery { reversedReducer.reduce(entity, revertEvent) } returns entity
 
         val updatedEntity = revertedEntityReducer.reduce(entity, revertEvent)
-        Assertions.assertThat(updatedEntity.revertableEvents).isEqualTo(listOf(Erc20BalanceEvent(block = 1)))
+        assertThat(updatedEntity.revertableEvents).isEqualTo(listOf(expectedEvent))
 
         coVerify { reversedReducer.reduce(entity, revertEvent) }
     }

@@ -1,7 +1,8 @@
 package com.rarible.core.entity.reducer.service
 
-import com.rarible.core.entity.reducer.service.model.Erc20BalanceEvent
+import com.rarible.core.common.nowMillis
 import com.rarible.core.entity.reducer.service.model.Erc20Balance
+import com.rarible.core.entity.reducer.service.model.Erc20BalanceEvent
 import com.rarible.core.entity.reducer.service.service.Erc20BalanceEntityIdService
 import com.rarible.core.entity.reducer.service.service.Erc20BalanceReducer
 import com.rarible.core.entity.reducer.service.service.Erc20BalanceService
@@ -27,6 +28,7 @@ internal class EventReduceServiceTest {
     @Test
     fun `should reduce all events`() = runBlocking<Unit> {
         val entityId1 = randomLong()
+        val lastEventDate1 = nowMillis().minusMillis(randomLong(1000))
         val events1 = listOf(
             Erc20BalanceEvent(
                 block = 1,
@@ -36,17 +38,20 @@ internal class EventReduceServiceTest {
             Erc20BalanceEvent(
                 block = 1,
                 value = 2,
-                entityId = entityId1
+                entityId = entityId1,
+                date = lastEventDate1
             )
         )
         val expectedEntity1 = Erc20Balance(
             revertableEvents = emptyList(),
             balance = 3,
             id = entityId1,
-            version = 1
+            version = 1,
+            updatedAt = lastEventDate1
         )
 
         val entityId2 = randomLong()
+        val lastEventDate2 = nowMillis().minusMillis(randomLong(1000))
         val events2 = listOf(
             Erc20BalanceEvent(
                 block = 1,
@@ -56,14 +61,16 @@ internal class EventReduceServiceTest {
             Erc20BalanceEvent(
                 block = 1,
                 value = 2,
-                entityId = entityId2
+                entityId = entityId2,
+                date = lastEventDate2
             )
         )
         val expectedEntity2 = Erc20Balance(
             revertableEvents = emptyList(),
             balance = 3,
             id = entityId2,
-            version = 1
+            version = 1,
+            updatedAt = lastEventDate2
         )
 
         eventReduceService.reduceAll((events1 + events2))

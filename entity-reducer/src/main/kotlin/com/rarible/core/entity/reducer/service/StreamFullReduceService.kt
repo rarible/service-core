@@ -2,7 +2,6 @@ package com.rarible.core.entity.reducer.service
 
 import com.rarible.core.entity.reducer.model.Identifiable
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
 
 /**
@@ -11,7 +10,7 @@ import kotlinx.coroutines.flow.flow
  * Service should be used in the long-running Task which updates state of entities
  */
 open class StreamFullReduceService<Id, Event, E : Identifiable<Id>>(
-    private val entityService: EntityService<Id, E>,
+    private val entityService: EntityService<Id, E, Event>,
     private val entityIdService: EntityIdService<Event, Id>,
     private val templateProvider: EntityTemplateProvider<Id, E>,
     private val reducer: Reducer<Event, E>
@@ -24,6 +23,7 @@ open class StreamFullReduceService<Id, Event, E : Identifiable<Id>>(
             val prevEntity = entity
             val currentEntity = if (prevEntity == null || prevEntity.id != id) {
                 if (prevEntity != null) {
+                    // for full reduce we don't need to specify event triggered the update - it is not actual
                     emit(entityService.update(prevEntity))
                 }
                 val version = entityService.get(id)?.version

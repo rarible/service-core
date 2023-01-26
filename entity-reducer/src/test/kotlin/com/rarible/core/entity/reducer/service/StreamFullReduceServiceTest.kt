@@ -1,12 +1,15 @@
 package com.rarible.core.entity.reducer.service
 
-import com.rarible.core.entity.reducer.service.model.Erc20BalanceEvent
 import com.rarible.core.entity.reducer.service.model.Erc20Balance
-import com.rarible.core.entity.reducer.service.service.*
+import com.rarible.core.entity.reducer.service.model.Erc20BalanceEvent
+import com.rarible.core.entity.reducer.service.service.Erc20BalanceEntityIdService
+import com.rarible.core.entity.reducer.service.service.Erc20BalanceForwardEventApplyPolicy
+import com.rarible.core.entity.reducer.service.service.Erc20BalanceReducer
+import com.rarible.core.entity.reducer.service.service.Erc20BalanceService
+import com.rarible.core.entity.reducer.service.service.Erc20BalanceTemplateProvider
 import com.rarible.core.test.data.randomInt
 import com.rarible.core.test.data.randomLong
 import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -51,10 +54,15 @@ internal class StreamFullReduceServiceTest {
     fun `should make full reduce of existed single entity`() = runBlocking<Unit> {
         val entityService = Erc20BalanceService()
         val task = createStreamReduceService(entityService)
-        val exitedEntity = Erc20Balance(id = 28, balance = 100, revertableEvents = emptyList(), version = 100)
-        entityService.update(exitedEntity)
+        val exists = Erc20Balance(
+            id = 28,
+            balance = 100,
+            revertableEvents = emptyList(),
+            version = 100
+        )
+        entityService.update(exists)
 
-        val entityId = exitedEntity.id
+        val entityId = exists.id
         val events = listOf(
             Erc20BalanceEvent(
                 block = 1,
@@ -64,10 +72,12 @@ internal class StreamFullReduceServiceTest {
         )
         val updatedEntity = mutableListOf<Erc20Balance>()
         task.reduce(events.asFlow()).collect { entity ->
-            assertThat(entity.id).isEqualTo(exitedEntity.id)
+            assertThat(entity.id).isEqualTo(exists.id)
             assertThat(entity.balance).isEqualTo(1)
             assertThat(entity.revertableEvents).isEqualTo(events)
             assertThat(entity.version).isEqualTo(102)
+            // updatedAt hasn't been changed - full reduce should not specify last event for update procedure
+            assertThat(entity.updatedAt).isNotEqualTo(exists.updatedAt)
             updatedEntity.add(entity)
         }
         assertThat(updatedEntity).hasSize(1)
