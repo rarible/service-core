@@ -9,7 +9,7 @@ import com.rarible.core.entity.reducer.model.Identifiable
  * It takes a batch of events, loads entity, applies these events and saves entity to the database
  */
 class EventReduceService<Id, Event, E : Identifiable<Id>>(
-    private val entityService: EntityService<Id, E>,
+    private val entityService: EntityService<Id, E, Event>,
     private val entityIdService: EntityIdService<Event, Id>,
     private val templateProvider: EntityTemplateProvider<Id, E>,
     private val reducer: Reducer<Event, E>
@@ -42,7 +42,9 @@ class EventReduceService<Id, Event, E : Identifiable<Id>>(
                     reducer.reduce(e, event)
                 }
             }
-            withSpan(name = "save", labels = listOf("id" to id.toString())) { entityService.update(result) }
+            withSpan(name = "save", labels = listOf("id" to id.toString())) {
+                entityService.update(result, events.lastOrNull())
+            }
             result
         }
     }
