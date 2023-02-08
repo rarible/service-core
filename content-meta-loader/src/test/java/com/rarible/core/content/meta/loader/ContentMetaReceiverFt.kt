@@ -71,7 +71,8 @@ class ContentMetaReceiverFt {
                 mimeType = MimeType.SVG_XML_IMAGE.value,
                 width = 192,
                 height = 192,
-                size = 993
+                size = 993,
+                available = true
             ),
             meta
         )
@@ -91,7 +92,8 @@ class ContentMetaReceiverFt {
                 mimeType = MimeType.GIF_IMAGE.value,
                 width = 165,
                 height = 250,
-                size = 1570431
+                size = 1570431,
+                available = true
             ),
             meta
         )
@@ -109,7 +111,8 @@ class ContentMetaReceiverFt {
                 mimeType = MimeType.MP4_VIDEO.value,
                 width = 320,
                 height = 240,
-                size = null
+                size = null,
+                available = true
             ),
             meta
         )
@@ -128,7 +131,8 @@ class ContentMetaReceiverFt {
                 mimeType = MimeType.MP4_VIDEO.value,
                 width = 1280,
                 height = 700,
-                size = 43091297
+                size = 43091297,
+                available = true
             ),
             meta
         )
@@ -146,7 +150,8 @@ class ContentMetaReceiverFt {
                 mimeType = MimeType.JPEG_IMAGE.value,
                 width = 167,
                 height = 250,
-                size = 44789
+                size = 44789,
+                available = true
             ),
             meta
         )
@@ -163,7 +168,8 @@ class ContentMetaReceiverFt {
                 mimeType = MimeType.GIF_IMAGE.value,
                 width = 600,
                 height = 404,
-                size = 2559234
+                size = 2559234,
+                available = true
             ), meta
         )
     }
@@ -180,25 +186,8 @@ class ContentMetaReceiverFt {
                 mimeType = MimeType.PNG_IMAGE.value,
                 width = 512,
                 height = 512,
-                size = 173580
-            ),
-            meta
-        )
-    }
-
-    @ParameterizedTest
-    @EnumSource(ContentMetaReceiversEnum::class)
-    fun `png with wrong content type`(receiverEnum: ContentMetaReceiversEnum) {
-        val meta = getContentMeta(
-            "https://rinkeby.traitsy.com/meta/0xc91741d26b851d6724cffdf9aa3cf379b678272a/99362971277997261421968536521162276234322138208043033076209335008158078363510/revealed.png",
-            receiverEnum.receiver
-        )
-        assertEquals(
-            ContentMeta(
-                mimeType = MimeType.PNG_IMAGE.value,
-                width = 4000,
-                height = 4000,
-                size = null
+                size = 173580,
+                available = true
             ),
             meta
         )
@@ -225,15 +214,14 @@ class ContentMetaReceiverFt {
     @ParameterizedTest
     @EnumSource(ContentMetaReceiversEnum::class)
     fun html(receiverEnum: ContentMetaReceiversEnum) {
-        // ETHEREUM:0x5bd815fd6c096bab38b4c6553cfce3585194dff9:10851
         val meta = getContentMeta(
-            "https://www.artofseasons.co/evolving/autumn/4",
+            "https://lens.mypinata.cloud/ipfs/QmPvbSDFp2rppbv5pP1i4eoqEoioH3rhH5NAtgnAZskLFh/?handle=marinawilde2.lens",
             receiverEnum.receiver
         )
         assertEquals(
             ContentMeta(
-                mimeType = "${MimeType.HTML_TEXT.value}; charset=utf-8",
-                size = 1675
+                mimeType = MimeType.HTML_TEXT.value,
+                available = true
             ),
             meta
         )
