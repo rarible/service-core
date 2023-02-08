@@ -206,6 +206,24 @@ class ContentMetaReceiverFt {
 
     @ParameterizedTest
     @EnumSource(ContentMetaReceiversEnum::class)
+    fun avif() {
+        // ETHEREUM:0xc64c3b560ed5c3f6a693a2f97f7c1147802e7971:994
+        val meta = getContentMeta(
+            "https://artblocks.s3.us-east-2.amazonaws.com/imgs/994.png",
+            ContentMetaReceiversEnum.KTOR_APACHE.receiver
+        )
+        assertEquals(
+            ContentMeta(
+                mimeType = MimeType.AVIF_IMAGE.value,
+                size = 15266,
+                available = true
+            ),
+            meta
+        )
+    }
+
+    @ParameterizedTest
+    @EnumSource(ContentMetaReceiversEnum::class)
     fun html(receiverEnum: ContentMetaReceiversEnum) {
         // ETHEREUM:0x5bd815fd6c096bab38b4c6553cfce3585194dff9:10851
         val meta = getContentMeta(
