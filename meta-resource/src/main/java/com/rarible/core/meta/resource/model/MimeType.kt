@@ -12,6 +12,7 @@ enum class MimeType(
     GIF_IMAGE("image/gif"),
     BMP_IMAGE("image/bmp"),
     WEBP_IMAGE("image/webp"),
+    AVIF_IMAGE("image/avif"),
 
     MP4_VIDEO("video/mp4"),
     WEBM_VIDEO("video/webm"),
