@@ -2,6 +2,7 @@ package com.rarible.core.telemetry.metrics
 
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
+import io.micrometer.core.instrument.Timer
 import java.time.Duration
 import java.util.Locale
 import java.util.concurrent.atomic.AtomicLong
@@ -37,9 +38,20 @@ abstract class LongGaugeMetric protected constructor(name: String, vararg tags: 
     }
 }
 
-abstract class TimingMetric protected constructor(name: String, vararg tags: Tag) : Metric(name, *tags) {
+abstract class TimingMetric protected constructor(
+    name: String,
+    private val percentiles: List<Double> = emptyList(),
+    vararg tags: Tag,
+) : Metric(name, *tags) {
     fun bind(registry: MeterRegistry): RegisteredTimer {
-        val timer = registry.timer(name, tags)
+        val timerBuilder = Timer.builder(name)
+            .tags(tags)
+        if (percentiles.isNotEmpty()) {
+            timerBuilder
+                .publishPercentiles(*percentiles.toDoubleArray())
+                .publishPercentileHistogram()
+        }
+        val timer = timerBuilder.register(registry)
         return RegisteredTimer(timer, registry.config().clock())
     }
 }
