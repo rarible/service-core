@@ -14,5 +14,5 @@ data class ApmAgentProperties(
     val packages: String? = null,
     val instrument: Boolean = false,
     val sampling: Double = 1.0,
-    val token: String? = ""
+    val token: String = ""
 )
