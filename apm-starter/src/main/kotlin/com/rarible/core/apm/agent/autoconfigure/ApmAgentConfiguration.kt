@@ -30,7 +30,7 @@ class ApmAgentConfiguration(
             ENVIRONMENT_PROPERTY to environmentInfo.name,
             INSTRUMENT_PROPERTY to properties.instrument.toString(),
             TRANSACTION_SAMPLE_RATE to properties.sampling.toString(),
-            SECRET_TOKEN as properties.token
+            SECRET_TOKEN to properties.token
         )
         ElasticApmAttacher.attach(settings)
     }
