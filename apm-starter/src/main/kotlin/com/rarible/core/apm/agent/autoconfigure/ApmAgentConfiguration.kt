@@ -29,7 +29,8 @@ class ApmAgentConfiguration(
             SERVICE_NAME_PROPERTY to applicationInfo.serviceName,
             ENVIRONMENT_PROPERTY to environmentInfo.name,
             INSTRUMENT_PROPERTY to properties.instrument.toString(),
-            TRANSACTION_SAMPLE_RATE to properties.sampling.toString()
+            TRANSACTION_SAMPLE_RATE to properties.sampling.toString(),
+            SECRET_TOKEN as properties.token
         )
         ElasticApmAttacher.attach(settings)
     }
@@ -41,5 +42,6 @@ class ApmAgentConfiguration(
         private const val APPLICATION_PACKAGES_PROPERTY = "application_packages"
         private const val INSTRUMENT_PROPERTY = "instrument"
         private const val TRANSACTION_SAMPLE_RATE = "transaction_sample_rate"
+        private const val SECRET_TOKEN = "secret_token"
     }
 }

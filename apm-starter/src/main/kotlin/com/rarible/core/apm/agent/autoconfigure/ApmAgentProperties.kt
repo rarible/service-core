@@ -13,5 +13,6 @@ data class ApmAgentProperties(
     val server: URI = URI.create("http://apm-server:8200"),
     val packages: String? = null,
     val instrument: Boolean = false,
-    val sampling: Double = 1.0
+    val sampling: Double = 1.0,
+    val token: String? = ""
 )
