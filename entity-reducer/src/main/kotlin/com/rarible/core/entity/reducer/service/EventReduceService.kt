@@ -8,7 +8,7 @@ import com.rarible.core.entity.reducer.model.Identifiable
  * Service to handle small amount of events for one entity
  * It takes a batch of events, loads entity, applies these events and saves entity to the database
  */
-class EventReduceService<Id, Event, E : Identifiable<Id>>(
+open class EventReduceService<Id, Event, E : Identifiable<Id>>(
     private val entityService: EntityService<Id, E, Event>,
     private val entityIdService: EntityIdService<Event, Id>,
     private val templateProvider: EntityTemplateProvider<Id, E>,
@@ -29,6 +29,13 @@ class EventReduceService<Id, Event, E : Identifiable<Id>>(
     }
 
     /**
+     * Checking current entity with the entity after reducing before persisting into db
+     */
+    protected open suspend fun isChanged(current: E, result: E): Boolean {
+        return true
+    }
+
+    /**
      * Takes batch of events that needs to be applied to one entity.
      * Gets entity by id, applies events and saves the entity
      */
@@ -42,8 +49,10 @@ class EventReduceService<Id, Event, E : Identifiable<Id>>(
                     reducer.reduce(e, event)
                 }
             }
-            withSpan(name = "save", labels = listOf("id" to id.toString())) {
-                entityService.update(result, events.lastOrNull())
+            if (isChanged(entity, result)) {
+                withSpan(name = "save", labels = listOf("id" to id.toString())) {
+                    entityService.update(result, events.lastOrNull())
+                }
             }
             result
         }
