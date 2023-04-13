@@ -31,7 +31,7 @@ open class EventReduceService<Id, Event, E : Identifiable<Id>>(
     /**
      * Checking current entity with the entity after reducing before persisting into db
      */
-    protected open suspend fun isChanged(current: E, result: E): Boolean {
+    protected open fun isChanged(current: E, result: E): Boolean {
         return true
     }
 
