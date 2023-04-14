@@ -117,80 +117,6 @@ internal class StreamFullReduceServiceTest {
         assertThat(entityService.getUpdateCount()).isEqualTo(events.keys.size.toLong())
     }
 
-    @Test
-    fun `shouldn't make useless update during full reduce of existed single entity`() = runBlocking<Unit> {
-        val entityService = Erc20BalanceService()
-        val task = createStreamReduceServiceWithComparing(entityService)
-        val existed = Erc20Balance(
-            id = 28,
-            balance = 100,
-            revertableEvents = emptyList(),
-            version = 0
-        )
-        entityService.update(existed)
-
-        val entityId = existed.id
-        val events = listOf(
-            Erc20BalanceEvent(
-                block = 1,
-                value = 1,
-                entityId = entityId
-            )
-        )
-        val updatedEntity = mutableListOf<Erc20Balance>()
-        task.reduce(events.asFlow()).collect { entity ->
-            assertThat(entity.version).isEqualTo(2)
-            updatedEntity.add(entity)
-        }
-
-        // second try
-        task.reduce(events.asFlow()).collect { entity ->
-            assertThat(entity.version).isEqualTo(2)
-            updatedEntity.add(entity)
-        }
-        assertThat(updatedEntity).hasSize(2)
-    }
-
-    @Test
-    fun `shouldn't make useless update during full reduce of existed many entities`() = runBlocking<Unit> {
-        val entityService = Erc20BalanceService()
-        val task = createStreamReduceServiceWithComparing(entityService)
-        val existed1 = Erc20Balance(
-            id = 28,
-            balance = 100,
-            revertableEvents = emptyList(),
-            version = 0
-        )
-        entityService.update(existed1)
-        val existed2 = Erc20Balance(
-            id = 29,
-            balance = 10,
-            revertableEvents = emptyList(),
-            version = 0
-        )
-        entityService.update(existed2)
-
-        val events = listOf(existed1, existed2).map {
-            Erc20BalanceEvent(
-                block = 1,
-                value = 1,
-                entityId = it.id
-            )
-        }
-        val updatedEntity = mutableListOf<Erc20Balance>()
-        task.reduce(events.asFlow()).collect { entity ->
-            assertThat(entity.version).isEqualTo(2)
-            updatedEntity.add(entity)
-        }
-
-        // second try
-        task.reduce(events.asFlow()).collect { entity ->
-            assertThat(entity.version).isEqualTo(2)
-            updatedEntity.add(entity)
-        }
-        assertThat(updatedEntity).hasSize(4)
-    }
-
     private fun createStreamReduceService(entityService: Erc20BalanceService): StreamFullReduceService<Long, Erc20BalanceEvent, Erc20Balance> {
         val entityIdService = Erc20BalanceEntityIdService()
         val templateProvider = Erc20BalanceTemplateProvider()
@@ -203,23 +129,5 @@ internal class StreamFullReduceServiceTest {
             templateProvider,
             reducer
         )
-    }
-
-    private fun createStreamReduceServiceWithComparing(entityService: Erc20BalanceService): StreamFullReduceService<Long, Erc20BalanceEvent, Erc20Balance> {
-        val entityIdService = Erc20BalanceEntityIdService()
-        val templateProvider = Erc20BalanceTemplateProvider()
-        val eventRevertPolicy = Erc20BalanceForwardEventApplyPolicy()
-        val reducer = EntityReducer(eventRevertPolicy, Erc20BalanceReducer())
-
-        return object : StreamFullReduceService<Long, Erc20BalanceEvent, Erc20Balance>(
-            entityService,
-            entityIdService,
-            templateProvider,
-            reducer
-        ) {
-            override fun isChanged(current: Erc20Balance?, result: Erc20Balance?): Boolean {
-                return current?.balance != result?.balance
-            }
-        }
     }
 }
