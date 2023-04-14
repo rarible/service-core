@@ -16,7 +16,15 @@ open class StreamFullReduceService<Id, Event, E : Identifiable<Id>>(
     private val reducer: Reducer<Event, E>
 ) : ReduceService<Id, Event, E> {
 
+    /**
+     * Checking current entity with the entity after reducing before persisting into db
+     */
+    protected open fun isChanged(current: E?, result: E?): Boolean {
+        return true
+    }
+
     override fun reduce(events: Flow<Event>): Flow<E> = flow {
+        var current: E? = null
         var entity: E? = null
         events.collect { event ->
             val id = entityIdService.getEntityId(event)
@@ -26,15 +34,15 @@ open class StreamFullReduceService<Id, Event, E : Identifiable<Id>>(
                     // for full reduce we don't need to specify event triggered the update - it is not actual
                     emit(entityService.update(prevEntity))
                 }
-                val version = entityService.get(id)?.version
-                templateProvider.getEntityTemplate(id, version)
+                current = entityService.get(id)
+                templateProvider.getEntityTemplate(id, current?.version)
             } else {
                 prevEntity
             }
             entity = reducer.reduce(currentEntity, event)
         }
         val lastEntity = entity
-        if (lastEntity != null) {
+        if (lastEntity != null && isChanged(current, lastEntity)) {
             emit(entityService.update(lastEntity))
         }
     }
