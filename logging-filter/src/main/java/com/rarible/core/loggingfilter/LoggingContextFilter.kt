@@ -1,13 +1,14 @@
 package com.rarible.core.loggingfilter
 
 import com.google.common.base.CaseFormat
+import com.rarible.core.logging.TRACE_ID
+import com.rarible.core.logging.generateTraceId
 import com.rarible.core.logging.loggerContext
 import org.springframework.util.MultiValueMap
 import org.springframework.web.server.ServerWebExchange
 import org.springframework.web.server.WebFilter
 import org.springframework.web.server.WebFilterChain
 import reactor.core.publisher.Mono
-import java.util.UUID
 
 class LoggingContextFilter : WebFilter {
     override fun filter(ex: ServerWebExchange, chain: WebFilterChain): Mono<Void> {
@@ -29,12 +30,11 @@ fun MultiValueMap<String, String>.toLoggingContext(): Map<String, String> {
     }.toMap()
 
     return if (!result.containsKey(TRACE_ID)) {
-        result + (TRACE_ID to UUID.randomUUID().toString().replace("-", ""))
+        result + (TRACE_ID to generateTraceId())
     } else {
         result
     }
 }
 
-const val TRACE_ID = "trace.id"
 private const val X_LOG = "x-log-"
 private val CONVERTER = CaseFormat.LOWER_HYPHEN.converterTo(CaseFormat.LOWER_CAMEL)
