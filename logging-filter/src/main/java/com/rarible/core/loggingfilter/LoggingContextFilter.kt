@@ -1,6 +1,7 @@
 package com.rarible.core.loggingfilter
 
 import com.google.common.base.CaseFormat
+import com.rarible.core.logging.TRACE_ID
 import com.rarible.core.logging.loggerContext
 import org.springframework.util.MultiValueMap
 import org.springframework.web.server.ServerWebExchange
@@ -35,6 +36,5 @@ fun MultiValueMap<String, String>.toLoggingContext(): Map<String, String> {
     }
 }
 
-const val TRACE_ID = "trace.id"
 private const val X_LOG = "x-log-"
 private val CONVERTER = CaseFormat.LOWER_HYPHEN.converterTo(CaseFormat.LOWER_CAMEL)
