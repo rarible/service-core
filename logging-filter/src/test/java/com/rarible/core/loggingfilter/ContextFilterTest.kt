@@ -1,5 +1,6 @@
 package com.rarible.core.loggingfilter
 
+import com.rarible.core.logging.TRACE_ID
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpHeaders
