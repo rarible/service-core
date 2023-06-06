@@ -24,10 +24,10 @@ const val TRACE_ID = "trace.id"
 const val BATCH_ID = "batch.id"
 
 fun <T> Mono<T>.loggerContext(key: String, value: String): Mono<T> =
-    subscriberContext { addToContext(it, mapOf(key to value) ) }
+    subscriberContext { addToContext(it, mapOf(key to value)) }
 
 fun <T> Flux<T>.loggerContext(key: String, value: String): Flux<T> =
-    subscriberContext { addToContext(it, mapOf(key to value) ) }
+    subscriberContext { addToContext(it, mapOf(key to value)) }
 
 fun <T> Mono<T>.loggerContext(map: Map<String, String>): Mono<T> =
     subscriberContext { addToContext(it, map) }
@@ -48,7 +48,6 @@ object LoggerContext {
         .map { extractMDCMap(it) }
         .switchIfEmpty { Mono.just(emptyMap()) }
 }
-
 
 fun generateTraceId() = UUID.randomUUID().toString().replace("-", "")
 
