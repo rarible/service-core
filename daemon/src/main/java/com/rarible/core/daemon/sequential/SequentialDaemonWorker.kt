@@ -4,6 +4,8 @@ import com.rarible.core.daemon.AbstractDaemonWorker
 import com.rarible.core.daemon.DaemonError
 import com.rarible.core.daemon.DaemonLiveness
 import com.rarible.core.daemon.DaemonWorkerProperties
+import com.rarible.core.logging.withBatchId
+import com.rarible.core.logging.withTraceId
 import com.rarible.core.telemetry.metrics.increment
 import io.micrometer.core.instrument.MeterRegistry
 import kotlinx.coroutines.CancellationException
@@ -23,18 +25,22 @@ abstract class SequentialDaemonWorker(
     protected abstract suspend fun handle()
 
     override suspend fun run(scope: CoroutineScope) {
-        while (coroutineContext.isActive) {
-            try {
-                handle()
-            } catch (ex: CancellationException) {
-                throw ex
-            } catch (ex: Exception) {
-                logger.error("Daemon worker execution exception $workerName", ex)
-                meterRegistry.increment(DaemonError(workerName))
-                delay(errorDelay)
+        withBatchId {
+            while (coroutineContext.isActive) {
+                withTraceId {
+                    try {
+                        handle()
+                    } catch (ex: CancellationException) {
+                        throw ex
+                    } catch (ex: Exception) {
+                        logger.error("Daemon worker execution exception $workerName", ex)
+                        meterRegistry.increment(DaemonError(workerName))
+                        delay(errorDelay)
+                    }
+                    healthCheck.up()
+                    meterRegistry.increment(DaemonLiveness(workerName))
+                }
             }
-            healthCheck.up()
-            meterRegistry.increment(DaemonLiveness(workerName))
         }
     }
 }
