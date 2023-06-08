@@ -13,6 +13,11 @@
     <dependencies>
         <dependency>
             <groupId>com.rarible.core</groupId>
+            <artifactId>rarible-core-logging</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.rarible.core</groupId>
             <artifactId>rarible-core-metrics</artifactId>
         </dependency>
         <dependency>
