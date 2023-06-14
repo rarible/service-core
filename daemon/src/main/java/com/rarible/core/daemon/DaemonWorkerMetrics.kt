@@ -32,6 +32,6 @@ class DaemonProcessingError(workerName: String) : CountingMetric(
 
 class DaemonClosedChannelEvent(workerName: String) : CountingMetric(
     METRIC_NAME,
-    tag("worker", workerName),
-    tag("event", "closed_channel")
+    tag(WORKER_TAG_NAME, workerName),
+    tag(EVENT_TAG_NAME, "closed_channel")
 )
