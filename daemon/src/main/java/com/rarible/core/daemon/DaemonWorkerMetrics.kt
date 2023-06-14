@@ -2,7 +2,7 @@ package com.rarible.core.daemon
 
 import com.rarible.core.telemetry.metrics.CountingMetric
 
-private const val METRIC_NAME = "worker_name"
+private const val METRIC_NAME = "worker_event"
 private const val WORKER_TAG_NAME = "worker"
 private const val EVENT_TAG_NAME = "event"
 
