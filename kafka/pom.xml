@@ -11,6 +11,12 @@
     <artifactId>rarible-core-kafka</artifactId>
 
     <dependencies>
+
+        <dependency>
+            <groupId>com.rarible.core</groupId>
+            <artifactId>rarible-core-logging</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>io.projectreactor.kafka</groupId>
             <artifactId>reactor-kafka</artifactId>
@@ -30,6 +36,11 @@
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jsr310</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
         </dependency>
 
         <dependency>

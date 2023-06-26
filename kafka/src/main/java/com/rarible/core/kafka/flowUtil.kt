@@ -5,13 +5,13 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 /*
 TODO: Kotlin does not support Flow<T>.chunked operator yet
  https://github.com/Kotlin/kotlinx.coroutines/issues/1302
  */
+@Deprecated("Do NOT use it, works with bugs")
 fun <T> Flow<T>.chunked(maxSize: Int, delayMillis: Long = 0): Flow<List<T>> {
     val buffer = Channel<T>(maxSize)
     return channelFlow {

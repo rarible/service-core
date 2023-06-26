@@ -1,5 +1,6 @@
 package com.rarible.core.kafka
 
+@Deprecated("Use KafkaConsumerFactory")
 data class KafkaMessageBatch<V>(
     val messages: List<KafkaMessage<V>>
 ) {
