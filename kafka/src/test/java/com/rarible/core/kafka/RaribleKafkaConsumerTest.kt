@@ -35,7 +35,7 @@ internal class RaribleKafkaConsumerTest {
         val producer = RaribleKafkaProducer(
             clientId = "test-producer",
             valueSerializerClass = JsonSerializer::class.java,
-            valueClass = TestObject::class.java,
+            valueClass = TestEvent::class.java,
             defaultTopic = "test-topic",
             bootstrapServers = kafkaContainer.kafkaBoostrapServers()
         )
@@ -43,14 +43,14 @@ internal class RaribleKafkaConsumerTest {
             clientId = "test-consumer",
             consumerGroup = "test-group",
             valueDeserializerClass = JsonDeserializer::class.java,
-            valueClass = TestObject::class.java,
+            valueClass = TestEvent::class.java,
             defaultTopic = "test-topic",
             bootstrapServers = kafkaContainer.kafkaBoostrapServers(),
             offsetResetStrategy = OffsetResetStrategy.EARLIEST
         )
         val sendResult = withTimeout(Duration.ofSeconds(5)) {
             val headers = hashMapOf("header1" to "value1", "header2" to "value2")
-            producer.send(KafkaMessage(key = "key", value = TestObject("field1", 1), headers = headers))
+            producer.send(KafkaMessage(key = "key", value = TestEvent("field1", 1), headers = headers))
         }
 
         assertThat(sendResult.isSuccess).isEqualTo(true)
@@ -60,8 +60,8 @@ internal class RaribleKafkaConsumerTest {
         }
 
         assertThat(received.key).isEqualTo("key")
-        assertThat(received.value.field1).isEqualTo("field1")
-        assertThat(received.value.field2).isEqualTo(1)
+        assertThat(received.value.name).isEqualTo("field1")
+        assertThat(received.value.age).isEqualTo(1)
         assertThat(received.headers.size).isEqualTo(3)
         assertThat(received.headers["header1"]).isEqualTo("value1")
         assertThat(received.headers["header2"]).isEqualTo("value2")
@@ -77,12 +77,12 @@ internal class RaribleKafkaConsumerTest {
         val producer = RaribleKafkaProducer(
             clientId = "test-producer",
             valueSerializerClass = JsonSerializer::class.java,
-            valueClass = TestObject::class.java,
+            valueClass = TestEvent::class.java,
             defaultTopic = topicName,
             bootstrapServers = kafkaContainer.kafkaBoostrapServers()
         )
-        val testObjects = (0 until countMessages).map { TestObject(field1 = randomString(), field2 = randomInt()) }
-        producer.send(testObjects.map { KafkaMessage(it.field1, it) }, topicName).collect()
+        val testObjects = (0 until countMessages).map { TestEvent(name = randomString(), age = randomInt()) }
+        producer.send(testObjects.map { KafkaMessage(it.name, it) }, topicName).collect()
 
         val consumersGroup = "test-group-for-$topicName"
         val consumers = (0 until countConsumers).map {
@@ -90,7 +90,7 @@ internal class RaribleKafkaConsumerTest {
                 clientId = "test-consumer-$it",
                 consumerGroup = consumersGroup,
                 valueDeserializerClass = JsonDeserializer::class.java,
-                valueClass = TestObject::class.java,
+                valueClass = TestEvent::class.java,
                 defaultTopic = topicName,
                 bootstrapServers = kafkaContainer.kafkaBoostrapServers(),
                 offsetResetStrategy = OffsetResetStrategy.EARLIEST
@@ -109,21 +109,21 @@ internal class RaribleKafkaConsumerTest {
         val producer = RaribleKafkaProducer(
             clientId = "test-producer",
             valueSerializerClass = JsonSerializer::class.java,
-            valueClass = TestObject::class.java,
+            valueClass = TestEvent::class.java,
             defaultTopic = topicName,
             bootstrapServers = kafkaContainer.kafkaBoostrapServers()
         )
         val testObjects = (0 until countMessages).map {
-            TestObject(field1 = randomString(), field2 = randomInt())
+            TestEvent(name = randomString(), age = randomInt())
         }
-        producer.send(testObjects.map { KafkaMessage(it.field1, it) }, topicName).collect()
+        producer.send(testObjects.map { KafkaMessage(it.name, it) }, topicName).collect()
 
         val consumers = (0 until countPartitions).map { id ->
             RaribleKafkaConsumer(
                 clientId = "test-consumer-$id",
                 consumerGroup = "test-group",
                 valueDeserializerClass = JsonDeserializer::class.java,
-                valueClass = TestObject::class.java,
+                valueClass = TestEvent::class.java,
                 defaultTopic = topicName,
                 bootstrapServers = kafkaContainer.kafkaBoostrapServers(),
                 offsetResetStrategy = OffsetResetStrategy.EARLIEST
@@ -152,7 +152,7 @@ internal class RaribleKafkaConsumerTest {
             clientId = "test-consumer",
             consumerGroup = "test-group",
             valueDeserializerClass = JsonDeserializer::class.java,
-            valueClass = TestObject::class.java,
+            valueClass = TestEvent::class.java,
             defaultTopic = topicName,
             bootstrapServers = kafkaContainer.kafkaBoostrapServers(),
             offsetResetStrategy = OffsetResetStrategy.EARLIEST,
@@ -182,18 +182,18 @@ internal class RaribleKafkaConsumerTest {
         val producer = RaribleKafkaProducer(
             clientId = "test-producer",
             valueSerializerClass = JsonSerializer::class.java,
-            valueClass = TestObject::class.java,
+            valueClass = TestEvent::class.java,
             defaultTopic = topicName,
             bootstrapServers = kafkaContainer.kafkaBoostrapServers()
         )
-        val testObjects = (0 until countMessages).map { TestObject(field1 = randomString(), field2 = randomInt()) }
-        producer.send(testObjects.map { KafkaMessage(it.field1, it) }, topicName).collect()
+        val testObjects = (0 until countMessages).map { TestEvent(name = randomString(), age = randomInt()) }
+        producer.send(testObjects.map { KafkaMessage(it.name, it) }, topicName).collect()
 
         val consumer = RaribleKafkaConsumer(
             clientId = "test-consumer",
             consumerGroup = "test-group-for-$topicName",
             valueDeserializerClass = JsonDeserializer::class.java,
-            valueClass = TestObject::class.java,
+            valueClass = TestEvent::class.java,
             defaultTopic = topicName,
             bootstrapServers = kafkaContainer.kafkaBoostrapServers(),
             offsetResetStrategy = OffsetResetStrategy.EARLIEST

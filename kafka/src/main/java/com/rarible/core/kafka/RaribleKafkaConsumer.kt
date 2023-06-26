@@ -13,8 +13,9 @@ import org.apache.kafka.common.serialization.StringDeserializer
 import reactor.kafka.receiver.KafkaReceiver
 import reactor.kafka.receiver.ReceiverOptions
 import java.nio.charset.StandardCharsets
-import java.util.*
+import java.util.Locale
 
+@Deprecated("Use KafkaConsumerFactory")
 class RaribleKafkaConsumer<V>(
     /**
      * Anything to identify the client

@@ -1,7 +1,6 @@
 package com.rarible.core.kafka
 
-import java.lang.Exception
-
+@Deprecated("Use KafkaConsumerFactory")
 sealed class KafkaSendResult {
     abstract val id: String
 
