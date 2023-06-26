@@ -63,10 +63,10 @@ class RaribleKafkaConsumerFactory(
         container.containerProperties.groupId = "${env}.${settings.group}"
         container.containerProperties.clientId = "$clientIdPrefix.${settings.group}"
 
-        return RaribleRaribleKafkaConsumerWorker(listOf(container))
+        return RaribleKafkaConsumerWorkerWrapper(listOf(container))
     }
 
-    private class RaribleRaribleKafkaConsumerWorker<K, V>(
+    private class RaribleKafkaConsumerWorkerWrapper<K, V>(
         private val containers: List<AbstractMessageListenerContainer<K, V>>
     ) : RaribleKafkaConsumerWorker<V>, ApplicationEventPublisherAware, ApplicationContextAware {
 
