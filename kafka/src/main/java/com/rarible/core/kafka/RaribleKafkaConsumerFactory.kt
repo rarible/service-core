@@ -8,11 +8,13 @@ import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.ApplicationEventPublisherAware
 import org.springframework.kafka.listener.AbstractMessageListenerContainer
 import org.springframework.kafka.listener.BatchMessageListener
+import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
 import java.util.UUID
 
 class RaribleKafkaConsumerFactory(
     private val env: String,
-    private val host: String
+    private val host: String,
+    private val deserializer: Class<*>? = null
 ) {
 
     companion object {
@@ -54,7 +56,8 @@ class RaribleKafkaConsumerFactory(
             concurrency = settings.concurrency,
             hosts = settings.hosts,
             batchSize = settings.batchSize,
-            offsetResetStrategy = settings.offsetResetStrategy
+            offsetResetStrategy = settings.offsetResetStrategy,
+            customSettings = customConfig()
         )
 
         logger.info("Created Kafka consumer with params: {}", settings)
@@ -64,6 +67,12 @@ class RaribleKafkaConsumerFactory(
         container.containerProperties.clientId = "$clientIdPrefix.${settings.group}"
 
         return RaribleKafkaConsumerWorkerWrapper(listOf(container))
+    }
+
+    private fun customConfig(): Map<String, Any> {
+        val config = HashMap<String, Any>()
+        deserializer?.let { config[ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS] = it }
+        return config
     }
 
     private class RaribleKafkaConsumerWorkerWrapper<K, V>(
