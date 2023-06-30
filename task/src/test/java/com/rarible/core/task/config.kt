@@ -1,6 +1,7 @@
 package com.rarible.core.task
 
 import com.rarible.core.mongo.configuration.IncludePersistProperties
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration
 import org.springframework.context.annotation.Bean
@@ -18,4 +19,7 @@ class MockContext {
     @Bean
     @Qualifier("mockHandler2")
     fun mockHandler2() = MockHandler("MOCK2")
+
+    @Bean
+    fun meterRegistry() = SimpleMeterRegistry()
 }

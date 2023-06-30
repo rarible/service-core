@@ -11,7 +11,6 @@ import org.springframework.data.mongodb.core.find
 import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.core.query.isEqualTo
-import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
 import java.util.concurrent.Executors
@@ -48,7 +47,6 @@ class TaskService(
         }
     }
 
-    @Scheduled(initialDelayString = "\${rarible.task.initialDelay:30000}", fixedDelay = Long.MAX_VALUE)
     fun autorun() {
         handlersMap.values.forEach { handler ->
             handler.getAutorunParams().forEach { (param, sample) ->
@@ -57,7 +55,6 @@ class TaskService(
         }
     }
 
-    @Scheduled(initialDelayString = "\${rarible.task.initialDelay:30000}", fixedDelayString = "\${rarible.task.delay:60000}")
     fun runTasks() {
         scope.launch {
             logger.info("TaskHandler: find tasks to run")
