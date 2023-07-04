@@ -3,17 +3,11 @@ package com.rarible.core.task
 import com.rarible.core.daemon.DaemonWorkerProperties
 import com.rarible.core.daemon.sequential.SequentialDaemonWorker
 import io.micrometer.core.instrument.MeterRegistry
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.time.delay
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.event.EventListener
-import org.springframework.stereotype.Component
 import java.util.concurrent.atomic.AtomicBoolean
 
-@Component
-@FlowPreview
-@ExperimentalCoroutinesApi
 class RaribleTaskWorker (
     private val taskService: TaskService,
     private val properties: RaribleTaskProperties,
