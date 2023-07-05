@@ -1,7 +1,6 @@
 package com.rarible.core.task
 
 import io.micrometer.core.instrument.MeterRegistry
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ComponentScan
@@ -17,7 +16,6 @@ import org.springframework.scheduling.annotation.EnableScheduling
 class TaskConfiguration {
 
     @Bean
-    @ConditionalOnBean(MeterRegistry::class)
     fun raribleTaskWorker(
         taskService: TaskService,
         properties: RaribleTaskProperties,
