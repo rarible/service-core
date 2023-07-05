@@ -11,17 +11,15 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import java.time.Duration
 
+@FlowPreview
+@ExperimentalCoroutinesApi
 class RaribleTaskWorkerTest {
     private val taskService = mockk<TaskService>()
-    private val properties = mockk<RaribleTaskProperties> {
-        every { pollingPeriod } returns Duration.ZERO
-        every { errorDelay } returns Duration.ZERO
-        every { initialDelay } returns Duration.ZERO
-    }
+    private val properties = RaribleTaskProperties(
+        true, Duration.ZERO, Duration.ZERO, Duration.ZERO
+    )
     private val meterRegistry = SimpleMeterRegistry()
 
-    @FlowPreview
-    @ExperimentalCoroutinesApi
     private val worker = RaribleTaskWorker(
         taskService = taskService,
         properties = properties,
@@ -33,7 +31,7 @@ class RaribleTaskWorkerTest {
         every { taskService.autorun() } returns Unit
         every { taskService.runTasks() } returns Unit
 
-        worker.start()
+        worker.onApplicationStarted()
 
         Wait.waitAssert {
             verify(exactly = 1) { taskService.autorun() }
