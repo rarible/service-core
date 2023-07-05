@@ -58,7 +58,10 @@ abstract class AbstractDaemonWorker(
     fun start() {
         logger.info("Starting daemon worker $workerName")
 
-        check(job.start()) { "Daemon worker was already started $workerName" }
+        if (!job.start()) {
+            logger.info("Daemon worker was already started $workerName")
+            return
+        }
         job.invokeOnCompletion { error ->
             when (error) {
                 is CancellationException -> logger.info("Daemon worker cancelled $workerName")
