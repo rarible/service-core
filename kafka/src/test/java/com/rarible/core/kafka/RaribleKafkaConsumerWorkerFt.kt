@@ -42,7 +42,7 @@ class RaribleKafkaConsumerWorkerFt {
         producer.send(events.map { KafkaMessage(key = randomString(), value = it) }).collect()
 
         waitAssert {
-            assertThat(eventHandler.received).containsExactlyInAnyOrderElementsOf(events)
+            assertThat(eventHandler.received).containsExactlyElementsOf(events)
         }
     }
 
@@ -75,7 +75,7 @@ class RaribleKafkaConsumerWorkerFt {
     }
 
     @Test
-    fun `receive message - ok, batch consumer`() = runBlocking<Unit> {
+    fun `receive message - ok, batch consumer, sync`() = runBlocking<Unit> {
         val producer = createProducer()
         val settings = createConsumerSettings(1, 3, false)
         factory.createWorker(settings, batchEventHandler).start()
@@ -89,9 +89,37 @@ class RaribleKafkaConsumerWorkerFt {
     }
 
     @Test
-    fun `receive message - ok, batch consumer, same key`() = runBlocking<Unit> {
+    fun `receive message - ok, batch consumer, sync with same key`() = runBlocking<Unit> {
         val producer = createProducer()
         val settings = createConsumerSettings(3, 10, false)
+        factory.createWorker(settings, batchEventHandler).start()
+
+        val events = createEvents(25)
+        producer.send(events.map { KafkaMessage(key = "1", value = it) }).collect()
+
+        waitAssert {
+            assertThat(batchEventHandler.received).containsExactlyElementsOf(events)
+        }
+    }
+
+    @Test
+    fun `receive message - ok, batch consumer, async`() = runBlocking<Unit> {
+        val producer = createProducer()
+        val settings = createConsumerSettings(3, 10, true)
+        factory.createWorker(settings, batchEventHandler).start()
+
+        val events = createEvents(25)
+        producer.send(events.map { KafkaMessage(key = randomString(), value = it) }).collect()
+
+        waitAssert {
+            assertThat(batchEventHandler.received).containsExactlyInAnyOrderElementsOf(events)
+        }
+    }
+
+    @Test
+    fun `receive message - ok, batch consumer, async with same key`() = runBlocking<Unit> {
+        val producer = createProducer()
+        val settings = createConsumerSettings(1, 10, true)
         factory.createWorker(settings, batchEventHandler).start()
 
         val events = createEvents(25)

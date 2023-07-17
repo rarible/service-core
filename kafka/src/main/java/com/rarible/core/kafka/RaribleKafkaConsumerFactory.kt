@@ -36,14 +36,14 @@ class RaribleKafkaConsumerFactory(
     }
 
     /**
-     * Creates worker for batch handling, so parallelization of event processing is
-     * responsibility of handler's implementation
+     * Creates worker for batch handling. Can group messages by kafka 'key' to smaller batches
+     * and call handle() function in async way, if settings.async == true
      */
     fun <T> createWorker(
         settings: RaribleKafkaConsumerSettings<T>,
         handler: RaribleKafkaBatchEventHandler<T>
     ): RaribleKafkaConsumerWorker<T> {
-        val listener = RaribleKafkaMessageListenerFactory.create(handler)
+        val listener = RaribleKafkaMessageListenerFactory.create(handler, settings.async)
         return createWorker(settings, listener)
     }
 
