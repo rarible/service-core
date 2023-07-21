@@ -2,7 +2,7 @@ package com.rarible.protocol.apikey.kafka
 
 import com.rarible.core.kafka.RaribleKafkaBatchEventHandler
 import com.rarible.core.kafka.RaribleKafkaEventHandler
-import com.rarible.core.logging.asyncWithTraceId
+import com.rarible.core.common.asyncWithTraceId
 import com.rarible.core.logging.withBatchId
 import com.rarible.core.logging.withTraceId
 import kotlinx.coroutines.NonCancellable
