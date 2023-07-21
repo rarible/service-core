@@ -74,12 +74,14 @@ fun <T> Flow<T>.withTraceId(): Flow<T> {
 }
 
 @Suppress("DeferredIsResult")
+@Deprecated("Use com.rarible.core.common.asyncWithTraceId")
 fun <T> CoroutineScope.asyncWithTraceId(
     start: CoroutineStart = CoroutineStart.DEFAULT,
     context: kotlin.coroutines.CoroutineContext = EmptyCoroutineContext,
     block: suspend CoroutineScope.() -> T
 ): Deferred<T> = async(context = MDCContext() + context, start = start, block = block)
 
+@Deprecated("Use com.rarible.core.common.launchWithTraceId")
 fun CoroutineScope.launchWithTraceId(
     start: CoroutineStart = CoroutineStart.DEFAULT,
     block: suspend CoroutineScope.() -> Unit

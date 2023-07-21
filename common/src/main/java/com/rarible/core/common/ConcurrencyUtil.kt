@@ -9,7 +9,7 @@ suspend fun <T, R> Collection<T>.asyncBatchHandle(batch: Int, handler: suspend (
     return coroutineScope {
         list.chunked(batch).map { chunk ->
             chunk.map { element ->
-                async {
+                asyncWithTraceId {
                     handler(element)
                 }
             }.awaitAll()
