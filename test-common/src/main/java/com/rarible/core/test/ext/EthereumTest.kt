@@ -23,8 +23,8 @@ class EthereumTestExtension : BeforeAllCallback {
         setProperty("parityUrls", ethereumContainer.ethereumUrl().toString())
         setProperty("parityWebSocketUrls", ethereumContainer.ethereumWebSocketUrl().toString())
 
-        setProperty("rarible.ethereum.httpUrl", ethereumContainer.ethereumUrl().toString())
-        setProperty("rarible.ethereum.websocketUrl", ethereumContainer.ethereumWebSocketUrl().toString())
+        setProperty("rarible.ethereum.nodes[0].httpUrl", ethereumContainer.ethereumUrl().toString())
+        setProperty("rarible.ethereum.nodes[0].websocketUrl", ethereumContainer.ethereumWebSocketUrl().toString())
     }
 
     companion object {
