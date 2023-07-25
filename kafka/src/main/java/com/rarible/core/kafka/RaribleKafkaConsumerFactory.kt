@@ -75,7 +75,7 @@ class RaribleKafkaConsumerFactory(
         return config
     }
 
-    private class RaribleKafkaConsumerWorkerWrapper<K, V>(
+    class RaribleKafkaConsumerWorkerWrapper<K, V>(
         private val containers: List<AbstractMessageListenerContainer<K, V>>
     ) : RaribleKafkaConsumerWorker<V>, ApplicationEventPublisherAware, ApplicationContextAware {
 
