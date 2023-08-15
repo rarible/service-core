@@ -1,8 +1,10 @@
 package com.rarible.core.entity.reducer.service
 
-import com.rarible.core.apm.withSpan
 import com.rarible.core.common.optimisticLock
 import com.rarible.core.entity.reducer.model.Identifiable
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 
 /**
  * Service to handle small amount of events for one entity
@@ -19,13 +21,13 @@ open class EventReduceService<Id, Event, E : Identifiable<Id>>(
      * groups them by entity id and applies using batch to every entity
      */
     suspend fun reduceAll(event: List<Event>) {
-        event
-            .groupBy { entityIdService.getEntityId(it) }
-            .forEach { (id, events) ->
-                withSpan(name = "reduceEntity", labels = listOf("entityId" to id.toString(), "size" to events.size)) {
+        coroutineScope {
+            event.groupBy { entityIdService.getEntityId(it) }.map { (id, events) ->
+                async {
                     reduce(id, events)
                 }
-            }
+            }.awaitAll()
+        }
     }
 
     /**
@@ -41,18 +43,14 @@ open class EventReduceService<Id, Event, E : Identifiable<Id>>(
      */
     private suspend fun reduce(id: Id, events: List<Event>): E {
         return optimisticLock {
-            val entity = withSpan(name = "get", labels = listOf("id" to id.toString())) {
-                entityService.get(id) ?: templateProvider.getEntityTemplate(id, version = null)
+            val entity = entityService.get(id) ?: templateProvider.getEntityTemplate(id, version = null)
+
+            val result = events.fold(entity) { e, event ->
+                reducer.reduce(e, event)
             }
-            val result = withSpan(name = "reduce", labels = listOf("id" to id.toString())) {
-                events.fold(entity) { e, event ->
-                    reducer.reduce(e, event)
-                }
-            }
+
             if (isChanged(entity, result)) {
-                withSpan(name = "save", labels = listOf("id" to id.toString())) {
-                    entityService.update(result, events.lastOrNull())
-                }
+                entityService.update(result, events.lastOrNull())
             }
             result
         }

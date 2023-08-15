@@ -37,7 +37,7 @@
     </distributionManagement>
 
     <properties>
-        <revision>2.5.34</revision>
+        <revision>2.5.35</revision>
         <logback.version>1.2.11</logback.version>
         <logstash-encoder.version>7.0.1</logstash-encoder.version>
         <testcontainers.version>1.16.2</testcontainers.version>
@@ -291,8 +291,6 @@
         <module>common</module>
         <module>lock-redis</module>
         <module>cache</module>
-        <module>loader</module>
-        <module>loader-cache</module>
         <module>content-meta-loader</module>
         <module>task</module>
         <module>kafka</module>
