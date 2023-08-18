@@ -29,7 +29,7 @@ class RaribleKafkaListenerContainerFactory<T>(
         isBatchListener = batchSize > 1
         setConcurrency(concurrency)
         if (isBatchListener) {
-            setCommonErrorHandler(DefaultErrorHandler())
+            setCommonErrorHandler(DefaultErrorHandler(NoRecover()))
         }
         setRecordFilterStrategy(NullFilteringStrategy<T>())
     }
