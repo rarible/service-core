@@ -36,7 +36,7 @@ class RaribleKafkaConsumerWorkerFt {
     fun `receive message - ok, sync `() = runBlocking<Unit> {
         val producer = createProducer()
         val settings = createConsumerSettings(1, 10, false)
-        factory.createWorker(settings, eventHandler).start()
+        factory.createWorker(settings, eventHandler, createContainerFactory(settings)).start()
 
         val events = createEvents(25)
         producer.send(events.map { KafkaMessage(key = randomString(), value = it) }).collect()
@@ -50,7 +50,7 @@ class RaribleKafkaConsumerWorkerFt {
     fun `receive message - ok, async`() = runBlocking<Unit> {
         val producer = createProducer()
         val settings = createConsumerSettings(3, 10, true)
-        factory.createWorker(settings, eventHandler).start()
+        factory.createWorker(settings, eventHandler, createContainerFactory(settings)).start()
 
         val events = createEvents(25)
         producer.send(events.map { KafkaMessage(key = randomString(), value = it) }).collect()
@@ -64,7 +64,7 @@ class RaribleKafkaConsumerWorkerFt {
     fun `receive message - ok, async with same key`() = runBlocking<Unit> {
         val producer = createProducer()
         val settings = createConsumerSettings(3, 3, true)
-        factory.createWorker(settings, eventHandler).start()
+        factory.createWorker(settings, eventHandler, createContainerFactory(settings)).start()
 
         val events = createEvents(25)
         producer.send(events.map { KafkaMessage(key = "1", value = it) }).collect()
@@ -78,7 +78,7 @@ class RaribleKafkaConsumerWorkerFt {
     fun `receive message - ok, batch consumer, sync`() = runBlocking<Unit> {
         val producer = createProducer()
         val settings = createConsumerSettings(1, 3, false)
-        factory.createWorker(settings, batchEventHandler).start()
+        factory.createWorker(settings, batchEventHandler, createContainerFactory(settings)).start()
 
         val events = createEvents(25)
         producer.send(events.map { KafkaMessage(key = randomString(), value = it) }).collect()
@@ -92,7 +92,7 @@ class RaribleKafkaConsumerWorkerFt {
     fun `receive message - ok, batch consumer, sync with same key`() = runBlocking<Unit> {
         val producer = createProducer()
         val settings = createConsumerSettings(3, 10, false)
-        factory.createWorker(settings, batchEventHandler).start()
+        factory.createWorker(settings, batchEventHandler, createContainerFactory(settings)).start()
 
         val events = createEvents(25)
         producer.send(events.map { KafkaMessage(key = "1", value = it) }).collect()
@@ -106,7 +106,7 @@ class RaribleKafkaConsumerWorkerFt {
     fun `receive message - ok, batch consumer, async`() = runBlocking<Unit> {
         val producer = createProducer()
         val settings = createConsumerSettings(3, 10, true)
-        factory.createWorker(settings, batchEventHandler).start()
+        factory.createWorker(settings, batchEventHandler, createContainerFactory(settings)).start()
 
         val events = createEvents(25)
         producer.send(events.map { KafkaMessage(key = randomString(), value = it) }).collect()
@@ -120,7 +120,7 @@ class RaribleKafkaConsumerWorkerFt {
     fun `receive message - ok, batch consumer, async with same key`() = runBlocking<Unit> {
         val producer = createProducer()
         val settings = createConsumerSettings(1, 10, true)
-        factory.createWorker(settings, batchEventHandler).start()
+        factory.createWorker(settings, batchEventHandler, createContainerFactory(settings)).start()
 
         val events = createEvents(25)
         producer.send(events.map { KafkaMessage(key = "1", value = it) }).collect()
@@ -139,6 +139,15 @@ class RaribleKafkaConsumerWorkerFt {
             bootstrapServers = kafkaContainer.kafkaBoostrapServers()
         )
     }
+
+    private fun createContainerFactory(settings: RaribleKafkaConsumerSettings<TestEvent>) =
+        RaribleKafkaListenerContainerFactory(
+            valueClass = settings.valueClass,
+            concurrency = settings.concurrency,
+            hosts = settings.hosts,
+            batchSize = settings.batchSize,
+            offsetResetStrategy = settings.offsetResetStrategy,
+        )
 
     private fun createConsumerSettings(
         concurrency: Int,

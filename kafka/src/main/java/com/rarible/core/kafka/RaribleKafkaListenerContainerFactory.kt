@@ -19,6 +19,8 @@ class RaribleKafkaListenerContainerFactory<T>(
     private val hosts: String,
     private val batchSize: Int,
     private val offsetResetStrategy: OffsetResetStrategy,
+    private val deserializer: Class<*>? = null,
+    shouldSkipEventsOnError: Boolean = false,
     concurrency: Int = 9, // By default, we have 9 partitions for each topic
     valueClass: Class<T>,
     customSettings: Map<String, Any> = mapOf()
@@ -29,7 +31,7 @@ class RaribleKafkaListenerContainerFactory<T>(
         isBatchListener = batchSize > 1
         setConcurrency(concurrency)
         if (isBatchListener) {
-            setCommonErrorHandler(DefaultErrorHandler(NoRecover()))
+            setCommonErrorHandler(DefaultErrorHandler(if (shouldSkipEventsOnError) null else NoRecover()))
         }
         setRecordFilterStrategy(NullFilteringStrategy<T>())
     }
@@ -41,8 +43,8 @@ class RaribleKafkaListenerContainerFactory<T>(
             ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG to hosts,
             ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to offsetResetStrategy.name.lowercase(),
             ErrorHandlingDeserializer.KEY_DESERIALIZER_CLASS to StringDeserializer::class.java,
-            ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS to if (valueClass == String::class.java)
-                StringDeserializer::class.java else JsonDeserializer::class.java,
+            ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS to (deserializer ?: if (valueClass == String::class.java)
+                StringDeserializer::class.java else JsonDeserializer::class.java),
             ErrorHandlingDeserializer.KEY_FUNCTION to LoggingDeserializationFailureFunction::class.java,
             ErrorHandlingDeserializer.VALUE_FUNCTION to LoggingDeserializationFailureFunction::class.java,
             ConsumerConfig.MAX_POLL_RECORDS_CONFIG to batchSize,
