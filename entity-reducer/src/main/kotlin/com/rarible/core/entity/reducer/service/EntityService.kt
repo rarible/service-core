@@ -4,6 +4,8 @@ interface EntityService<Id, E, Event> {
 
     suspend fun get(id: Id): E?
 
+    suspend fun getAll(ids: Collection<Id>): List<E>
+
     /**
      * Update existing entity. Optionally, event triggered this update might be provided.
      * Event might be not specified, if update triggered by some internal logic -
