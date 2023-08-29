@@ -7,7 +7,6 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import org.slf4j.LoggerFactory
-import java.util.Optional
 
 /**
  * Service to handle small amount of events for one entity
@@ -35,7 +34,8 @@ open class EventReduceService<Id, Event, E : Identifiable<Id>>(
         coroutineScope {
             grouped.map { (id, events) ->
                 asyncWithTraceId(context = NonCancellable) {
-                    reduce(id, Optional.ofNullable(initial[id]), events)
+                    val current = initial[id] ?: getTemplate(id)
+                    reduce(id, current, events)
                 }
             }.awaitAll()
         }
@@ -63,21 +63,15 @@ open class EventReduceService<Id, Event, E : Identifiable<Id>>(
      */
     private suspend fun reduce(
         id: Id,
-        initial: Optional<E>,
+        current: E,
         events: List<Event>
     ): E {
         return optimisticLockWithInitial(
-            initial = initial,
+            initial = current,
             optimisticExceptionHandler = { onOptimisticLockException(id, it) }
         ) {
-            val entity = when {
-                // Second try after optimistic lock exception - means entity exists
-                it == null -> entityService.get(id) ?: getTemplate(id)
-                // Initial is not null, but content is null - means entity doesn't exist, using template
-                !it.isPresent -> getTemplate(id)
-                // Otherwise - entity already exists, first try without previous OL exception
-                else -> it.get()
-            }
+            // If initial == null it means there is already entity in DB, so in fact template not needed here
+            val entity = it ?: entityService.get(id) ?: getTemplate(id)
 
             val result = events.fold(entity) { e, event ->
                 reducer.reduce(e, event)
