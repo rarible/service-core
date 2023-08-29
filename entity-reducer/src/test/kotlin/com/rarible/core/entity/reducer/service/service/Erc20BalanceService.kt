@@ -17,6 +17,10 @@ class Erc20BalanceService : EntityService<Long, Erc20Balance, Erc20BalanceEvent>
         return storage[id]
     }
 
+    override suspend fun getAll(ids: Collection<Long>): List<Erc20Balance> {
+        return ids.mapNotNull { get(it) }
+    }
+
     override suspend fun update(entity: Erc20Balance, event: Erc20BalanceEvent?): Erc20Balance {
         storage[entity.id] = entity.copy(
             version = (entity.version ?: 0L) + 1L,
