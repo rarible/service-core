@@ -1,5 +1,6 @@
 package com.rarible.core.task
 
+import io.micrometer.core.instrument.util.NamedThreadFactory
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.reactive.asFlow
@@ -28,7 +29,11 @@ class TaskService(
     handlers: List<TaskHandler<*>>
 ) {
     private val scope = CoroutineScope(
-        SupervisorJob() + Executors.newCachedThreadPool().asCoroutineDispatcher()
+        SupervisorJob() + Executors.newFixedThreadPool(
+            Runtime.getRuntime().availableProcessors() * 2,
+            NamedThreadFactory("task-")
+        )
+            .asCoroutineDispatcher()
     )
 
     val handlersMap = handlers.associateBy { it.type }
