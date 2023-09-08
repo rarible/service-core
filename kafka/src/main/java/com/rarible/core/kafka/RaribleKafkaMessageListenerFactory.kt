@@ -1,19 +1,15 @@
-package com.rarible.protocol.apikey.kafka
+package com.rarible.core.kafka
 
-import com.rarible.core.kafka.RaribleKafkaBatchEventHandler
-import com.rarible.core.kafka.RaribleKafkaEventHandler
 import com.rarible.core.common.asyncWithTraceId
 import com.rarible.core.logging.withBatchId
 import com.rarible.core.logging.withTraceId
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.runBlocking
 import org.apache.kafka.clients.consumer.ConsumerRecord
-import org.springframework.kafka.listener.BatchMessageListener
 
 object RaribleKafkaMessageListenerFactory {
 
-    fun <T> create(handler: RaribleKafkaEventHandler<T>, async: Boolean): BatchMessageListener<String, T> {
+    fun <T> create(handler: RaribleKafkaEventHandler<T>, async: Boolean): SuspendBatchMessageListener<String, T> {
         return when (async) {
             // All events will be handled in parallel (except that having same key)
             true -> Concurrent(handler)
@@ -22,7 +18,7 @@ object RaribleKafkaMessageListenerFactory {
         }
     }
 
-    fun <T> create(handler: RaribleKafkaBatchEventHandler<T>, async: Boolean): BatchMessageListener<String, T> {
+    fun <T> create(handler: RaribleKafkaBatchEventHandler<T>, async: Boolean): SuspendBatchMessageListener<String, T> {
         return when (async) {
             // All events grouped by key will be handled in parallel, all events in the batch have same key
             true -> BatchConcurrent(handler)
@@ -33,8 +29,9 @@ object RaribleKafkaMessageListenerFactory {
 
     private class Concurrent<T>(
         private val handler: RaribleKafkaEventHandler<T>
-    ) : BatchMessageListener<String, T> {
-        override fun onMessage(records: List<ConsumerRecord<String, T>>) = runBlocking<Unit>(NonCancellable) {
+    ) : SuspendBatchMessageListener<String, T> {
+
+        override suspend fun onMessage(records: List<ConsumerRecord<String, T>>) {
             withBatchId {
                 val recordsByKey = records.filter { it.value() != null }.groupBy { it.key() }
                 recordsByKey.values.map { group ->
@@ -52,9 +49,9 @@ object RaribleKafkaMessageListenerFactory {
 
     private class Sequential<T>(
         private val handler: RaribleKafkaEventHandler<T>
-    ) : BatchMessageListener<String, T> {
+    ) : SuspendBatchMessageListener<String, T> {
 
-        override fun onMessage(records: List<ConsumerRecord<String, T>>) = runBlocking<Unit>(NonCancellable) {
+        override suspend fun onMessage(records: List<ConsumerRecord<String, T>>) {
             withBatchId {
                 records.map { record ->
                     record.value()?.let {
@@ -69,9 +66,9 @@ object RaribleKafkaMessageListenerFactory {
 
     private class BatchSequential<T>(
         private val handler: RaribleKafkaBatchEventHandler<T>
-    ) : BatchMessageListener<String, T> {
+    ) : SuspendBatchMessageListener<String, T> {
 
-        override fun onMessage(records: List<ConsumerRecord<String, T>>) = runBlocking<Unit>(NonCancellable) {
+        override suspend fun onMessage(records: List<ConsumerRecord<String, T>>) {
             withBatchId {
                 withTraceId {
                     handler.handle(records.mapNotNull { it.value() })
@@ -82,9 +79,9 @@ object RaribleKafkaMessageListenerFactory {
 
     private class BatchConcurrent<T>(
         private val handler: RaribleKafkaBatchEventHandler<T>
-    ) : BatchMessageListener<String, T> {
+    ) : SuspendBatchMessageListener<String, T> {
 
-        override fun onMessage(records: List<ConsumerRecord<String, T>>) = runBlocking<Unit>(NonCancellable) {
+        override suspend fun onMessage(records: List<ConsumerRecord<String, T>>) {
             withBatchId {
                 val recordsByKey = records.filter { it.value() != null }.groupBy { it.key() }
                 recordsByKey.values.map { group ->
