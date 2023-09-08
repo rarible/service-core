@@ -1,7 +1,15 @@
 package com.rarible.core.task
 
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
+import io.micrometer.core.instrument.util.NamedThreadFactory
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.count
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitFirst
 import org.slf4j.Logger
@@ -28,7 +36,11 @@ class TaskService(
     handlers: List<TaskHandler<*>>
 ) {
     private val scope = CoroutineScope(
-        SupervisorJob() + Executors.newCachedThreadPool().asCoroutineDispatcher()
+        SupervisorJob() + Executors.newFixedThreadPool(
+            Runtime.getRuntime().availableProcessors() * 2,
+            NamedThreadFactory("task-")
+        )
+            .asCoroutineDispatcher()
     )
 
     val handlersMap = handlers.associateBy { it.type }

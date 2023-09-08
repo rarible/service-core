@@ -1,10 +1,10 @@
 package com.rarible.core.content.meta.loader
 
-import io.ktor.client.*
-import io.ktor.client.engine.cio.*
-import io.ktor.client.features.*
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.features.BrowserUserAgent
 
-class KtorCioClientContentReceiver (
+class KtorCioClientContentReceiver(
     private val timeout: Int,
     private val threadsCount: Int = 1,
     private val totalConnection: Int = 1000
@@ -18,5 +18,4 @@ class KtorCioClientContentReceiver (
         }
         BrowserUserAgent()
     }
-
 }

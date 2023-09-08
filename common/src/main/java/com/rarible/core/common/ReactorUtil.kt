@@ -4,8 +4,17 @@ import org.slf4j.Logger
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.scheduler.Schedulers
-import reactor.util.function.*
-import java.util.*
+import reactor.util.function.Tuple10
+import reactor.util.function.Tuple11
+import reactor.util.function.Tuple2
+import reactor.util.function.Tuple3
+import reactor.util.function.Tuple4
+import reactor.util.function.Tuple5
+import reactor.util.function.Tuple6
+import reactor.util.function.Tuple7
+import reactor.util.function.Tuple8
+import reactor.util.function.Tuple9
+import java.util.Optional
 import java.util.concurrent.Callable
 
 fun <T> Mono<T>.subscribeAndLog(name: String, logger: Logger) {
@@ -66,7 +75,6 @@ fun <T> Mono<Optional<T>>.fromOptional(): Mono<T> =
 
 fun <T> Mono<Collection<T>>.toFlux(): Flux<T> =
     this.flatMapMany { Flux.fromIterable(it) }
-
 
 operator fun <T1, T2> Tuple2<T1, T2>.component1(): T1 {
     return t1
@@ -138,7 +146,15 @@ operator fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> Tuple11<T1, T2, T3, 
 
 @Suppress("UNCHECKED_CAST")
 fun <T1, T2, T3, T4, T5, T6, T7, T8, T9> zip(
-    t1: Mono<T1>, t2: Mono<T2>, t3: Mono<T3>, t4: Mono<T4>, t5: Mono<T5>, t6: Mono<T6>, t7: Mono<T7>, t8: Mono<T8>, t9: Mono<T9>
+    t1: Mono<T1>,
+    t2: Mono<T2>,
+    t3: Mono<T3>,
+    t4: Mono<T4>,
+    t5: Mono<T5>,
+    t6: Mono<T6>,
+    t7: Mono<T7>,
+    t8: Mono<T8>,
+    t9: Mono<T9>
 ): Mono<Tuple9<T1, T2, T3, T4, T5, T6, T7, T8, T9>> =
     reactor.kotlin.core.publisher.zip(t1, t2, t3, t4, t5, t6, t7, t8, t9) { zipped ->
         Tuple9(
@@ -156,7 +172,16 @@ fun <T1, T2, T3, T4, T5, T6, T7, T8, T9> zip(
 
 @Suppress("UNCHECKED_CAST")
 fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> zip(
-    t1: Mono<T1>, t2: Mono<T2>, t3: Mono<T3>, t4: Mono<T4>, t5: Mono<T5>, t6: Mono<T6>, t7: Mono<T7>, t8: Mono<T8>, t9: Mono<T9>, t10: Mono<T10>
+    t1: Mono<T1>,
+    t2: Mono<T2>,
+    t3: Mono<T3>,
+    t4: Mono<T4>,
+    t5: Mono<T5>,
+    t6: Mono<T6>,
+    t7: Mono<T7>,
+    t8: Mono<T8>,
+    t9: Mono<T9>,
+    t10: Mono<T10>
 ): Mono<Tuple10<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>> =
     reactor.kotlin.core.publisher.zip(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10) { zipped ->
         Tuple10(
@@ -175,7 +200,17 @@ fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> zip(
 
 @Suppress("UNCHECKED_CAST")
 fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> zip(
-    t1: Mono<T1>, t2: Mono<T2>, t3: Mono<T3>, t4: Mono<T4>, t5: Mono<T5>, t6: Mono<T6>, t7: Mono<T7>, t8: Mono<T8>, t9: Mono<T9>, t10: Mono<T10>, t11: Mono<T11>
+    t1: Mono<T1>,
+    t2: Mono<T2>,
+    t3: Mono<T3>,
+    t4: Mono<T4>,
+    t5: Mono<T5>,
+    t6: Mono<T6>,
+    t7: Mono<T7>,
+    t8: Mono<T8>,
+    t9: Mono<T9>,
+    t10: Mono<T10>,
+    t11: Mono<T11>
 ): Mono<Tuple11<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>> =
     reactor.kotlin.core.publisher.zip(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11) { zipped ->
         Tuple11(

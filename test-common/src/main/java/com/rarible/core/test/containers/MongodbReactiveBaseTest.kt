@@ -19,4 +19,3 @@ abstract class MongodbReactiveBaseTest {
         return ReactiveMongoTemplate(createMongoClient(), database ?: "test")
     }
 }
-

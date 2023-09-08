@@ -1,7 +1,12 @@
 package com.rarible.core.reduce.service.reducer
 
 import com.rarible.core.reduce.service.Reducer
-import com.rarible.core.reduce.service.model.*
+import com.rarible.core.reduce.service.model.AccountBalance
+import com.rarible.core.reduce.service.model.AccountId
+import com.rarible.core.reduce.service.model.AccountIncomeTransfer
+import com.rarible.core.reduce.service.model.AccountOutcomeTransfer
+import com.rarible.core.reduce.service.model.AccountReduceEvent
+import com.rarible.core.reduce.service.model.AccountReduceSnapshot
 import com.rarible.core.reduce.service.repository.AccountBalanceRepository
 import java.math.BigInteger
 

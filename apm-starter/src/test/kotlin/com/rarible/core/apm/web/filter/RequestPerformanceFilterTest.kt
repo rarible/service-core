@@ -1,6 +1,6 @@
 package com.rarible.core.apm.web.filter
 
-import com.rarible.core.apm.*
+import com.rarible.core.apm.getApmContext
 import com.rarible.core.application.ApplicationEnvironmentInfo
 import com.rarible.core.application.ApplicationInfo
 import org.assertj.core.api.Assertions.assertThat
@@ -43,7 +43,7 @@ class RequestPerformanceFilterTest {
     @Test
     fun `APM context propagated`() {
         val template = RestTemplate()
-        val result: Boolean = template.getForObject("http://localhost:${port}/test")
+        val result: Boolean = template.getForObject("http://localhost:$port/test")
         assertThat(result).isTrue()
     }
 

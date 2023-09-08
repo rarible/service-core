@@ -18,5 +18,4 @@ object KafkaObjectMapperFactory {
         objectMapper.registerModule(JavaTimeModule())
         return objectMapper
     }
-
 }

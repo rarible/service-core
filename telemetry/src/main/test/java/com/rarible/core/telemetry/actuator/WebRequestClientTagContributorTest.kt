@@ -70,5 +70,4 @@ class WebRequestClientTagContributorTest {
         clientName?.let { request.header("x-rarible-client", clientName) }
         return MockServerWebExchange.builder(request.build()).build()
     }
-
 }

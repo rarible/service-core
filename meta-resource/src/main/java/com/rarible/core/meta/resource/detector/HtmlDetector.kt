@@ -28,8 +28,7 @@ object HtmlDetector : MediaDetector {
         val receivedMimeType = contentBytes.mimeType ?: ""
 
         // Checking content-type (could be like 'text/html; charset=utf-8') and opening of tag <html> in the content
-        return receivedMimeType.startsWith(MimeType.HTML_TEXT.value)
-            || Bytes.indexOf(contentBytes.data, HTML_TAG) >= 0
+        return receivedMimeType.startsWith(MimeType.HTML_TEXT.value) ||
+            Bytes.indexOf(contentBytes.data, HTML_TAG) >= 0
     }
-
 }

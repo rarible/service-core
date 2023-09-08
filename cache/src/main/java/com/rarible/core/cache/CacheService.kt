@@ -18,7 +18,7 @@ import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.core.query.isEqualTo
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
-import java.util.*
+import java.util.Date
 
 @Service
 class CacheService(
@@ -26,7 +26,7 @@ class CacheService(
     private val lockService: LockService,
     @Value("\${rarible.cache.use-locks}") private val useLocks: Boolean
 ) {
-    fun <T: Any> getCached(
+    fun <T : Any> getCached(
         id: String,
         d: CacheDescriptor<T>,
         immediatelyIfCached: Boolean = true
@@ -64,7 +64,7 @@ class CacheService(
             mongo.remove(Query(criteria), descriptor.collection).then()
         }
 
-    private fun <T: Any> getCachedInternalSync(
+    private fun <T : Any> getCachedInternalSync(
         marker: Marker,
         id: String,
         d: CacheDescriptor<T>,
@@ -77,7 +77,7 @@ class CacheService(
         }
     }
 
-    private fun <T: Any> getCachedInternal(
+    private fun <T : Any> getCachedInternal(
         marker: Marker,
         id: String,
         d: CacheDescriptor<T>,
@@ -99,7 +99,7 @@ class CacheService(
             }
     }
 
-    private fun <T: Any> getAndUpdateCache(
+    private fun <T : Any> getAndUpdateCache(
         marker: Marker,
         cache: Cache?,
         id: String,
@@ -131,6 +131,6 @@ class CacheService(
     }
 }
 
-fun <T: Any> CacheService?.get(id: String, d: CacheDescriptor<T>, immediatelyIfCached: Boolean = false): Mono<T> {
+fun <T : Any> CacheService?.get(id: String, d: CacheDescriptor<T>, immediatelyIfCached: Boolean = false): Mono<T> {
     return this?.getCached(id, d, immediatelyIfCached) ?: d.get(id)
 }

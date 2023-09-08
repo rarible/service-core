@@ -25,7 +25,6 @@ class ApmAgentConfigurationTest {
 
     @Test
     fun `test apm filter initialized`() {
-
     }
 
     @TestConfiguration

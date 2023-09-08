@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.Flow
  * Do not use `Address | EthUInt256` or other types that internally serialize to string, but cannot be deserialized without a hint.
  * This is because the current implementation of `TaskRunner` loses type information of the state field (RPN-1164).
  */
-interface TaskHandler<T: Any> {
+interface TaskHandler<T : Any> {
     /**
      * Application-wide unique identifier of this type of tasks.
      */

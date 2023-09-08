@@ -12,14 +12,14 @@ class AbstractIpfsUrlResourceParseTest {
     @Test
     fun `IPFS urls with ipfs path and broken slashes`() {
         // Abstract IPFS urls with /ipfs/ path and broken slashes
-        assertIpfsUrl("ipfs:/ipfs/${CID}", CID)
-        assertIpfsUrl("ipfs://ipfs/${CID}", CID)
-        assertIpfsUrl("ipfs:///ipfs/${CID}", CID)
-        assertIpfsUrl("ipfs:////ipfs/${CID}", CID)
+        assertIpfsUrl("ipfs:/ipfs/$CID", CID)
+        assertIpfsUrl("ipfs://ipfs/$CID", CID)
+        assertIpfsUrl("ipfs:///ipfs/$CID", CID)
+        assertIpfsUrl("ipfs:////ipfs/$CID", CID)
 
-        assertIpfsUrl("ipfs:////ipfs/${CID}", CID)
-        assertIpfsUrl("ipfs:////ipfs//${CID}", CID)
-        assertIpfsUrl("ipfs:////ipfs///${CID}", CID)
+        assertIpfsUrl("ipfs:////ipfs/$CID", CID)
+        assertIpfsUrl("ipfs:////ipfs//$CID", CID)
+        assertIpfsUrl("ipfs:////ipfs///$CID", CID)
     }
 
     @Test
@@ -29,7 +29,7 @@ class AbstractIpfsUrlResourceParseTest {
 
     @Test
     fun `IPFS prefix not found`() {
-        assertThat(abstractIpfsUrlResourceParser.parse("ipffs:/ipfs/${CID}")).isNull()
+        assertThat(abstractIpfsUrlResourceParser.parse("ipffs:/ipfs/$CID")).isNull()
     }
 
     @Test

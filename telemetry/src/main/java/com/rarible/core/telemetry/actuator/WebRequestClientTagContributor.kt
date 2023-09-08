@@ -57,5 +57,4 @@ class WebRequestClientTagContributor(
             return acceptableClientNames.contains(clientName)
         }
     }
-
 }

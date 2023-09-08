@@ -105,7 +105,3 @@ open class ExternalHttpClient(
             ""
         }
 }
-
-
-
-
