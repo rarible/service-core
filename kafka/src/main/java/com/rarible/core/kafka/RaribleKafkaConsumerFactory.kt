@@ -135,7 +135,7 @@ class RaribleKafkaConsumerFactory(
         private val threadPrefix = "${THREAD_PREFIX.incrementAndGet()}-KafkaSuspendListener"
 
         private val daemonDispatcher = Executors.newFixedThreadPool(coroutineThreads) {
-            Thread(it, "$threadPrefix-${THREAD_INDEX.getAndIncrement()}").apply { isDaemon = true }
+            Thread(it, "$threadPrefix-${THREAD_INDEX.getAndIncrement()}")
         }.asCoroutineDispatcher()
 
         private val scope = CoroutineScope(SupervisorJob() + daemonDispatcher)
