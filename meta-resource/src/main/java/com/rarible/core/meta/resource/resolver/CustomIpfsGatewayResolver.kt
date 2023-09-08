@@ -14,7 +14,7 @@ class LegacyIpfsGatewaySubstitutor(
     override fun getResourceUrl(ipfsUrl: IpfsUrl, gateway: String, replaceOriginalHost: Boolean): String? {
         for (legacy in legacyGateways) {
             if (ipfsUrl.originalGateway == legacy) {
-                return "${gateway}/${IpfsUrl.IPFS}/${ipfsUrl.path}"
+                return "$gateway/${IpfsUrl.IPFS}/${ipfsUrl.path}"
             }
         }
         return null

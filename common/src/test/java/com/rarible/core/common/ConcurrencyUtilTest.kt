@@ -11,7 +11,7 @@ class ConcurrencyUtilTest {
         assertThat(result).containsExactly("1", "2", "3", "4", "5", "6", "7", "8", "9")
     }
 
-    private fun handle(value : Int): String {
+    private fun handle(value: Int): String {
         return value.toString()
     }
 }

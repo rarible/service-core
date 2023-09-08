@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.toFlux
-import java.util.*
+import java.util.Optional
 
 @Suppress("MemberVisibilityCanBePrivate")
 class ReduceService<
@@ -23,12 +23,12 @@ class ReduceService<
         Mark : Comparable<Mark>,
         Data,
         Key>(
-    private val reducer: Reducer<Event, Snapshot, Mark, Data, Key>,
-    private val eventRepository: ReduceEventRepository<Event, Mark, Key>,
-    private val snapshotRepository: SnapshotRepository<Snapshot, Data, Mark, Key>,
-    private val updateService: UpdateService<Data>,
-    private val snapshotStrategy: SnapshotStrategy<Snapshot, Mark>
-) {
+        private val reducer: Reducer<Event, Snapshot, Mark, Data, Key>,
+        private val eventRepository: ReduceEventRepository<Event, Mark, Key>,
+        private val snapshotRepository: SnapshotRepository<Snapshot, Data, Mark, Key>,
+        private val updateService: UpdateService<Data>,
+        private val snapshotStrategy: SnapshotStrategy<Snapshot, Mark>
+    ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     suspend fun onEvents(events: List<Event>) {

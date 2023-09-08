@@ -3,7 +3,7 @@ package com.rarible.core.cache
 import org.springframework.data.annotation.Id
 import org.springframework.data.annotation.Version
 import org.springframework.data.mongodb.core.mapping.Document
-import java.util.*
+import java.util.Date
 
 @Document
 data class Cache(

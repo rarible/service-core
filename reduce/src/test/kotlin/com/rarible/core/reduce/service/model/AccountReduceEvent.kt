@@ -7,4 +7,3 @@ data class AccountReduceEvent(
 ) : ReduceEvent<Long> {
     override val mark = event.blockNumber
 }
-

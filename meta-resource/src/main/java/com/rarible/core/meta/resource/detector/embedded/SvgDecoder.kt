@@ -36,6 +36,5 @@ object SvgDecoder : ContentDecoder {
             mimeType = MimeType.SVG_XML_IMAGE.value,
             size = bytes.size.toLong()
         )
-
     }
 }

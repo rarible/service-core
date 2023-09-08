@@ -7,4 +7,4 @@ import org.springframework.data.mongodb.core.mapping.Document
 data class DoubleTest(
     val value: Double,
     val id: ObjectId = ObjectId.get()
-);
+)

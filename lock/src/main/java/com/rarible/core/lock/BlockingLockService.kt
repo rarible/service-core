@@ -2,7 +2,7 @@ package com.rarible.core.lock
 
 import com.rarible.core.common.blockingToMono
 import reactor.core.publisher.Mono
-import java.util.*
+import java.util.Optional
 import java.util.concurrent.Callable
 
 class BlockingLockService : LockService {

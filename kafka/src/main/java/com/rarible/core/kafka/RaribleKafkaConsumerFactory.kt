@@ -63,7 +63,7 @@ class RaribleKafkaConsumerFactory(
         logger.info("Created Kafka consumer with params: {}", settings)
         val container = factory.createContainer(settings.topic)
         container.setupMessageListener(listener)
-        container.containerProperties.groupId = "${env}.${settings.group}"
+        container.containerProperties.groupId = "$env.${settings.group}"
         container.containerProperties.clientId = "$clientIdPrefix.${settings.group}"
 
         return RaribleKafkaConsumerWorkerWrapper(listOf(container))

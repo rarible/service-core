@@ -31,7 +31,7 @@ object SvgDetector : MediaDetector {
     private fun isSvg(contentData: ContentData): Boolean {
         val receivedMimeType = contentData.mimeType ?: ""
         // Checking content-type (could be like 'image/svg; charset=utf-8') and opening of tag <svg> in the content
-        return receivedMimeType.startsWith(SVG_MIME_TYPE_START)
-            || Bytes.indexOf(contentData.data, SVG_TAG_BYTES) >= 0
+        return receivedMimeType.startsWith(SVG_MIME_TYPE_START) ||
+            Bytes.indexOf(contentData.data, SVG_TAG_BYTES) >= 0
     }
 }

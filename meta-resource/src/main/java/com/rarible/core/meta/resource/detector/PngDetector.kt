@@ -36,7 +36,7 @@ object PngDetector : MediaDetector {
                 return null
             }
             val chunkTypeBytes = runCatching { reader.getBytes(4) }.getOrNull() ?: return null
-            when(val chunkType = PngChunkType(chunkTypeBytes)) {
+            when (val chunkType = PngChunkType(chunkTypeBytes)) {
                 PngChunkType.IHDR -> {
                     val chunkData = runCatching { reader.getBytes(chunkDataLength) }.getOrNull() ?: return null
                     val chunk = PngChunk(chunkType, chunkData)

@@ -47,5 +47,4 @@ class HtmlDetectorTest {
         assertEquals(ContentMeta(mimeType = MimeType.HTML_TEXT.value, size = 50), htmlContent)
         assertEquals(ContentMeta(mimeType = "${MimeType.HTML_TEXT.value}; charset=utf-8"), htmlContentWithMimeType)
     }
-
 }

@@ -9,4 +9,3 @@ class Erc20BalanceReducer : Reducer<Erc20BalanceEvent, Erc20Balance> {
         return entity.copy(balance = entity.balance + event.value)
     }
 }
-
