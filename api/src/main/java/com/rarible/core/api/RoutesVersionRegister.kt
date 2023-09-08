@@ -9,7 +9,6 @@ import org.springframework.web.reactive.result.method.annotation.RequestMappingH
 import org.springframework.web.util.pattern.PathPatternParser
 import java.lang.IllegalStateException
 
-
 class RoutesVersionRegister(
     private val oldVersion: String,
     private val currentVersion: String,

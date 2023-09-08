@@ -18,5 +18,3 @@ annotation class CaptureSpan(
 
     val action: String = ""
 )
-
-

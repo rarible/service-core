@@ -10,4 +10,3 @@ internal const val RARIBLE_FILTER_APM = "rarible.core.apm.web.filter"
 data class ApmFilterProperties(
     val enabled: Boolean = true
 )
-

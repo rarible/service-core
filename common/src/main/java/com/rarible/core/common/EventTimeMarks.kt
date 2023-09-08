@@ -24,7 +24,6 @@ data class EventTimeMarks(
 
     fun addIn(stage: String, postfix: String?, date: Instant? = null) = addStage("$stage-in", postfix, date)
     fun addOut(stage: String, postfix: String?, date: Instant? = null) = addStage("$stage-out", postfix, date)
-
 }
 
 data class EventTimeMark(

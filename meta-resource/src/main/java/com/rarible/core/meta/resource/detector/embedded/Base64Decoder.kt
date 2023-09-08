@@ -40,4 +40,3 @@ object Base64Decoder : ContentDecoder {
         return data.substring(mimeTypeStartIndex, markerIndex)
     }
 }
-

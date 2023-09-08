@@ -1,8 +1,13 @@
 package com.rarible.core.reduce.factory
 
-import com.rarible.core.reduce.service.model.*
+import com.rarible.core.reduce.service.model.AccountBalance
+import com.rarible.core.reduce.service.model.AccountId
+import com.rarible.core.reduce.service.model.AccountIncomeTransfer
+import com.rarible.core.reduce.service.model.AccountOutcomeTransfer
+import com.rarible.core.reduce.service.model.Address
 import java.math.BigInteger
-import java.util.*
+import java.util.Date
+import java.util.UUID
 
 fun randomLong(): Long {
     return (1L..1000).random()

@@ -347,7 +347,6 @@ class SpanAnnotationPostProcessorTest {
         fun applicationInfo(): ApplicationInfo {
             return ApplicationInfo("test", "test.com")
         }
-
     }
 
     open class TransactionClass(

@@ -31,7 +31,7 @@ class RaribleKafkaConsumer<V>(
     offsetResetStrategy: OffsetResetStrategy = OffsetResetStrategy.LATEST,
     valueClass: Class<V>? = null,
     autoCreateTopic: Boolean? = null,
-    maxPollIntervalMs: Int? = null, //TODO: add a test for this parameter.
+    maxPollIntervalMs: Int? = null, // TODO: add a test for this parameter.
     // Deprecated parameter, use explicit parameters or make a PR to the library.
     properties: Map<String, String> = emptyMap()
 ) : KafkaConsumer<V> {

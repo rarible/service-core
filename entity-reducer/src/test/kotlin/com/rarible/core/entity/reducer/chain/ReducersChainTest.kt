@@ -10,12 +10,12 @@ import org.junit.jupiter.api.Test
 internal class ReducersChainTest {
     private val reduce1 = object : Reducer<Erc20BalanceEvent, Erc20Balance> {
         override suspend fun reduce(entity: Erc20Balance, event: Erc20BalanceEvent): Erc20Balance {
-            return entity.copy(balance = entity.balance * event.value )
+            return entity.copy(balance = entity.balance * event.value)
         }
     }
     private val reduce2 = object : Reducer<Erc20BalanceEvent, Erc20Balance> {
         override suspend fun reduce(entity: Erc20Balance, event: Erc20BalanceEvent): Erc20Balance {
-            return entity.copy(balance = entity.balance + event.value )
+            return entity.copy(balance = entity.balance + event.value)
         }
     }
     private val chain = ReducersChain(listOf(reduce1, reduce2))

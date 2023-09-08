@@ -10,4 +10,3 @@ internal const val RARIBLE_APM_ANNOTATION = "rarible.core.apm.annotation"
 data class ApmAnnotationProperties(
     val enabled: Boolean = true
 )
-

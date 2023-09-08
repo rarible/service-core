@@ -76,7 +76,7 @@ class ContentMetaReceiver(
         contentDetector.detect(contentBytes, url.toString())
             ?.let { return it.copy(available = true) }
 
-        return getFallbackContentMeta(url, contentBytes)?.copy( available = contentBytes.data.isNotEmpty())
+        return getFallbackContentMeta(url, contentBytes)?.copy(available = contentBytes.data.isNotEmpty())
     }
 
     private fun countResult(contentMeta: ContentMeta?) {

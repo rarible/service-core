@@ -30,9 +30,9 @@ class UrlResolverTest {
     fun `SimpleHttpGatewayResolver happy path`() {
         assertThat(
             urlResolver.resolvePublicUrl(
-                resource = HttpUrl(original = "${ResourceTestData.ORIGINAL_GATEWAY}/ipfs/${CID}")
+                resource = HttpUrl(original = "${ResourceTestData.ORIGINAL_GATEWAY}/ipfs/$CID")
             )
-        ).isEqualTo("${ResourceTestData.ORIGINAL_GATEWAY}/ipfs/${CID}")
+        ).isEqualTo("${ResourceTestData.ORIGINAL_GATEWAY}/ipfs/$CID")
     }
 
     @Test

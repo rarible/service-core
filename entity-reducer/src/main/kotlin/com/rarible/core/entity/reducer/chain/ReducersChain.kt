@@ -12,4 +12,3 @@ open class ReducersChain<Event, Entity>(
         }
     }
 }
-

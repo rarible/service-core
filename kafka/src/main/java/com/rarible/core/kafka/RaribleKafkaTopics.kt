@@ -7,7 +7,7 @@ import org.apache.kafka.clients.admin.OffsetSpec
 import org.apache.kafka.clients.admin.RecordsToDelete
 import org.apache.kafka.common.TopicPartition
 import org.slf4j.LoggerFactory
-import java.util.*
+import java.util.Optional
 
 // TODO: add a utility to cleanup all Kafka topics in a local cluster and an annotation KafkaCleanup (like MongoCleanup)
 object RaribleKafkaTopics {

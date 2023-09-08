@@ -93,5 +93,4 @@ abstract class AbstractConsumerWorker<T, E>(
     private companion object {
         val WORKER_DOWN_TIME: Duration = Duration.ofSeconds(30)
     }
-
 }

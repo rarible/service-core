@@ -30,5 +30,4 @@ class ContextFilterTest {
         val result = headers.toLoggingContext()
         assertThat(result.containsKey(TRACE_ID)).isTrue
     }
-
 }

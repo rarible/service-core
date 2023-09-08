@@ -59,7 +59,7 @@ class ApacheHttpContentReceiver(
             .setConnectionRequestTimeout(timeout)
             .build()
 
-        request.config = config;
+        request.config = config
 
         val promise = CompletableFuture<ContentData>().exceptionally { throwable ->
             if ((throwable is CancellationException || throwable.cause is CancellationException)) {

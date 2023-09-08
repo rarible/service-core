@@ -19,7 +19,7 @@ class EthereumTestExtension : BeforeAllCallback {
         setProperty("rarible.common.parityUrls", ethereumContainer.ethereumUrl().toString())
         setProperty("rarible.common.parityWebSocketUrls", ethereumContainer.ethereumWebSocketUrl().toString())
 
-        //configuration io.daonomic.ethereum.listener.common.EthereumConfiguration has different ethereum prefix
+        // configuration io.daonomic.ethereum.listener.common.EthereumConfiguration has different ethereum prefix
         setProperty("parityUrls", ethereumContainer.ethereumUrl().toString())
         setProperty("parityWebSocketUrls", ethereumContainer.ethereumWebSocketUrl().toString())
 
