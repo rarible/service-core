@@ -11,8 +11,8 @@ open class BlockchainSnapshotStrategy<
         Snapshot : ReduceSnapshot<Data, Long, Key>,
         Data,
         Key>(
-    private val numberOfBlockConfirmations: Int
-) : SnapshotStrategy<Snapshot, Long> {
+        private val numberOfBlockConfirmations: Int
+    ) : SnapshotStrategy<Snapshot, Long> {
 
     override fun context(initial: Snapshot): Context<Snapshot, Long> {
         return object : Context<Snapshot, Long> {

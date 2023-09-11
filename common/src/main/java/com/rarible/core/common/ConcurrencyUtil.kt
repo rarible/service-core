@@ -1,6 +1,5 @@
 package com.rarible.core.common
 
-import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 

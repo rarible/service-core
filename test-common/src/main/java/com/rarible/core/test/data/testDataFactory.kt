@@ -71,4 +71,3 @@ fun randomBinary() = randomBinary(64)
 fun randomBinary(length: Int) = Binary.apply(Random.nextBytes(length))
 
 fun randomWord() = Word(Random.nextBytes(32)).toString()
-

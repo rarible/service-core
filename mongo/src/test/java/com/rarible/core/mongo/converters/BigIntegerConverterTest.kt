@@ -25,7 +25,6 @@ class BigIntegerConverterTest : AbstractIntegrationTest() {
         val found = mongo.findById<WithBigInteger>(saved.id).block()
         assertEquals(found, saved)
     }
-
 }
 
 data class WithBigInteger(

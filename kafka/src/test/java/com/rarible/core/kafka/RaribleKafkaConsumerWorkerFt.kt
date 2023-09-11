@@ -2,7 +2,6 @@ package com.rarible.core.kafka
 
 import com.rarible.core.kafka.json.JsonSerializer
 import com.rarible.core.test.containers.KafkaTestContainer
-import com.rarible.core.test.data.randomInt
 import com.rarible.core.test.data.randomString
 import com.rarible.core.test.wait.Wait.waitAssertWithCheckInterval
 import kotlinx.coroutines.flow.collect
@@ -13,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.Duration
 import java.util.concurrent.ConcurrentLinkedDeque
+import java.util.concurrent.atomic.AtomicInteger
 
 class RaribleKafkaConsumerWorkerFt {
 
@@ -23,6 +23,10 @@ class RaribleKafkaConsumerWorkerFt {
 
     private lateinit var topic: String
     private lateinit var group: String
+
+    companion object {
+        private val counter = AtomicInteger(0)
+    }
 
     @BeforeEach
     fun beforeEach() {
@@ -67,6 +71,25 @@ class RaribleKafkaConsumerWorkerFt {
         factory.createWorker(settings, eventHandler, createContainerFactory(settings)).start()
 
         val events = createEvents(25)
+        producer.send(events.map { KafkaMessage(key = "1", value = it) }).collect()
+
+        waitAssert {
+            assertThat(eventHandler.received).containsExactlyElementsOf(events)
+        }
+    }
+
+    @Test
+    fun `receive message - ok, several coroutine threads`() = runBlocking<Unit> {
+        val producer = createProducer()
+        val settings = createConsumerSettings(
+            concurrency = 1,
+            batchSize = 10,
+            async = true,
+            coroutineThreads = 3
+        )
+        factory.createWorker(settings, eventHandler).start()
+
+        val events = createEvents(105)
         producer.send(events.map { KafkaMessage(key = "1", value = it) }).collect()
 
         waitAssert {
@@ -152,7 +175,8 @@ class RaribleKafkaConsumerWorkerFt {
     private fun createConsumerSettings(
         concurrency: Int,
         batchSize: Int,
-        async: Boolean
+        async: Boolean,
+        coroutineThreads: Int = 1
     ): RaribleKafkaConsumerSettings<TestEvent> {
         return RaribleKafkaConsumerSettings(
             hosts = kafkaContainer.kafkaBoostrapServers(),
@@ -162,13 +186,14 @@ class RaribleKafkaConsumerWorkerFt {
             concurrency = concurrency,
             async = async,
             batchSize = batchSize,
-            offsetResetStrategy = OffsetResetStrategy.EARLIEST
+            offsetResetStrategy = OffsetResetStrategy.EARLIEST,
+            coroutineThreadCount = coroutineThreads
         )
     }
 
     private fun createEvents(count: Int): List<TestEvent> {
         return (1..count).map {
-            TestEvent(randomString(), randomInt())
+            TestEvent(randomString(), counter.incrementAndGet())
         }
     }
 

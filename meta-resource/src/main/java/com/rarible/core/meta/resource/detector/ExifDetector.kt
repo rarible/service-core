@@ -185,7 +185,5 @@ object ExifDetector : MediaDetector {
             }
             return null
         }
-
     }
-
 }

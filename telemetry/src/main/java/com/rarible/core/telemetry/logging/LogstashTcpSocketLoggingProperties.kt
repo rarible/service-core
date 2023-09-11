@@ -24,5 +24,5 @@ internal data class LogstashTcpSocketLoggingProperties(
     @NotEmpty
     var destinations: List<URI>,
 
-    var  ringBufferSize: Int = AsyncDisruptorAppender.DEFAULT_RING_BUFFER_SIZE * 4
+    var ringBufferSize: Int = AsyncDisruptorAppender.DEFAULT_RING_BUFFER_SIZE * 4
 )

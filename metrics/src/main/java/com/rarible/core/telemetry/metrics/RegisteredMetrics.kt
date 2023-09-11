@@ -13,7 +13,7 @@ class RegisteredCounter internal constructor(
     fun increment(number: Number = 1): Unit = counter.increment(number.toDouble())
 }
 
-class RegisteredGauge<T: Number> internal constructor(
+class RegisteredGauge<T : Number> internal constructor(
     private val gaugeModifier: GaugeModifier<T>
 ) {
     fun set(number: T): Unit = gaugeModifier.set(number)

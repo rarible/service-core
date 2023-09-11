@@ -4,7 +4,6 @@ import com.rarible.core.daemon.DaemonIncome
 import com.rarible.core.daemon.DaemonWorkerProperties
 import com.rarible.core.daemon.RetryProperties
 import com.rarible.core.kafka.KafkaConsumer
-import com.rarible.core.kafka.KafkaMessage
 import com.rarible.core.kafka.KafkaMessageBatch
 import com.rarible.core.telemetry.metrics.increment
 import io.micrometer.core.instrument.MeterRegistry

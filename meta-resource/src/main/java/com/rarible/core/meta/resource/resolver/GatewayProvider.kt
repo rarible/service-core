@@ -1,6 +1,6 @@
 package com.rarible.core.meta.resource.resolver
 
-import java.util.*
+import java.util.Random
 
 interface GatewayProvider {
     fun getGateway(): String
@@ -19,4 +19,3 @@ class ConstantGatewayProvider(
 
     override fun getGateway(): String = gateway
 }
-

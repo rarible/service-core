@@ -39,5 +39,4 @@ class TaskIndexes(
             TYPE_AND_PARAM_UINQUE,
         )
     }
-
 }

@@ -8,4 +8,3 @@ data class AccountId(
         return "$bank:$owner"
     }
 }
-

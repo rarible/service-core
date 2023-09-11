@@ -1,8 +1,11 @@
 package com.rarible.core.entity.reducer.service
 
-import com.rarible.core.entity.reducer.service.model.Erc20BalanceEvent
 import com.rarible.core.entity.reducer.service.model.Erc20Balance
-import io.mockk.*
+import com.rarible.core.entity.reducer.service.model.Erc20BalanceEvent
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test

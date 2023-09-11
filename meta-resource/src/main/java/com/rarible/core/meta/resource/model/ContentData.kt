@@ -21,5 +21,4 @@ data class ContentData(
             null
         )
     }
-
 }

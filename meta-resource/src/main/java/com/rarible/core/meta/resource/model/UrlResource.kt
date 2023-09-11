@@ -19,7 +19,6 @@ data class SchemaUrl(
     fun toSchemaUrl(): String {
         return "$schema://$path"
     }
-
 }
 
 data class IpfsUrl(

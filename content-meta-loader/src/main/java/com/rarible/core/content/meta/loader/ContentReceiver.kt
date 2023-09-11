@@ -8,4 +8,3 @@ interface ContentReceiver : Closeable {
 
     suspend fun receiveBytes(url: URL, maxBytes: Int): ContentData
 }
-

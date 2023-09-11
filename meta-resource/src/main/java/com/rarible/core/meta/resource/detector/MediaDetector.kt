@@ -9,5 +9,4 @@ interface MediaDetector {
     fun detect(contentBytes: ContentData, entityId: String): ContentMeta?
 
     fun logPrefix(id: String): String = "Content meta by $id"
-
 }

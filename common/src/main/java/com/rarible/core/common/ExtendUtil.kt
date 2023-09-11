@@ -26,12 +26,12 @@ interface Identifiable<Id> {
     val id: Id
 }
 
-fun <Id, T: Identifiable<Id>, R: Identifiable<Id>> Flux<T>.extendById(mapper: (T) -> Mono<R>): Mono<List<R>> {
+fun <Id, T : Identifiable<Id>, R : Identifiable<Id>> Flux<T>.extendById(mapper: (T) -> Mono<R>): Mono<List<R>> {
     return this.collectList()
         .flatMap { it.extendById(mapper) }
 }
 
-fun <Id, T: Identifiable<Id>, R: Identifiable<Id>> List<T>.extendById(mapper: (T) -> Mono<R>): Mono<List<R>> {
+fun <Id, T : Identifiable<Id>, R : Identifiable<Id>> List<T>.extendById(mapper: (T) -> Mono<R>): Mono<List<R>> {
     return Flux.fromIterable(this)
         .flatMap(mapper)
         .collectList()

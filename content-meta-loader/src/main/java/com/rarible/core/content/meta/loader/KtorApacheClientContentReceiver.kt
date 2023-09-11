@@ -1,11 +1,10 @@
 package com.rarible.core.content.meta.loader
 
-import io.ktor.client.features.*
+import io.ktor.client.features.BrowserUserAgent
 import io.ktor.client.HttpClient
-import io.ktor.client.engine.apache.*
+import io.ktor.client.engine.apache.Apache
 import org.apache.http.conn.ConnectionKeepAliveStrategy
 import org.apache.http.impl.client.DefaultConnectionKeepAliveStrategy
-
 
 class KtorApacheClientContentReceiver(
     private val timeout: Int,
@@ -33,5 +32,4 @@ class KtorApacheClientContentReceiver(
         }
         BrowserUserAgent()
     }
-
 }
