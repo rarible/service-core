@@ -87,7 +87,7 @@ class RaribleKafkaConsumerWorkerFt {
             async = true,
             coroutineThreads = 3
         )
-        factory.createWorker(settings, eventHandler).start()
+        factory.createWorker(settings, eventHandler, createContainerFactory(settings)).start()
 
         val events = createEvents(105)
         producer.send(events.map { KafkaMessage(key = "1", value = it) }).collect()
