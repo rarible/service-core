@@ -4,7 +4,6 @@ import com.rarible.core.kafka.json.JsonDeserializer
 import com.rarible.core.kafka.json.RARIBLE_KAFKA_CLASS_PARAM
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.ConsumerRecord
-import org.apache.kafka.clients.consumer.OffsetResetStrategy
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.LoggerFactory
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory
@@ -16,22 +15,15 @@ import org.springframework.kafka.support.serializer.FailedDeserializationInfo
 import java.util.function.Function
 
 class RaribleKafkaListenerContainerFactory<T>(
-    private val hosts: String,
-    private val batchSize: Int,
-    private val offsetResetStrategy: OffsetResetStrategy,
-    private val deserializer: Class<*>? = null,
-    shouldSkipEventsOnError: Boolean = false,
-    concurrency: Int = 9, // By default, we have 9 partitions for each topic
-    valueClass: Class<T>,
-    customSettings: Map<String, Any> = mapOf()
+    private val settings: RaribleKafkaContainerFactorySettings<T>,
 ) : ConcurrentKafkaListenerContainerFactory<String, T>() {
 
     init {
-        consumerFactory = DefaultKafkaConsumerFactory(consumerConfigs(valueClass) + customSettings)
-        isBatchListener = batchSize > 1
-        setConcurrency(concurrency)
+        consumerFactory = DefaultKafkaConsumerFactory(consumerConfigs(settings.valueClass) + settings.customSettings)
+        isBatchListener = settings.batchSize > 1
+        setConcurrency(settings.concurrency)
         if (isBatchListener) {
-            setCommonErrorHandler(DefaultErrorHandler(if (shouldSkipEventsOnError) null else NoRecover()))
+            setCommonErrorHandler(DefaultErrorHandler(if (settings.shouldSkipEventsOnError) null else NoRecover()))
         }
         setRecordFilterStrategy(NullFilteringStrategy<T>())
     }
@@ -40,14 +32,18 @@ class RaribleKafkaListenerContainerFactory<T>(
         return mapOf(
             ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG to ErrorHandlingDeserializer::class.java,
             ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG to ErrorHandlingDeserializer::class.java,
-            ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG to hosts,
-            ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to offsetResetStrategy.name.lowercase(),
+            ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG to settings.hosts,
+            ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to settings.offsetResetStrategy.name.lowercase(),
             ErrorHandlingDeserializer.KEY_DESERIALIZER_CLASS to StringDeserializer::class.java,
-            ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS to (deserializer ?: if (valueClass == String::class.java)
-                StringDeserializer::class.java else JsonDeserializer::class.java),
+            ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS to (settings.deserializer
+                ?: if (valueClass == String::class.java) {
+                    StringDeserializer::class.java
+                } else {
+                    JsonDeserializer::class.java
+                }),
             ErrorHandlingDeserializer.KEY_FUNCTION to LoggingDeserializationFailureFunction::class.java,
             ErrorHandlingDeserializer.VALUE_FUNCTION to LoggingDeserializationFailureFunction::class.java,
-            ConsumerConfig.MAX_POLL_RECORDS_CONFIG to batchSize,
+            ConsumerConfig.MAX_POLL_RECORDS_CONFIG to settings.batchSize,
             RARIBLE_KAFKA_CLASS_PARAM to valueClass
         )
     }

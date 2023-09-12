@@ -30,7 +30,7 @@ class RaribleKafkaConsumerFactory(
      * and call handle() function in async way, if settings.async == true
      */
     fun <T> createWorker(
-        settings: RaribleKafkaConsumerSettings<T>,
+        settings: RaribleKafkaConsumerSettings,
         handler: RaribleKafkaEventHandler<T>,
         factory: RaribleKafkaListenerContainerFactory<T>,
     ): ConcurrentMessageListenerContainer<String, T> {
@@ -43,7 +43,7 @@ class RaribleKafkaConsumerFactory(
      * and call handle() function in async way, if settings.async == true
      */
     fun <T> createWorker(
-        settings: RaribleKafkaConsumerSettings<T>,
+        settings: RaribleKafkaConsumerSettings,
         handler: RaribleKafkaBatchEventHandler<T>,
         factory: RaribleKafkaListenerContainerFactory<T>,
     ): ConcurrentMessageListenerContainer<String, T> {
@@ -52,7 +52,7 @@ class RaribleKafkaConsumerFactory(
     }
 
     private fun <T> createWorker(
-        settings: RaribleKafkaConsumerSettings<T>,
+        settings: RaribleKafkaConsumerSettings,
         listener: SuspendBatchMessageListener<String, T>,
         factory: RaribleKafkaListenerContainerFactory<T>,
     ): ConcurrentMessageListenerContainer<String, T> {
