@@ -37,7 +37,7 @@
     </distributionManagement>
 
     <properties>
-        <revision>2.6.1</revision>
+        <revision>2.6.2</revision>
         <logback.version>1.2.11</logback.version>
         <logstash-encoder.version>7.0.1</logstash-encoder.version>
         <testcontainers.version>1.16.2</testcontainers.version>
@@ -255,6 +255,11 @@
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-text</artifactId>
                 <version>1.10.0</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mock-server</groupId>
+                <artifactId>mockserver-netty</artifactId>
+                <version>5.11.2</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

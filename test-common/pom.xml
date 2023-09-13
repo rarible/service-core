@@ -125,6 +125,10 @@
             <artifactId>springmockk</artifactId>
             <version>${springmockk.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.mock-server</groupId>
+            <artifactId>mockserver-netty</artifactId>
+        </dependency>
     </dependencies>
 
 </project>
