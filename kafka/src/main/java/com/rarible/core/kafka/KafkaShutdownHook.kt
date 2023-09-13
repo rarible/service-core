@@ -15,7 +15,7 @@ class KafkaShutdownHook(
                 logger.info("Failed to shudtdown kafka consumer $it", e)
             }
         }
-        delegate
+        delegate.run()
     }
 
     companion object {
