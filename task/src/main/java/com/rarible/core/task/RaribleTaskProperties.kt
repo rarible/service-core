@@ -11,6 +11,7 @@ internal const val RARIBLE_TASK = "rarible.core.task"
 data class RaribleTaskProperties(
     val enabled: Boolean = true,
     val concurrency: Int = -1, // -1 - unlimited
+    val removeCompleted: Boolean = false, // remove tasks instead of marking them completed
     val initialDelay: Duration = Duration.ofSeconds(30),
     val pollingPeriod: Duration = Duration.ofSeconds(60),
     val errorDelay: Duration = Duration.ofSeconds(60),
