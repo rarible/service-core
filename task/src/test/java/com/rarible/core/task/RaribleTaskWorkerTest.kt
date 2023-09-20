@@ -16,7 +16,10 @@ import java.time.Duration
 class RaribleTaskWorkerTest {
     private val taskService = mockk<TaskService>()
     private val properties = RaribleTaskProperties(
-        true, Duration.ZERO, Duration.ZERO, Duration.ZERO
+        enabled = true,
+        initialDelay = Duration.ZERO,
+        pollingPeriod = Duration.ZERO,
+        errorDelay = Duration.ZERO
     )
     private val meterRegistry = SimpleMeterRegistry()
 

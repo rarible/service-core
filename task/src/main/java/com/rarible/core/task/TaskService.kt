@@ -22,6 +22,7 @@ import org.springframework.data.mongodb.core.query.isEqualTo
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Background service responsible for running and resuming [TaskHandler]s.
@@ -33,7 +34,8 @@ class TaskService(
     private val taskRepository: TaskRepository,
     private val runner: TaskRunner,
     private val mongo: ReactiveMongoOperations,
-    handlers: List<TaskHandler<*>>
+    handlers: List<TaskHandler<*>>,
+    raribleTaskProperties: RaribleTaskProperties,
 ) {
     private val scope = CoroutineScope(
         SupervisorJob() + Executors.newFixedThreadPool(
@@ -44,6 +46,8 @@ class TaskService(
     )
 
     val handlersMap = handlers.associateBy { it.type }
+    val runningTasksCount = AtomicInteger(0)
+    val concurrency = raribleTaskProperties.concurrency
 
     init {
         scope.launch {
@@ -68,11 +72,18 @@ class TaskService(
     }
 
     fun runTasks() {
+        if (concurrency > 0) {
+            val currentlyRunning = runningTasksCount.get()
+            if (currentlyRunning >= concurrency) {
+                logger.info("Skip tasks run as runner is full. running=$currentlyRunning, concurrency=$concurrency")
+                return
+            }
+        }
         scope.launch {
             logger.info("TaskHandler: find tasks to run")
             val tasksStarted = Flux.concat(
-                taskRepository.findByRunningAndLastStatus(false, TaskStatus.ERROR),
-                taskRepository.findByRunningAndLastStatus(false, TaskStatus.NONE)
+                taskRepository.findByRunningAndLastStatusOrderByIdAsc(false, TaskStatus.ERROR),
+                taskRepository.findByRunningAndLastStatusOrderByIdAsc(false, TaskStatus.NONE)
             )
                 .asFlow()
                 .map {
@@ -88,8 +99,19 @@ class TaskService(
         scope.launch {
             val handler = handlersMap[type]
             if (handler != null) {
+                val count = runningTasksCount.incrementAndGet()
+                if (concurrency > 0 && concurrency < count) {
+                    logger.info("do not start task type=$type param=$param. " +
+                        "Concurrency=$concurrency, running=$count")
+                    runningTasksCount.decrementAndGet()
+                    return@launch
+                }
                 logger.info("runTask type=$type param=$param")
-                runner.runLongTask(param, handler, sample)
+                try {
+                    runner.runLongTask(param, handler, sample)
+                } finally {
+                    runningTasksCount.decrementAndGet()
+                }
             } else {
                 logger.info("TaskHandler $type not found. skipping")
             }
