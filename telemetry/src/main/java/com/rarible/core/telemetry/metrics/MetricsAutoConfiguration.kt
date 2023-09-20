@@ -3,7 +3,14 @@ package com.rarible.core.telemetry.metrics
 import com.rarible.core.application.ApplicationEnvironmentInfo
 import com.rarible.core.application.ApplicationInfo
 import com.rarible.core.telemetry.metrics.configuration.InfraNamingConventionFactoring
+import io.micrometer.core.instrument.Clock
 import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.prometheus.PrometheusConfig
+import io.micrometer.prometheus.PrometheusMeterRegistry
+import io.micrometer.prometheus.SafePrometheusMeterRegistry
+import io.prometheus.client.CollectorRegistry
+import io.prometheus.client.exemplars.ExemplarSampler
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.boot.actuate.autoconfigure.metrics.CompositeMeterRegistryAutoConfiguration
 import org.springframework.boot.actuate.autoconfigure.metrics.MeterRegistryCustomizer
 import org.springframework.boot.actuate.autoconfigure.metrics.export.prometheus.PrometheusMetricsExportAutoConfiguration
@@ -33,5 +40,20 @@ class MetricsAutoConfiguration(
                 commonTags(commonTags)
             }
         }
+    }
+
+    @Bean
+    fun safePrometheusMeterRegistry(
+        prometheusConfig: PrometheusConfig,
+        collectorRegistry: CollectorRegistry,
+        clock: Clock,
+        exemplarSamplerProvider: ObjectProvider<ExemplarSampler>
+    ): PrometheusMeterRegistry {
+        return SafePrometheusMeterRegistry(
+            prometheusConfig,
+            collectorRegistry,
+            clock,
+            exemplarSamplerProvider.getIfAvailable()
+        )
     }
 }
