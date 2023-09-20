@@ -1,7 +1,6 @@
-package io.micrometer.core.instrument
+package io.micrometer.prometheus
 
-import io.micrometer.prometheus.PrometheusConfig
-import io.micrometer.prometheus.PrometheusMeterRegistry
+import io.micrometer.core.instrument.Clock
 import io.prometheus.client.CollectorRegistry
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -10,7 +9,7 @@ import java.time.Duration
 class SafePrometheusMeterRegistryTest {
 
     private val registry = CollectorRegistry()
-    private val prometheusMeterRegistry = PrometheusMeterRegistry(
+    private val meterRegistry = SafePrometheusMeterRegistry(
         PrometheusConfig.DEFAULT,
         registry,
         Clock.SYSTEM,
@@ -19,7 +18,6 @@ class SafePrometheusMeterRegistryTest {
 
     @Test
     fun `timer - ok`() {
-        val meterRegistry = SafePrometheusMeterRegistry(prometheusMeterRegistry)
         val timer = meterRegistry.timer("test")
         timer.record(Duration.ofSeconds(1))
 

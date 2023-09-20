@@ -1,7 +1,6 @@
 package io.micrometer.prometheus
 
 import io.micrometer.core.instrument.Clock
-import io.micrometer.core.instrument.SafePrometheusMeterRegistry
 import io.prometheus.client.CollectorRegistry
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.data.Percentage
@@ -11,14 +10,13 @@ import java.util.concurrent.TimeUnit
 
 class SafePrometheusTimerTest {
 
-    private val prometheusMeterRegistry = PrometheusMeterRegistry(
+    private val safePrometheusMeterRegistry = SafePrometheusMeterRegistry(
         PrometheusConfig.DEFAULT,
         CollectorRegistry(),
         Clock.SYSTEM,
         null
     )
 
-    private val safePrometheusMeterRegistry = SafePrometheusMeterRegistry(prometheusMeterRegistry)
     private val precision = Percentage.withPercentage(0.00001)
 
     @Test

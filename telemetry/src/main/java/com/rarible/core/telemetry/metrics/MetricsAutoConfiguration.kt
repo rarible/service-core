@@ -3,9 +3,14 @@ package com.rarible.core.telemetry.metrics
 import com.rarible.core.application.ApplicationEnvironmentInfo
 import com.rarible.core.application.ApplicationInfo
 import com.rarible.core.telemetry.metrics.configuration.InfraNamingConventionFactoring
+import io.micrometer.core.instrument.Clock
 import io.micrometer.core.instrument.MeterRegistry
-import io.micrometer.core.instrument.SafePrometheusMeterRegistry
+import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
+import io.micrometer.prometheus.SafePrometheusMeterRegistry
+import io.prometheus.client.CollectorRegistry
+import io.prometheus.client.exemplars.ExemplarSampler
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.boot.actuate.autoconfigure.metrics.CompositeMeterRegistryAutoConfiguration
 import org.springframework.boot.actuate.autoconfigure.metrics.MeterRegistryCustomizer
 import org.springframework.boot.actuate.autoconfigure.metrics.export.prometheus.PrometheusMetricsExportAutoConfiguration
@@ -13,7 +18,6 @@ import org.springframework.boot.actuate.autoconfigure.metrics.export.simple.Simp
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Primary
 
 @AutoConfigureBefore(
     CompositeMeterRegistryAutoConfiguration::class,
@@ -38,9 +42,18 @@ class MetricsAutoConfiguration(
         }
     }
 
-    @Primary
     @Bean
-    fun safePrometheusMeterRegistry(prometheusMeterRegistry: PrometheusMeterRegistry): MeterRegistry {
-        return SafePrometheusMeterRegistry(prometheusMeterRegistry)
+    fun safePrometheusMeterRegistry(
+        prometheusConfig: PrometheusConfig,
+        collectorRegistry: CollectorRegistry,
+        clock: Clock,
+        exemplarSamplerProvider: ObjectProvider<ExemplarSampler>
+    ): PrometheusMeterRegistry {
+        return SafePrometheusMeterRegistry(
+            prometheusConfig,
+            collectorRegistry,
+            clock,
+            exemplarSamplerProvider.getIfAvailable()
+        )
     }
 }
