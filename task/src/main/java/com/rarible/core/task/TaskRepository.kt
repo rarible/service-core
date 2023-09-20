@@ -14,7 +14,7 @@ interface TaskRepository : ReactiveCrudRepository<Task, String> {
 
     fun findByRunning(running: Boolean): Flux<Task>
 
-    fun findByRunningAndLastStatus(running: Boolean, lastStatus: TaskStatus): Flux<Task>
+    fun findByRunningAndLastStatusOrderByIdAsc(running: Boolean, lastStatus: TaskStatus): Flux<Task>
 
     fun findByTypeAndParamRegex(type: String, paramRegex: String): Flux<Task>
 }

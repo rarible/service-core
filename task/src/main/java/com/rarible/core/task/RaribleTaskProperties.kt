@@ -10,6 +10,7 @@ internal const val RARIBLE_TASK = "rarible.core.task"
 @ConfigurationProperties(RARIBLE_TASK)
 data class RaribleTaskProperties(
     val enabled: Boolean = true,
+    val concurrency: Int = -1, // -1 - unlimited
     val initialDelay: Duration = Duration.ofSeconds(30),
     val pollingPeriod: Duration = Duration.ofSeconds(60),
     val errorDelay: Duration = Duration.ofSeconds(60),

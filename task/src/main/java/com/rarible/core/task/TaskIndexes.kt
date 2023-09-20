@@ -26,6 +26,7 @@ class TaskIndexes(
         private val RUNNING_AND_STATUS: Index = Index()
             .on(Task::running.name, Sort.Direction.ASC)
             .on(Task::lastStatus.name, Sort.Direction.ASC)
+            .on("_id", Sort.Direction.ASC)
             .background()
 
         private val TYPE_AND_PARAM_UINQUE: Index = Index()
