@@ -9,6 +9,7 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.count
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitFirst
@@ -86,6 +87,11 @@ class TaskService(
                 taskRepository.findByRunningAndLastStatusOrderByIdAsc(false, TaskStatus.NONE)
             )
                 .asFlow()
+                .apply {
+                    if (concurrency > 0) {
+                        take(concurrency * 2)
+                    }
+                }
                 .map {
                     runTask(it.type, it.param, it.sample)
                     logger.info("TaskHandler: started task $it")
