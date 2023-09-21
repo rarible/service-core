@@ -3,10 +3,10 @@ package com.rarible.core.task
 import com.rarible.core.common.optimisticLock
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.sample
 import kotlinx.coroutines.reactive.awaitFirst
 import kotlinx.coroutines.reactive.awaitFirstOrNull
+import kotlinx.coroutines.reactor.awaitSingleOrNull
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -19,7 +19,8 @@ import org.springframework.stereotype.Service
 @FlowPreview
 @Service
 class TaskRunner(
-    private val taskRepository: TaskRepository
+    private val taskRepository: TaskRepository,
+    private val properties: RaribleTaskProperties,
 ) {
     @ExperimentalCoroutinesApi
     @Suppress("UNCHECKED_CAST")
@@ -45,8 +46,12 @@ class TaskRunner(
                     logger.info("new task state for ${handler.type} with param=${task.param}: $next")
                     current = taskRepository.save(current.withState(next)).awaitFirst()
                 }
-            logger.info("completed ${handler.type} with param=${task.param}")
-            taskRepository.save(current.markCompleted()).awaitFirst()
+            logger.info("completed ${handler.type} with param=${task.param}, lastState=${current.state}")
+            if (properties.removeCompleted) {
+                taskRepository.delete(current).awaitSingleOrNull()
+            } else {
+                taskRepository.save(current.markCompleted()).awaitFirst()
+            }
         } catch (e: Throwable) {
             logger.info("error caught executing ${handler.type} with param=${task.param}", e)
             taskRepository.save(current.markError(e)).awaitFirst()
