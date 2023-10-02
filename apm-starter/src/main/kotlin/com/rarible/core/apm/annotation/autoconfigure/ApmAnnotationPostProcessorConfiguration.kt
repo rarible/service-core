@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Bean
     prefix = RARIBLE_APM_ANNOTATION,
     name = ["enabled"],
     havingValue = "true",
-    matchIfMissing = true
+    matchIfMissing = false
 )
 @EnableConfigurationProperties(ApmAnnotationProperties::class)
 class ApmAnnotationPostProcessorConfiguration {

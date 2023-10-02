@@ -12,7 +12,7 @@ import org.springframework.web.reactive.result.method.annotation.RequestMappingH
     prefix = RARIBLE_FILTER_APM,
     name = ["enabled"],
     havingValue = "true",
-    matchIfMissing = true
+    matchIfMissing = false
 )
 @EnableConfigurationProperties(ApmFilterProperties::class)
 class RequestPerformanceFilterConfiguration(
