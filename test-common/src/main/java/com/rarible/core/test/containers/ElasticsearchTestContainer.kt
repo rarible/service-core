@@ -28,7 +28,7 @@ class ElasticsearchTestContainer {
                 withEnv("xpack.security.enabled", "false")
                 withEnv("xpack.security.http.ssl.enabled", "false")
                 withEnv("xpack.security.transport.ssl.enabled", "false")
-                withEnv("CLI_JAVA_OPTS", "-Xms128m -Xmx512m")
+                withEnv("ES_JAVA_OPTS", "-Xms128m -Xmx512m")
             }
         }
 
