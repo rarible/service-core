@@ -19,12 +19,16 @@ class ElasticsearchTestContainer {
 
     companion object {
         val ELASTIC_SEARCH__IMAGE: DockerImageName =
-            DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch:7.9.3")
+            DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch:8.7.0")
 
         @JvmStatic
         private val elasticsearch: ElasticsearchContainer by lazy {
             ElasticsearchContainer(ELASTIC_SEARCH__IMAGE).apply {
                 withReuse(true)
+                withEnv("xpack.security.enabled", "false")
+                withEnv("xpack.security.http.ssl.enabled", "false")
+                withEnv("xpack.security.transport.ssl.enabled", "false")
+                withEnv("CLI_JAVA_OPTS", "-Xms128m -Xmx512m")
             }
         }
 
