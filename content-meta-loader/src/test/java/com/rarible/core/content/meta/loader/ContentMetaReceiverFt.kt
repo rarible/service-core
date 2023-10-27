@@ -3,20 +3,20 @@ package com.rarible.core.content.meta.loader
 import com.rarible.core.meta.resource.detector.ContentDetector
 import com.rarible.core.meta.resource.model.ContentMeta
 import com.rarible.core.meta.resource.model.MimeType
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Assertions.assertEquals
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
+import java.net.URL
 
 @Disabled
 class ContentMetaReceiverFt {
 
     companion object {
 
-        private val contentReceiverMetrics = ContentReceiverMetrics(SimpleMeterRegistry())
+        private const val MAX_BYTES = 128 * 1024
 
         private val contentKtorCioReceiver = KtorCioClientContentReceiver(
             timeout = 10000
@@ -34,20 +34,17 @@ class ContentMetaReceiverFt {
 
         private val contentMetaKtorCioReceiver = ContentMetaReceiver(
             contentReceiver = contentKtorCioReceiver,
-            maxBytes = 128 * 1024,
-            contentReceiverMetrics = contentReceiverMetrics,
+            maxBytes = MAX_BYTES,
             contentDetector = contentDetector
         )
         private val contentMetaKtorApacheReceiver = ContentMetaReceiver(
             contentReceiver = contentKtorApacheReceiver,
-            maxBytes = 128 * 1024,
-            contentReceiverMetrics = contentReceiverMetrics,
+            maxBytes = MAX_BYTES,
             contentDetector = contentDetector
         )
         private val contentMetaApacheAsyncHttpReceiver = ContentMetaReceiver(
             contentReceiver = contentApacheAsyncHttpContentReceiver,
-            maxBytes = 128 * 1024,
-            contentReceiverMetrics = contentReceiverMetrics,
+            maxBytes = MAX_BYTES,
             contentDetector = contentDetector
         )
     }
@@ -61,182 +58,216 @@ class ContentMetaReceiverFt {
     @ParameterizedTest
     @EnumSource(ContentMetaReceiversEnum::class)
     fun svg(receiverEnum: ContentMetaReceiversEnum) {
-        val totalBytesReceived = contentReceiverMetrics.totalBytesReceived
-        val meta = getContentMeta(
+        val result = getContentMeta(
             "https://dev.w3.org/SVG/tools/svgweb/samples/svg-files/aa.svg",
             receiverEnum.receiver
         )
-        assertEquals(
-            ContentMeta(
-                mimeType = MimeType.SVG_XML_IMAGE.value,
-                width = 192,
-                height = 192,
-                size = 993,
-                available = true
-            ),
-            meta
+
+        val expectedContentMeta = ContentMeta(
+            mimeType = MimeType.SVG_XML_IMAGE.value,
+            width = 192,
+            height = 192,
+            size = 993,
+            available = true
         )
-        assertEquals(totalBytesReceived + 993, contentReceiverMetrics.totalBytesReceived)
+
+        assertThat(result.meta).isEqualTo(expectedContentMeta)
+        assertThat(result.approach).isEqualTo("exif")
+        assertThat(result.bytesRead).isEqualTo(expectedContentMeta.size!!.toLong())
     }
 
     @ParameterizedTest
     @EnumSource(ContentMetaReceiversEnum::class)
     fun gif(receiverEnum: ContentMetaReceiversEnum) {
-        val meta =
-            getContentMeta(
-                "https://lh3.googleusercontent.com/CIKzsJLHKmoC8YmHt3l6h7pzj-mJx5uHrS231VE006DCZ-IQLyONCtMBCYiOwbT9SzS5IdkSOF517Zq1CejmHVrMuQ=s250",
-                receiverEnum.receiver
-            )
-        assertEquals(
-            ContentMeta(
-                mimeType = MimeType.GIF_IMAGE.value,
-                width = 165,
-                height = 250,
-                size = 1570431,
-                available = true
-            ),
-            meta
+        val result = getContentMeta(
+            "https://lh3.googleusercontent.com/CIKzsJLHKmoC8YmHt3l6h7pzj-mJx5uHrS231VE006DCZ-IQLyONCtMBCYiOwbT9SzS5IdkSOF517Zq1CejmHVrMuQ=s250",
+            receiverEnum.receiver
         )
+
+        val expectedContentMeta = ContentMeta(
+            mimeType = MimeType.GIF_IMAGE.value,
+            width = 165,
+            height = 250,
+            size = 1570431,
+            available = true
+        )
+
+        assertThat(result.meta).isEqualTo(expectedContentMeta)
+        assertThat(result.approach).isEqualTo("exif")
+        assertThat(result.bytesRead).isEqualTo(MAX_BYTES)
+    }
+
+    @ParameterizedTest
+    @EnumSource(ContentMetaReceiversEnum::class)
+    fun mp3(receiverEnum: ContentMetaReceiversEnum) {
+        val result = getContentMeta(
+            "http://localhost:8080/music.mp3",
+            receiverEnum.receiver
+        )
+
+        val expectedContentMeta = ContentMeta(
+            mimeType = MimeType.MP3_AUDIO.value,
+            available = true
+        )
+
+        assertThat(result.meta).isEqualTo(expectedContentMeta)
+        assertThat(result.approach).isEqualTo("predefined")
+        assertThat(result.bytesRead).isEqualTo(0)
     }
 
     @ParameterizedTest
     @EnumSource(ContentMetaReceiversEnum::class)
     fun mp4(receiverEnum: ContentMetaReceiversEnum) {
-        val meta = getContentMeta(
+        val result = getContentMeta(
             "https://www.learningcontainer.com/download/sample-mp4-video-file-download-for-testing/?wpdmdl=2727&refresh=62810df6e03441652624886",
             receiverEnum.receiver
         )
-        assertEquals(
-            ContentMeta(
-                mimeType = MimeType.MP4_VIDEO.value,
-                width = 320,
-                height = 240,
-                size = null,
-                available = true
-            ),
-            meta
+
+        val expectedContentMeta = ContentMeta(
+            mimeType = MimeType.MP4_VIDEO.value,
+            width = 320,
+            height = 240,
+            size = null,
+            available = true
         )
+
+        assertThat(result.meta).isEqualTo(expectedContentMeta)
+        assertThat(result.approach).isEqualTo("exif")
+        assertThat(result.bytesRead).isEqualTo(MAX_BYTES)
     }
 
     @ParameterizedTest
     @EnumSource(ContentMetaReceiversEnum::class)
     fun amazon(receiverEnum: ContentMetaReceiversEnum) {
-        val meta =
-            getContentMeta(
-                "https://s3.us-west-2.amazonaws.com/sing.serve/e487c504da821859cbac142e63ef9d8cc36015f0dfaf1de2949e6f894f5aa538%2Feae9b612-df09-4023-9b53-ac73e6319b44",
-                receiverEnum.receiver
-            )
-        assertEquals(
-            ContentMeta(
-                mimeType = MimeType.MP4_VIDEO.value,
-                width = 1280,
-                height = 700,
-                size = 43091297,
-                available = true
-            ),
-            meta
+        val result = getContentMeta(
+            "https://s3.us-west-2.amazonaws.com/sing.serve/e487c504da821859cbac142e63ef9d8cc36015f0dfaf1de2949e6f894f5aa538%2Feae9b612-df09-4023-9b53-ac73e6319b44",
+            receiverEnum.receiver
         )
+
+        val expectedContentMeta = ContentMeta(
+            mimeType = MimeType.MP4_VIDEO.value,
+            width = 1280,
+            height = 700,
+            size = 43091297,
+            available = true
+        )
+
+        assertThat(result.meta).isEqualTo(expectedContentMeta)
+        assertThat(result.approach).isEqualTo("exif")
+        assertThat(result.bytesRead).isEqualTo(MAX_BYTES)
     }
 
     @ParameterizedTest
     @EnumSource(ContentMetaReceiversEnum::class)
     fun jpeg(receiverEnum: ContentMetaReceiversEnum) {
-        val meta = getContentMeta(
+        val result = getContentMeta(
             "https://lh3.googleusercontent.com/rnS-RmufKkrLlWb4gl0_3yHx_lsQI7V0kRbB1VAiSCBRcY-fiHa_2U42xexLz9ZtaUZnRuo2-o-CcYPuCkmVdko=s250",
             receiverEnum.receiver
         )
-        assertEquals(
-            ContentMeta(
-                mimeType = MimeType.JPEG_IMAGE.value,
-                width = 167,
-                height = 250,
-                size = 44789,
-                available = true
-            ),
-            meta
+
+        val expectedContentMeta = ContentMeta(
+            mimeType = MimeType.JPEG_IMAGE.value,
+            width = 167,
+            height = 250,
+            size = 44789,
+            available = true
         )
+
+        assertThat(result.meta).isEqualTo(expectedContentMeta)
+        assertThat(result.approach).isEqualTo("exif")
+        assertThat(result.bytesRead).isEqualTo(expectedContentMeta.size!!.toLong())
     }
 
     @ParameterizedTest
     @EnumSource(ContentMetaReceiversEnum::class)
     fun video(receiverEnum: ContentMetaReceiversEnum) {
-        val meta = getContentMeta(
+        val result = getContentMeta(
             "https://ipfs.io/ipfs/QmSNhGhcBynr1s9QgPnon8HaiPzE5dKgmqSDNsNXCfDHGs/image.gif", receiverEnum.receiver
         )
-        assertEquals(
-            ContentMeta(
-                mimeType = MimeType.GIF_IMAGE.value,
-                width = 600,
-                height = 404,
-                size = 2559234,
-                available = true
-            ), meta
+
+        val expectedContentMeta = ContentMeta(
+            mimeType = MimeType.GIF_IMAGE.value,
+            width = 600,
+            height = 404,
+            size = 2559234,
+            available = true
         )
+
+        assertThat(result.meta).isEqualTo(expectedContentMeta)
+        assertThat(result.approach).isEqualTo("exif")
+        assertThat(result.bytesRead).isEqualTo(MAX_BYTES)
     }
 
     @ParameterizedTest
     @EnumSource(ContentMetaReceiversEnum::class)
     fun png(receiverEnum: ContentMetaReceiversEnum) {
-        val meta = getContentMeta(
+        val result = getContentMeta(
             "https://lh3.googleusercontent.com/v-6yD0Vf2BEo-nSPG-VuSSdYYAxaJkgFAAdizbO_2gxgqa85eWg0l27lerLKxOOcfJjKf7bCmug3S_cbJdCQ-csxqLN_Fvs3vHVOZFU",
             receiverEnum.receiver
         )
-        assertEquals(
-            ContentMeta(
-                mimeType = MimeType.PNG_IMAGE.value,
-                width = 512,
-                height = 512,
-                size = 173580,
-                available = true
-            ),
-            meta
+
+        val expectedContentMeta = ContentMeta(
+            mimeType = MimeType.PNG_IMAGE.value,
+            width = 512,
+            height = 512,
+            size = 173580,
+            available = true
         )
+
+        assertThat(result.meta).isEqualTo(expectedContentMeta)
+        assertThat(result.approach).isEqualTo("exif")
+        assertThat(result.bytesRead).isEqualTo(MAX_BYTES)
     }
 
     @ParameterizedTest
     @EnumSource(ContentMetaReceiversEnum::class)
-    fun avif() {
-        // ETHEREUM:0xc64c3b560ed5c3f6a693a2f97f7c1147802e7971:994
-        val meta = getContentMeta(
-            "https://artblocks.s3.us-east-2.amazonaws.com/imgs/994.png",
-            ContentMetaReceiversEnum.KTOR_APACHE.receiver
+    fun `png - by url`(receiverEnum: ContentMetaReceiversEnum) {
+        val result = getContentMeta(
+            "https://localhost:8080/image.png",
+            receiverEnum.receiver
         )
-        assertEquals(
-            ContentMeta(
-                mimeType = MimeType.AVIF_IMAGE.value,
-                size = 15266,
-                available = true
-            ),
-            meta
+
+        val expectedContentMeta = ContentMeta(
+            mimeType = MimeType.PNG_IMAGE.value,
+            available = false
         )
+
+        assertThat(result.meta).isEqualTo(expectedContentMeta)
+        assertThat(result.approach).isEqualTo("url-extension")
+        assertThat(result.bytesRead).isEqualTo(0)
     }
 
     @ParameterizedTest
     @EnumSource(ContentMetaReceiversEnum::class)
     fun html(receiverEnum: ContentMetaReceiversEnum) {
-        val meta = getContentMeta(
+        val result = getContentMeta(
             "https://lens.mypinata.cloud/ipfs/QmPvbSDFp2rppbv5pP1i4eoqEoioH3rhH5NAtgnAZskLFh/?handle=marinawilde2.lens",
             receiverEnum.receiver
         )
-        assertEquals(
-            ContentMeta(
-                mimeType = MimeType.HTML_TEXT.value,
-                available = true
-            ),
-            meta
+
+        val expectedContentMeta = ContentMeta(
+            mimeType = MimeType.HTML_TEXT.value,
+            available = true,
+            size = 22560
         )
+
+        assertThat(result.meta).isEqualTo(expectedContentMeta)
+        assertThat(result.approach).isEqualTo("exif")
+        assertThat(result.bytesRead).isEqualTo(expectedContentMeta.size!!.toLong())
     }
 
     @ParameterizedTest
     @EnumSource(ContentMetaReceiversEnum::class)
     fun `ignore 404`(receiverEnum: ContentMetaReceiversEnum) {
-        val meta = getContentMeta(
+        val result = getContentMeta(
             "https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/NON_EXISTING",
             receiverEnum.receiver
         )
-        assertNull(meta)
+        assertNull(result.meta)
+        assertThat(result.approach).isEqualTo("stub")
+        assertThat(result.bytesRead).isEqualTo(0)
     }
 
-    private fun getContentMeta(url: String, contentMetaReceiver: ContentMetaReceiver): ContentMeta? =
-        runBlocking { contentMetaReceiver.receive(url) }
+    private fun getContentMeta(url: String, contentMetaReceiver: ContentMetaReceiver): ContentMetaResult =
+        runBlocking { contentMetaReceiver.receive(URL(url)) }
 }

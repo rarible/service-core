@@ -13,6 +13,10 @@ data class ContentData(
         data.size.toLong()
     )
 
+    fun getReadBytesSize() = data.size
+
+    fun isEmpty() = data.isEmpty()
+
     companion object {
 
         val EMPTY = ContentData(
