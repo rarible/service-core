@@ -12,7 +12,7 @@ class ContentDetector(
     )
 ) {
 
-    fun detect(contentBytes: ContentData, entityId: String): ContentMeta? {
-        return mediaDetectors.firstNotNullOfOrNull { it.detect(contentBytes, entityId) }
+    fun detect(contentData: ContentData, entityId: String): ContentMeta? {
+        return mediaDetectors.firstNotNullOfOrNull { it.detect(contentData, entityId) }
     }
 }
