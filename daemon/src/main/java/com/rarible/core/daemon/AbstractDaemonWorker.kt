@@ -30,9 +30,11 @@ abstract class AbstractDaemonWorker(
 
     protected val errorDelay = properties.errorDelay
     protected val pollingPeriod = properties.pollingPeriod
+    protected val enabled = properties.enabled
 
     protected open val healthCheck: LivenessHealthIndicator = TouchLivenessHealthIndicator(
-        maxOf(errorDelay, pollingPeriod) + Duration.ofMinutes(3)
+        enabled = enabled,
+        allowedDowntime = maxOf(errorDelay, pollingPeriod) + Duration.ofMinutes(3)
     )
 
     private val daemonDispatcher = Executors
@@ -56,6 +58,10 @@ abstract class AbstractDaemonWorker(
     protected abstract suspend fun run(scope: CoroutineScope)
 
     fun start() {
+        if (!enabled) {
+            logger.info("Daemon worker $workerName disabled")
+            return
+        }
         logger.info("Starting daemon worker $workerName")
 
         if (!job.start()) {
@@ -73,6 +79,9 @@ abstract class AbstractDaemonWorker(
     }
 
     override fun close() {
+        if (!enabled) {
+            return
+        }
         logger.info("Stopping the daemon worker $workerName")
         job.cancel()
     }
