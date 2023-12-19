@@ -6,18 +6,16 @@ import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicReference
 
-class TouchLivenessHealthIndicator(
-    private val allowedDowntime: Duration,
-) : LivenessHealthIndicator {
+class DisabledLivenessHealthIndicator() : LivenessHealthIndicator {
+
     private val lastTouch = AtomicReference(Instant.now())
 
     override fun health(): Health {
         val lastTouch = lastTouch.get()
-        val status = if (Instant.now() > lastTouch + allowedDowntime) Status.DOWN else Status.UP
 
-        return Health.status(status)
+        return Health.status(Status.OUT_OF_SERVICE)
             .withDetail(LivenessHealthIndicator.LAST_TOUCH, lastTouch)
-            .withDetail(LivenessHealthIndicator.ALLOWED_DOWN_TIME, allowedDowntime)
+            .withDetail(LivenessHealthIndicator.ALLOWED_DOWN_TIME, maxDuration)
             .build()
     }
 
@@ -26,5 +24,9 @@ class TouchLivenessHealthIndicator(
     }
 
     override fun down() {
+    }
+
+    private companion object {
+        val maxDuration = Duration.ofDays(365 * 10)
     }
 }
