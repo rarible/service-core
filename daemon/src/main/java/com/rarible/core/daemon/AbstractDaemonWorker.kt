@@ -1,5 +1,6 @@
 package com.rarible.core.daemon
 
+import com.rarible.core.daemon.healthcheck.DisabledLivenessHealthIndicator
 import com.rarible.core.daemon.healthcheck.LivenessHealthIndicator
 import com.rarible.core.daemon.healthcheck.TouchLivenessHealthIndicator
 import io.micrometer.core.instrument.MeterRegistry
@@ -32,10 +33,16 @@ abstract class AbstractDaemonWorker(
     protected val pollingPeriod = properties.pollingPeriod
     protected val enabled = properties.enabled
 
-    protected open val healthCheck: LivenessHealthIndicator = TouchLivenessHealthIndicator(
-        enabled = enabled,
-        allowedDowntime = maxOf(errorDelay, pollingPeriod) + Duration.ofMinutes(3)
-    )
+    protected open val healthCheck = createHeathCheck()
+
+    private fun createHeathCheck(): LivenessHealthIndicator {
+        return if (enabled) {
+            val allowedDowntime = maxOf(errorDelay, pollingPeriod) + Duration.ofMinutes(3)
+            TouchLivenessHealthIndicator(allowedDowntime)
+        } else {
+            DisabledLivenessHealthIndicator()
+        }
+    }
 
     private val daemonDispatcher = Executors
         .newSingleThreadExecutor { r ->

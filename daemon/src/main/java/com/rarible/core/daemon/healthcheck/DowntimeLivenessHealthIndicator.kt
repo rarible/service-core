@@ -20,8 +20,8 @@ class DowntimeLivenessHealthIndicator(
             ?: Status.UP
 
         return Health.status(status).run {
-            lastDowntime?.let { withDetail(LAST_DOWNTIME, it) }
-            withDetail(ALLOWED_DOWN_TIME, allowedDowntime)
+            lastDowntime?.let { withDetail(LivenessHealthIndicator.LAST_DOWNTIME, it) }
+            withDetail(LivenessHealthIndicator.ALLOWED_DOWN_TIME, allowedDowntime)
             build()
         }
     }
@@ -32,10 +32,5 @@ class DowntimeLivenessHealthIndicator(
 
     override fun down() {
         lastDowntime.set(Instant.now())
-    }
-
-    private companion object {
-        const val LAST_DOWNTIME = "lastDowntime"
-        const val ALLOWED_DOWN_TIME = "allowedDowntime"
     }
 }
