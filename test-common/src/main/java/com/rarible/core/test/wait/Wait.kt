@@ -4,8 +4,12 @@ import kotlinx.coroutines.time.delay
 import java.time.Duration
 
 object Wait {
+
+    private val defaultInterval = Duration.ofMillis(100)
+    private val defaultDuration = Duration.ofSeconds(5)
+
     suspend fun <V> waitFor(
-        timeout: Duration = Duration.ofSeconds(5),
+        timeout: Duration = defaultDuration,
         callable: suspend () -> V
     ): V {
         val start = System.currentTimeMillis()
@@ -15,7 +19,7 @@ object Wait {
                 if (value != null) {
                     return value
                 }
-                delay(Duration.ofMillis(500))
+                delay(defaultInterval)
             } catch (ignored: Exception) {
             }
         }
@@ -23,19 +27,19 @@ object Wait {
     }
 
     suspend fun waitAssert(
-        timeout: Duration = Duration.ofSeconds(5),
+        timeout: Duration = defaultDuration,
         runnable: suspend () -> Unit
     ) {
         return waitAssertWithCheckInterval(
-            checkInterval = Duration.ofMillis(500),
+            checkInterval = defaultInterval,
             timeout = timeout,
             runnable = runnable
         )
     }
 
     suspend fun waitAssertWithCheckInterval(
-        checkInterval: Duration = Duration.ofMillis(500),
-        timeout: Duration = Duration.ofSeconds(5),
+        checkInterval: Duration = defaultInterval,
+        timeout: Duration = defaultDuration,
         runnable: suspend () -> Unit
     ) {
         val maxTime = System.currentTimeMillis() + timeout.toMillis()
