@@ -9,6 +9,7 @@ import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpUriRequest
 import org.apache.http.concurrent.FutureCallback
 import org.apache.http.conn.ConnectionKeepAliveStrategy
+import org.apache.http.conn.ssl.TrustAllStrategy
 import org.apache.http.impl.client.DefaultConnectionKeepAliveStrategy
 import org.apache.http.impl.nio.client.HttpAsyncClients
 import org.apache.http.impl.nio.conn.PoolingNHttpClientConnectionManager
@@ -20,6 +21,7 @@ import org.apache.http.nio.client.methods.AsyncByteConsumer
 import org.apache.http.nio.client.methods.HttpAsyncMethods
 import org.apache.http.nio.reactor.ConnectingIOReactor
 import org.apache.http.protocol.HttpContext
+import org.apache.http.ssl.SSLContextBuilder
 import java.io.Closeable
 import java.io.IOException
 import java.net.URL
@@ -31,7 +33,8 @@ import java.util.concurrent.atomic.AtomicReference
 class ApacheHttpContentReceiver(
     private val timeout: Int,
     connectionsPerRoute: Int,
-    keepAlive: Boolean
+    keepAlive: Boolean,
+    insecure: Boolean,
 ) : ContentReceiver, Closeable {
 
     private val client = run {
@@ -45,6 +48,13 @@ class ApacheHttpContentReceiver(
                 else ConnectionKeepAliveStrategy { _, _ -> -1 }
             )
             .setConnectionManager(connectionManager)
+            .apply {
+                if (insecure) {
+                    val sslBuilder = SSLContextBuilder()
+                    sslBuilder.loadTrustMaterial(null, TrustAllStrategy())
+                    setSSLContext(sslBuilder.build())
+                }
+            }
             .build()
 
         client.start()

@@ -2,6 +2,8 @@ package com.rarible.core.meta.resource.http.builder
 
 import io.netty.channel.ChannelOption
 import io.netty.channel.epoll.EpollChannelOption
+import io.netty.handler.ssl.SslContextBuilder
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory
 import io.netty.handler.timeout.ReadTimeoutHandler
 import io.netty.handler.timeout.WriteTimeoutHandler
 import org.springframework.http.HttpHeaders
@@ -15,7 +17,8 @@ import java.util.concurrent.TimeUnit
 
 class DefaultWebClientBuilder(
     private val followRedirect: Boolean,
-    private val defaultHeaders: HttpHeaders = HttpHeaders()
+    private val defaultHeaders: HttpHeaders = HttpHeaders(),
+    private val insecure: Boolean = false,
 ) : WebClientBuilder {
 
     override fun build(): WebClient {
@@ -31,8 +34,19 @@ class DefaultWebClientBuilder(
                     .maxLifeTime(DEFAULT_TIMEOUT)
                     .lifo()
                     .build()
+
+                val sslContext = SslContextBuilder
+                    .forClient()
+                    .apply {
+                        if (insecure) {
+                            trustManager(InsecureTrustManagerFactory.INSTANCE)
+                        }
+                    }
+                    .build()
+
                 val client = HttpClient
                     .create(provider)
+                    .secure { sslProvider -> sslProvider.sslContext(sslContext) }
                     .tcpConfiguration {
                         it.option(ChannelOption.SO_KEEPALIVE, true)
                             .option(EpollChannelOption.TCP_KEEPIDLE, 300)

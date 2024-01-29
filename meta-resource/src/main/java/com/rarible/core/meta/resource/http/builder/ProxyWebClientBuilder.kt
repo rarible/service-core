@@ -1,6 +1,8 @@
 package com.rarible.core.meta.resource.http.builder
 
 import com.rarible.core.meta.resource.http.builder.DefaultWebClientBuilder.Companion.DEFAULT_TIMEOUT
+import io.netty.handler.ssl.SslContextBuilder
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory
 import io.netty.handler.timeout.ReadTimeoutHandler
 import org.springframework.http.HttpHeaders
 import org.springframework.http.client.reactive.ClientHttpConnector
@@ -18,7 +20,8 @@ class ProxyWebClientBuilder(
     private val connectTimeout: Int,
     private val proxyUrl: String,
     private val followRedirect: Boolean,
-    private val defaultHeaders: HttpHeaders = HttpHeaders()
+    private val defaultHeaders: HttpHeaders = HttpHeaders(),
+    private val insecure: Boolean = false,
 ) : WebClientBuilder {
 
     override fun build(): WebClient =
@@ -58,6 +61,15 @@ class ProxyWebClientBuilder(
                 it.addHandlerLast(ReadTimeoutHandler(readTimeoutMs.toLong(), TimeUnit.MILLISECONDS))
             }
 
+        val sslContext = SslContextBuilder
+            .forClient()
+            .apply {
+                if (insecure) {
+                    trustManager(InsecureTrustManagerFactory.INSTANCE)
+                }
+            }
+            .build()
+
         if (proxyUrl.isNotBlank()) {
             val finalTcpClient = tcpClient.proxy {
                 val uri = URI.create(proxyUrl)
@@ -70,11 +82,13 @@ class ProxyWebClientBuilder(
             }
             return ReactorClientHttpConnector(
                 HttpClient.from(finalTcpClient).followRedirect(followRedirect)
+                    .secure { sslProvider -> sslProvider.sslContext(sslContext) }
             )
         }
 
         return ReactorClientHttpConnector(
             HttpClient.from(tcpClient).followRedirect(followRedirect)
+                .secure { sslProvider -> sslProvider.sslContext(sslContext) }
         )
     }
 }
