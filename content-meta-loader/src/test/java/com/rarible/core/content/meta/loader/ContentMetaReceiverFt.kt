@@ -7,6 +7,7 @@ import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import java.net.URL
@@ -18,30 +19,15 @@ class ContentMetaReceiverFt {
 
         private const val MAX_BYTES = 128 * 1024
 
-        private val contentKtorCioReceiver = KtorCioClientContentReceiver(
-            timeout = 10000
-        )
-        private val contentKtorApacheReceiver = KtorApacheClientContentReceiver(
-            timeout = 10000
-        )
         private val contentApacheAsyncHttpContentReceiver = ApacheHttpContentReceiver(
             timeout = 10000,
             connectionsPerRoute = 200,
-            keepAlive = true
+            keepAlive = true,
+            insecure = false,
         )
 
         private val contentDetector = ContentDetector()
 
-        private val contentMetaKtorCioReceiver = ContentMetaReceiver(
-            contentReceiver = contentKtorCioReceiver,
-            maxBytes = MAX_BYTES,
-            contentDetector = contentDetector
-        )
-        private val contentMetaKtorApacheReceiver = ContentMetaReceiver(
-            contentReceiver = contentKtorApacheReceiver,
-            maxBytes = MAX_BYTES,
-            contentDetector = contentDetector
-        )
         private val contentMetaApacheAsyncHttpReceiver = ContentMetaReceiver(
             contentReceiver = contentApacheAsyncHttpContentReceiver,
             maxBytes = MAX_BYTES,
@@ -50,8 +36,6 @@ class ContentMetaReceiverFt {
     }
 
     enum class ContentMetaReceiversEnum(val receiver: ContentMetaReceiver) {
-        KTOR_CIO(contentMetaKtorCioReceiver),
-        KTOR_APACHE(contentMetaKtorApacheReceiver),
         APACHE_ASYNC(contentMetaApacheAsyncHttpReceiver)
     }
 
@@ -266,6 +250,20 @@ class ContentMetaReceiverFt {
         assertNull(result.meta)
         assertThat(result.approach).isEqualTo("stub")
         assertThat(result.bytesRead).isEqualTo(0)
+    }
+
+    @Test
+    fun `allow insecure`() = runBlocking<Unit> {
+        val body = String(
+            ApacheHttpContentReceiver(
+                connectionsPerRoute = 1,
+                insecure = true,
+                keepAlive = false,
+                timeout = 30,
+            ).receiveBytes(URL("https://chameleoncollective.io/metadata/9277.json"), 1000000).data
+        )
+
+        assertThat(body).isEqualTo("""{"image":"https://chameleoncollective.io/metadata2/1176.png","attributes":[{"value":"Blue Veins","trait_type":"Eye"},{"value":"Red","trait_type":"Background"},{"value":"Green Moustache","trait_type":"Prop"},{"value":"Tangled White","trait_type":"Mouth"},{"value":"White Hoodie","trait_type":"Clothes"},{"value":"Basketball Green","trait_type":"Tail"},{"value":"Cowboy Brown","trait_type":"Hat"},{"value":"Green","trait_type":"Body"}]}""")
     }
 
     private fun getContentMeta(url: String, contentMetaReceiver: ContentMetaReceiver): ContentMetaResult =
