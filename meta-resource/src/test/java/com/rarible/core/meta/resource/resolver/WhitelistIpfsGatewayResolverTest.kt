@@ -14,16 +14,16 @@ class WhitelistIpfsGatewayResolverTest {
 
     @Test
     fun whitelist() {
-        val matched1 = parser.parse("https://ipfs-us-private.quantelica.com/ipfs/${CID}") as IpfsUrl
+        val matched1 = parser.parse("https://ipfs-us-private.quantelica.com/ipfs/$CID") as IpfsUrl
         assertThat(resolver.getResourceUrl(matched1, ORIGINAL_GATEWAY, false))
             .isEqualTo(matched1.original)
 
-        val matched2 = parser.parse("https://ipfs-eu-private.quantelica.com/ipfs/${CID}") as IpfsUrl
+        val matched2 = parser.parse("https://ipfs-eu-private.quantelica.com/ipfs/$CID") as IpfsUrl
         assertThat(resolver.getResourceUrl(matched2, ORIGINAL_GATEWAY, true))
             .isEqualTo(matched2.original)
 
-        val notMatched = parser.parse("https://somegateway.io/ipfs/${CID}") as IpfsUrl
+        val notMatched = parser.parse("https://somegateway.io/ipfs/$CID") as IpfsUrl
         assertThat(resolver.getResourceUrl(notMatched, ORIGINAL_GATEWAY, false))
-            .isNull()
+            .isEqualTo("https://some.io/ipfs/$CID")
     }
 }
