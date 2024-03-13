@@ -10,18 +10,20 @@ import org.junit.jupiter.api.Test
 class WhitelistIpfsGatewayResolverTest {
 
     private val parser = UrlParser()
-    private val resolver = WhitelistIpfsGatewayResolver(listOf("""https\://[a-zA-Z0-9_-]+\.infura-ipfs\.io"""))
+    private val resolver = WhitelistIpfsGatewayResolver(listOf("""https\://ipfs[a-zA-Z0-9_-]+\.quantelica\.com"""))
 
     @Test
     fun whitelist() {
-        val matched1 = parser.parse("https://ola.infura-ipfs.io/ipfs/$CID") as IpfsUrl
-        assertThat(resolver.getResourceUrl(matched1, ORIGINAL_GATEWAY, false)).isNull()
+        val matched1 = parser.parse("https://ipfs-us-private.quantelica.com/ipfs/${CID}") as IpfsUrl
+        assertThat(resolver.getResourceUrl(matched1, ORIGINAL_GATEWAY, false))
+            .isEqualTo(matched1.original)
 
-        val matched2 = parser.parse("https://test-url.infura-ipfs.io/ipfs/$CID") as IpfsUrl
-        assertThat(resolver.getResourceUrl(matched2, ORIGINAL_GATEWAY, true)).isNull()
+        val matched2 = parser.parse("https://ipfs-eu-private.quantelica.com/ipfs/${CID}") as IpfsUrl
+        assertThat(resolver.getResourceUrl(matched2, ORIGINAL_GATEWAY, true))
+            .isEqualTo(matched2.original)
 
-        val notMatched = parser.parse("https://somegateway.io/ipfs/$CID") as IpfsUrl
+        val notMatched = parser.parse("https://somegateway.io/ipfs/${CID}") as IpfsUrl
         assertThat(resolver.getResourceUrl(notMatched, ORIGINAL_GATEWAY, false))
-            .isEqualTo("$ORIGINAL_GATEWAY/ipfs/$CID")
+            .isNull()
     }
 }

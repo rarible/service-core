@@ -18,39 +18,10 @@ class CompositeCustomIpfsGatewayResolver(
     }
 }
 
-class LegacyIpfsGatewaySubstitutor(
-    private val legacyGateways: List<String>
-) : CustomIpfsGatewayResolver {
-
-    override fun getResourceUrl(ipfsUrl: IpfsUrl, gateway: String, replaceOriginalHost: Boolean): String? {
-        for (legacy in legacyGateways) {
-            if (ipfsUrl.originalGateway == legacy) {
-                return "$gateway/${IpfsUrl.IPFS}/${ipfsUrl.path}"
-            }
-        }
-        return null
-    }
-}
-
+// Fully substitute default logic of IPFS URLs resolution:
+// If gateway in whitelist - use it 'as is' in any case
+// Otherwise - always substitute original gateway by provided one
 class WhitelistIpfsGatewayResolver(
-    whitelist: List<String>,
-) : CustomIpfsGatewayResolver {
-
-    private val patterns = whitelist
-        .filter { it.isNotBlank() }
-        .map { it.toRegex() }
-
-    override fun getResourceUrl(ipfsUrl: IpfsUrl, gateway: String, replaceOriginalHost: Boolean): String? {
-        for (pattern in patterns) {
-            if (ipfsUrl.originalGateway?.matches(pattern) == true) {
-                return null
-            }
-        }
-        return "$gateway/${IpfsUrl.IPFS}/${ipfsUrl.path}"
-    }
-}
-
-class AsIsIpfsGatewayResolver(
     whitelist: List<String>,
 ) : CustomIpfsGatewayResolver {
 
@@ -64,6 +35,6 @@ class AsIsIpfsGatewayResolver(
                 return ipfsUrl.original
             }
         }
-        return null
+        return "$gateway/${IpfsUrl.IPFS}/${ipfsUrl.path}"
     }
 }
