@@ -7,7 +7,7 @@ import com.rarible.core.meta.resource.util.isHttpUrl
 class IpfsGatewayResolver(
     private val publicGatewayProvider: GatewayProvider,
     private val internalGatewayProvider: GatewayProvider,
-    private val customGatewaysResolver: CustomIpfsGatewayResolver
+    private val customGatewaysResolver: CustomIpfsGatewayResolver? = null
 ) {
 
     fun resolveUrl(resource: IpfsUrl, isPublic: Boolean): String =
@@ -27,7 +27,7 @@ class IpfsGatewayResolver(
 
     private fun resolveInternal(ipfsUrl: IpfsUrl, gateway: String, replaceOriginalHost: Boolean): String {
         // If there is IPFS URL with one of legacy gateways, we need to replace it with actual public gateway
-        customGatewaysResolver.getResourceUrl(ipfsUrl, gateway, replaceOriginalHost)?.let { return it }
+        customGatewaysResolver?.getResourceUrl(ipfsUrl, gateway, replaceOriginalHost)?.let { return it }
 
         // If URL is valid, and we want to keep original IPFS gateway, return 'as is'
         return if (!replaceOriginalHost && ipfsUrl.original.isHttpUrl()) {
