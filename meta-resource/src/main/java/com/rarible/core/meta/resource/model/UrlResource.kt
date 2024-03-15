@@ -35,6 +35,7 @@ data class IpfsUrl(
 
         const val IPFS = "ipfs"
         const val IPFS_PREFIX = "$IPFS:/"
+        const val IPFS_CORRUPTED_PREFIX = "$IPFS//"
         const val IPFS_PATH_PART = "/$IPFS/"
     }
 }
