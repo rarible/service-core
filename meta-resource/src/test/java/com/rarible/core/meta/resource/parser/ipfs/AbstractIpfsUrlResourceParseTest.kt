@@ -20,6 +20,9 @@ class AbstractIpfsUrlResourceParseTest {
         assertIpfsUrl("ipfs:////ipfs/$CID", CID)
         assertIpfsUrl("ipfs:////ipfs//$CID", CID)
         assertIpfsUrl("ipfs:////ipfs///$CID", CID)
+
+        assertIpfsUrl("ipfs//ipfs/$CID", CID)
+        assertIpfsUrl("ipfs////ipfs///$CID", CID)
     }
 
     @Test
@@ -36,17 +39,22 @@ class AbstractIpfsUrlResourceParseTest {
     fun `prefixed ipfs urls`() {
         //        assertFixedIpfsUrl("ipfs:/folder/$CID/abc .json", "folder/$CID/abc%20.json")  //SPACE
         assertIpfsUrl("ipfs://folder/abc", "folder/abc")
+        assertIpfsUrl("ipfs//folder/abc", "folder/abc")
         assertIpfsUrl("ipfs:///folder/subfolder/$CID", "folder/subfolder/$CID")
         assertIpfsUrl("ipfs:////$CID", CID)
+        assertIpfsUrl("ipfs////$CID", CID)
 
         // Various case of ipfs prefix
         assertIpfsUrl("IPFS://$CID", CID)
         assertIpfsUrl("Ipfs:///$CID", CID)
+        assertIpfsUrl("IpfS//$CID", CID)
 
         // Abstract IPFS urls with /ipfs/ path and broken slashes without a CID
         assertIpfsUrl("ipfs:/ipfs/abc", "abc")
+        assertIpfsUrl("ipfs//ipfs/abc", "abc")
         assertIpfsUrl("ipfs://ipfs/folder/abc", "folder/abc")
         assertIpfsUrl("ipfs:///ipfs/abc", "abc")
+        assertIpfsUrl("ipfs///ipfs/abc", "abc")
     }
 
     private fun assertIpfsUrl(url: String, expectedPath: String) {
