@@ -1,6 +1,7 @@
 package com.rarible.core.entity.reducer.service
 
 import com.rarible.core.entity.reducer.model.Identifiable
+import com.rarible.core.entity.reducer.service.ReduceService.EntityWithEvent
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.flow
@@ -14,7 +15,8 @@ open class StreamFullReduceService<Id, Event, E : Identifiable<Id>>(
     private val entityService: EntityService<Id, E, Event>,
     private val entityIdService: EntityIdService<Event, Id>,
     private val templateProvider: EntityTemplateProvider<Id, E>,
-    private val reducer: Reducer<Event, E>
+    private val reducer: Reducer<Event, E>,
+    private val throttleSaveToDb: Int
 ) : ReduceService<Id, Event, E> {
 
     /**
@@ -24,35 +26,44 @@ open class StreamFullReduceService<Id, Event, E : Identifiable<Id>>(
         return true
     }
 
-    override fun reduce(events: Flow<Event>): Flow<E> = flow {
-        var current: E? = null
-        var entity: E? = null
+    override fun reduceWithEvents(events: Flow<Event>): Flow<EntityWithEvent<E, Event>> = flow {
+        var originalEntity: E? = null
+        var eventsForEntity = 0
+        var currentResult: EntityWithEvent<E, Event>? = null
         events.collect { event ->
             val id = entityIdService.getEntityId(event)
-            val prevEntity = entity
-            // `prevEntity.id != id` means that we are reading next balance in the flow
-            val currentEntity = if (prevEntity == null || prevEntity.id != id) {
-                if (prevEntity != null) {
+            val prevResult = currentResult
+            // `prevResult.entity.id != id` means that we are reading next balance in the flow
+            val currentEntity = if (prevResult == null || prevResult.entity.id != id) {
+                if (prevResult != null) {
                     // for full reduce we don't need to specify event triggered the update - it is not actual
-                    checkAndEmit(current, prevEntity)
+                    updateAndEmit(originalEntity, prevResult)
                 }
-                current = entityService.get(id)
-                templateProvider.getEntityTemplate(id, current?.version)
+                originalEntity = entityService.get(id)
+                eventsForEntity = 0
+                templateProvider.getEntityTemplate(id, originalEntity?.version) withEvent event
             } else {
-                prevEntity
+                eventsForEntity += 1
+                if (eventsForEntity == throttleSaveToDb) {
+                    updateAndEmit(originalEntity, prevResult)
+                    eventsForEntity = 0
+                }
+                prevResult
             }
-            entity = reducer.reduce(currentEntity, event)
+            currentResult = reducer.reduce(currentEntity.entity, event) withEvent event
         }
-        val lastEntity = entity
-        checkAndEmit(current, lastEntity)
+        val prevResult = currentResult
+        updateAndEmit(originalEntity, prevResult)
     }
 
-    private suspend fun FlowCollector<E>.checkAndEmit(current: E?, result: E?) {
+    private suspend fun FlowCollector<EntityWithEvent<E, Event>>.updateAndEmit(original: E?, result: EntityWithEvent<E, Event>?) {
         if (result != null) {
-            val emittedEntity = if (isChanged(current, result)) {
-                entityService.update(result)
+            val emittedResult = if (isChanged(original, result.entity)) {
+                entityService.update(result.entity) withEvent result.event
             } else result
-            emit(emittedEntity)
+            emit(emittedResult)
         }
     }
+
+    private infix fun E.withEvent(event: Event) = EntityWithEvent(this, event)
 }
