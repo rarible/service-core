@@ -1,3 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.rarible.core.autoconfigure.nginx.RaribleNginxExposeAutoConfiguration, \
 com.rarible.core.autoconfigure.filter.cors.CorsWebFilterAutoConfiguration

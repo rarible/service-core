@@ -37,14 +37,13 @@
     </distributionManagement>
 
     <properties>
-        <revision>2.6.18</revision>
+        <revision>2.7.0</revision>
         <logback.version>1.2.11</logback.version>
         <logstash-encoder.version>7.0.1</logstash-encoder.version>
         <testcontainers.version>1.16.2</testcontainers.version>
         <springfox.version>3.0.0</springfox.version>
         <nexus.maven.public>http://nexus.rarible.int/repository/maven-public/</nexus.maven.public>
         <springmockk.version>3.0.1</springmockk.version>
-        <elastic-apm.version>1.36.0</elastic-apm.version>
         <ktor.client.version>1.6.7</ktor.client.version>
         <apache.client.async.version>4.1.5</apache.client.async.version>
         <escalog.version>1.1.2</escalog.version>
@@ -73,16 +72,6 @@
                 <groupId>net.logstash.logback</groupId>
                 <artifactId>logstash-logback-encoder</artifactId>
                 <version>${logstash-encoder.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>co.elastic.apm</groupId>
-                <artifactId>apm-agent-api</artifactId>
-                <version>${elastic-apm.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>co.elastic.apm</groupId>
-                <artifactId>apm-agent-attach</artifactId>
-                <version>${elastic-apm.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.google.guava</groupId>
@@ -208,22 +197,7 @@
             </dependency>
             <dependency>
                 <groupId>com.rarible.core</groupId>
-                <artifactId>rarible-core-reduce</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-entity-reducer</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.rarible.core</groupId>
-                <artifactId>rarible-core-apm</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.rarible.core</groupId>
-                <artifactId>rarible-core-apm-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -349,13 +323,9 @@
         <module>starter</module>
         <module>daemon</module>
         <module>client</module>
-        <module>reduce</module>
         <module>entity-reducer</module>
         <module>test-coverage</module>
         <module>api</module>
-        <module>apm</module>
-        <module>apm-starter</module>
-        <module>data-util</module>
         <module>meta-resource</module>
     </modules>
 
