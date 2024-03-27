@@ -1,10 +1,7 @@
 package com.rarible.core.client
 
-import co.elastic.apm.api.Span
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.base.CaseFormat
-import com.rarible.core.apm.ApmContext
-import com.rarible.core.common.orNull
 import com.rarible.core.logging.LoggerContext.MDC_MAP
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -17,7 +14,6 @@ import org.springframework.http.codec.json.Jackson2JsonEncoder
 import org.springframework.web.reactive.function.client.ExchangeStrategies
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.core.publisher.Mono
-import java.util.Optional
 import java.util.concurrent.TimeUnit
 
 object WebClientHelper {
@@ -26,15 +22,6 @@ object WebClientHelper {
     @JvmStatic
     val LOG_HEADERS: Mono<Map<String, String>> = MDC_MAP
         .map { it.toHeadersMap() }
-    val APM_SPAN: Mono<Optional<Span>> = Mono.subscriberContext()
-        .map {
-            val ctx: ApmContext? = if (it.hasKey(ApmContext.Key)) {
-                it.get(ApmContext.Key)
-            } else {
-                null
-            }
-            Optional.ofNullable(ctx?.span)
-        }
 
     @JvmStatic
     fun createConnector(connectTimeoutMs: Int, readTimeoutMs: Int): ClientHttpConnector {
@@ -75,13 +62,8 @@ object WebClientHelper {
 
     @JvmStatic
     fun preprocess(requestBuilder: WebClient.RequestBodySpec): Mono<WebClient.RequestBodySpec> {
-        val result = Mono.zip(LOG_HEADERS, APM_SPAN) { headers, span ->
-            preprocess(requestBuilder, headers)
-            span.orNull()?.injectTraceHeaders { key, value ->
-                requestBuilder.header(key, value)
-            }
-            requestBuilder
-        }
+        val result = LOG_HEADERS
+            .map { preprocess(requestBuilder, it) }
 
         requestBuilder.headers { headers ->
             for (header in headers) {

@@ -1,26 +1,9 @@
 spring:
   jmx:
     enabled: false
-  config:
-    use-legacy-processing: true
-    import: "consul:"
   cloud:
     bootstrap:
-      enabled: true
-    service-registry:
-      auto-registration:
-        enabled: true
-    consul:
-      discovery:
-        health-check-path: /_status/ping
-        health-check-critical-timeout: "3m"
-      host: consul-agent
-      port: 8500
-      config:
-        watch:
-          enabled: false
-        enabled: true
-        prefix:
+      enabled: false
 
 logging:
   logstash:
