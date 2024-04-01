@@ -10,8 +10,6 @@ import com.rarible.core.entity.reducer.service.service.Erc20BalanceTemplateProvi
 import com.rarible.core.test.data.randomInt
 import com.rarible.core.test.data.randomLong
 import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -120,34 +118,6 @@ internal class StreamFullReduceServiceTest {
     }
 
     @Test
-    fun `should return events every throttleSaveToDb`() = runBlocking<Unit> {
-        val entityService = Erc20BalanceService()
-        val task = createStreamReduceService(entityService, 3)
-        val entitiesAndEvents = task.reduceWithEvents(flowOf(
-            Erc20BalanceEvent(entityId = 1L, block = 10, value = 100),
-            Erc20BalanceEvent(entityId = 2L, block = 11, value = 100),
-            Erc20BalanceEvent(entityId = 2L, block = 12, value = 100),
-            Erc20BalanceEvent(entityId = 3L, block = 13, value = 100),
-            Erc20BalanceEvent(entityId = 3L, block = 14, value = 100),
-            Erc20BalanceEvent(entityId = 3L, block = 15, value = 100),
-            Erc20BalanceEvent(entityId = 4L, block = 16, value = 100),
-            Erc20BalanceEvent(entityId = 4L, block = 17, value = 100),
-            Erc20BalanceEvent(entityId = 4L, block = 18, value = 100),
-            Erc20BalanceEvent(entityId = 4L, block = 19, value = 100),
-        )).toList()
-
-        assertThat(entitiesAndEvents)
-            .extracting<Pair<Int, Long>> { (entity, event) -> entity.balance to event.block }
-            .containsExactly(
-                100 to 10,
-                200 to 12,
-                300 to 15,
-                300 to 18,
-                400 to 19
-            )
-    }
-
-    @Test
     fun `shouldn't make useless update during full reduce of existed single entity`() = runBlocking<Unit> {
         val entityService = Erc20BalanceService()
         val task = createStreamReduceServiceWithComparing(entityService)
@@ -221,10 +191,7 @@ internal class StreamFullReduceServiceTest {
         assertThat(updatedEntity).hasSize(4)
     }
 
-    private fun createStreamReduceService(
-        entityService: Erc20BalanceService,
-        throttleSaveToDb: Int = 100
-    ): StreamFullReduceService<Long, Erc20BalanceEvent, Erc20Balance> {
+    private fun createStreamReduceService(entityService: Erc20BalanceService): StreamFullReduceService<Long, Erc20BalanceEvent, Erc20Balance> {
         val entityIdService = Erc20BalanceEntityIdService()
         val templateProvider = Erc20BalanceTemplateProvider()
         val eventRevertPolicy = Erc20BalanceForwardEventApplyPolicy()
@@ -234,8 +201,7 @@ internal class StreamFullReduceServiceTest {
             entityService,
             entityIdService,
             templateProvider,
-            reducer,
-            throttleSaveToDb
+            reducer
         )
     }
 
@@ -249,8 +215,7 @@ internal class StreamFullReduceServiceTest {
             entityService,
             entityIdService,
             templateProvider,
-            reducer,
-            throttleSaveToDb = 100
+            reducer
         ) {
             override fun isChanged(current: Erc20Balance?, result: Erc20Balance?): Boolean {
                 return current?.balance != result?.balance
