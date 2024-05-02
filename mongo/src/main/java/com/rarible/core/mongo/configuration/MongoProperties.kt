@@ -9,4 +9,5 @@ import java.time.Duration
 data class MongoProperties(
     val maxConnectionLifeTime: Duration? = null,
     val maxConnectionIdleTime: Duration? = null,
+    val maxTime: Duration? = null,
 )
