@@ -28,11 +28,12 @@ class RaribleReactiveMongoTemplate(
 
     inner class MaxTimeAwarePreparer(private val delegate: FindPublisherPreparer?) : FindPublisherPreparer {
         override fun prepare(findPublisher: FindPublisher<Document>): FindPublisher<Document> {
-            val publisher = delegate?.prepare(findPublisher) ?: findPublisher
-            if (properties.maxTime != null) {
-                return publisher.maxTime(properties.maxTime.toMillis(), TimeUnit.MILLISECONDS)
+            val publisher = if (properties.maxTime != null) {
+                return findPublisher.maxTime(properties.maxTime.toMillis(), TimeUnit.MILLISECONDS)
+            } else {
+                findPublisher
             }
-            return publisher
+            return delegate?.prepare(publisher) ?: publisher
         }
     }
 }
