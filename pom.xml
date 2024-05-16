@@ -327,6 +327,7 @@
         <module>test-coverage</module>
         <module>api</module>
         <module>meta-resource</module>
+        <module>meta-resolver</module>
     </modules>
 
 </project>
