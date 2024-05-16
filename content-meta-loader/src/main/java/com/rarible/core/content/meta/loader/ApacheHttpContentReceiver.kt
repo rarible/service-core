@@ -41,6 +41,7 @@ class ApacheHttpContentReceiver(
         val reactor: ConnectingIOReactor = DefaultConnectingIOReactor()
         val connectionManager = PoolingNHttpClientConnectionManager(reactor)
         connectionManager.defaultMaxPerRoute = connectionsPerRoute
+        connectionManager.maxTotal = connectionsPerRoute * 5
 
         val client = HttpAsyncClients.custom()
             .setKeepAliveStrategy(
