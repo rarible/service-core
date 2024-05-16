@@ -37,7 +37,7 @@
     </distributionManagement>
 
     <properties>
-        <revision>2.7.4</revision>
+        <revision>2.7.5</revision>
         <logback.version>1.2.11</logback.version>
         <logstash-encoder.version>7.0.1</logstash-encoder.version>
         <testcontainers.version>1.16.2</testcontainers.version>
@@ -178,6 +178,11 @@
             <dependency>
                 <groupId>com.rarible.core</groupId>
                 <artifactId>rarible-core-kafka</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.rarible.core</groupId>
+                <artifactId>rarible-core-content-meta-loader</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -327,6 +332,7 @@
         <module>test-coverage</module>
         <module>api</module>
         <module>meta-resource</module>
+        <module>meta-resolver</module>
     </modules>
 
 </project>
