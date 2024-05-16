@@ -17,6 +17,10 @@
             <groupId>com.rarible.core</groupId>
             <artifactId>rarible-core-meta-resource</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.rarible.core</groupId>
+            <artifactId>rarible-core-content-meta-loader</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>com.fasterxml.jackson.module</groupId>

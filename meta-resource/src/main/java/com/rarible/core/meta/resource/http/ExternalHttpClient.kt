@@ -3,10 +3,12 @@ package com.rarible.core.meta.resource.http
 import com.rarible.core.meta.resource.util.MetaLogger.logMetaLoading
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import org.springframework.http.HttpHeaders
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import org.springframework.web.reactive.function.client.bodyToMono
+import org.springframework.web.reactive.function.client.toEntity
 import java.time.Duration
 
 /**
@@ -57,6 +59,20 @@ open class ExternalHttpClient(
         } catch (e: Exception) {
             logMetaLoading(id, "failed to get properties by URI $url: ${e.message} ${getResponse(e)}", warn = true)
             null
+        }
+    }
+
+    suspend fun getBodyBytes(url: String, useProxy: Boolean = false, id: String): Pair<MediaType?, ByteArray?> {
+        val (responseSpec, timeout) = getResponseSpec(url, useProxy, id) ?: return null to null
+        return try {
+            val entity = responseSpec
+                ?.toEntity<ByteArray>()
+                ?.timeout(timeout)
+                ?.awaitFirstOrNull()
+            return entity?.headers?.contentType to entity?.body
+        } catch (e: Exception) {
+            logMetaLoading(id, "failed to get properties by URI $url: ${e.message} ${getResponse(e)}", warn = true)
+            null to null
         }
     }
 

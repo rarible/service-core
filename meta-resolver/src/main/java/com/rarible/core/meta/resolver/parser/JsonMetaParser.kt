@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.rarible.core.meta.resolver.MetaResolverException
-import com.rarible.core.meta.resolver.util.logMetaLoading
+import com.rarible.core.meta.resource.util.MetaLogger.logMetaLoading
 import org.apache.commons.codec.binary.Base64
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
@@ -31,7 +31,7 @@ object JsonMetaParser {
             trimmed.startsWith(JSON_PREFIX) -> parseJson(id, trimmed.removePrefix(JSON_PREFIX))
             isRawJson(trimmed) -> parseJson(id, trimmed)
             else -> throw MetaResolverException(
-                "failed to parse son: $data",
+                "failed to parse Json: $data",
                 status = MetaResolverException.Status.CORRUPTED_JSON
             )
         }

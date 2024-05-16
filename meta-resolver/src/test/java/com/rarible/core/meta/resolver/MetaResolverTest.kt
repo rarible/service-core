@@ -1,6 +1,8 @@
 package com.rarible.core.meta.resolver
 
 import com.fasterxml.jackson.databind.node.ObjectNode
+import com.rarible.core.meta.resolver.parser.DefaultMetaParser
+import com.rarible.core.meta.resolver.test.TestMeta
 import com.rarible.core.meta.resolver.test.TestObjects
 import com.rarible.core.meta.resolver.url.DefaultMetaUrlParser
 import com.rarible.core.meta.resolver.url.MetaUrlCustomizer
@@ -14,13 +16,13 @@ import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 
 class MetaResolverTest {
 
     private val rawMetaProvider: RawMetaProvider<String> = mockk()
     private val metaUrlResolver: MetaUrlResolver<String> = mockk()
     private val urlParser = TestObjects.urlParser
+    private val metaParser = DefaultMetaParser<String>()
 
     @Test
     fun `resolve - ok`() = runBlocking<Unit> {
@@ -28,14 +30,34 @@ class MetaResolverTest {
         val entityId = randomString()
         val url = urlParser.parse("https://test.com/$entityId")!!
         val data = """{"name" : "Alice"}"""
+        val rawMeta = RawMeta(metaParser.parse(entityId, data), data.toByteArray(), null)
 
         coEvery { metaUrlResolver.getUrl(entityId) } returns url.original
-        coEvery { rawMetaProvider.getMetaJson(entityId, url) } returns data
+        coEvery { rawMetaProvider.getRawMeta(entityId, url, metaParser) } returns rawMeta
 
         val result = resolver.resolve(entityId)!!
 
         assertThat(result.metaUrl).isEqualTo(url.original)
-        assertThat(result.meta.name).isEqualTo("Alice")
+        assertThat(result.meta?.name).isEqualTo("Alice")
+        assertThat(result.isMedia).isFalse()
+    }
+
+    @Test
+    fun `resolve - ok, media url`() = runBlocking<Unit> {
+        val resolver = createResolver()
+        val entityId = randomString()
+        val url = urlParser.parse("https://test.com/$entityId")!!
+        val data = "abc"
+        val rawMeta = RawMeta(null, data.toByteArray(), "image/png")
+
+        coEvery { metaUrlResolver.getUrl(entityId) } returns url.original
+        coEvery { rawMetaProvider.getRawMeta(entityId, url, metaParser) } returns rawMeta
+
+        val result = resolver.resolve(entityId)!!
+
+        assertThat(result.metaUrl).isEqualTo(url.original)
+        assertThat(result.meta).isNull()
+        assertThat(result.isMedia).isTrue()
     }
 
     @Test
@@ -44,6 +66,7 @@ class MetaResolverTest {
         val url = "https://test.com/{id}"
         val customUrl = urlParser.parse("https://test.com/$entityId")!!
         val data = """{"name" : "Bob"}"""
+        val rawMeta = RawMeta(metaParser.parse(entityId, data), data.toByteArray(), null)
 
         val resolver = createResolver(
             urlCustomizer = object : MetaUrlCustomizer<String> {
@@ -53,12 +76,13 @@ class MetaResolverTest {
             }
         )
 
-        coEvery { rawMetaProvider.getMetaJson(entityId, customUrl) } returns data
+        coEvery { rawMetaProvider.getRawMeta(entityId, customUrl, metaParser) } returns rawMeta
 
         val result = resolver.resolve(entityId, url)!!
 
         assertThat(result.metaUrl).isEqualTo(url)
-        assertThat(result.meta.name).isEqualTo("Bob")
+        assertThat(result.meta?.name).isEqualTo("Bob")
+        assertThat(result.isMedia).isFalse()
     }
 
     @Test
@@ -67,16 +91,18 @@ class MetaResolverTest {
         val url = urlParser.parse("https://test.com/$entityId.json")!!
         val sanitizedUrl = urlParser.parse("https://test.com/$entityId")!!
         val data = """{"name" : "Nancy"}"""
+        val rawMeta = RawMeta(metaParser.parse(entityId, data), data.toByteArray(), null)
 
         val resolver = createResolver(urlSanitizer = MetaUrlExtensionSanitizer())
 
-        coEvery { rawMetaProvider.getMetaJson(entityId, url) } returns null
-        coEvery { rawMetaProvider.getMetaJson(entityId, sanitizedUrl) } returns data
+        coEvery { rawMetaProvider.getRawMeta(entityId, url, metaParser) } returns RawMeta.EMPTY
+        coEvery { rawMetaProvider.getRawMeta(entityId, sanitizedUrl, metaParser) } returns rawMeta
 
         val result = resolver.resolve(entityId, url.original)!!
 
         assertThat(result.metaUrl).isEqualTo(url.original)
-        assertThat(result.meta.name).isEqualTo("Nancy")
+        assertThat(result.meta?.name).isEqualTo("Nancy")
+        assertThat(result.isMedia).isFalse()
     }
 
     @Test
@@ -89,7 +115,7 @@ class MetaResolverTest {
         val result = resolver.resolve(entityId, url)!!
 
         assertThat(result.metaUrl).isEqualTo(url)
-        assertThat(result.meta.name).isEqualTo("Cat")
+        assertThat(result.meta?.name).isEqualTo("Cat")
     }
 
     @Test
@@ -109,11 +135,13 @@ class MetaResolverTest {
         val entityId = randomString()
         val url = urlParser.parse("https://test.com/$entityId")!!
         val data = "not a json"
+        val rawMeta = RawMeta(null, data.toByteArray(), null)
 
         coEvery { metaUrlResolver.getUrl(entityId) } returns url.original
-        coEvery { rawMetaProvider.getMetaJson(entityId, url) } returns data
+        coEvery { rawMetaProvider.getRawMeta(entityId, url, metaParser) } returns rawMeta
 
-        assertThrows<MetaResolverException> { resolver.resolve(entityId) }
+        val result = resolver.resolve(entityId)
+        assertThat(result).isNull()
     }
 
     @Test
@@ -122,9 +150,10 @@ class MetaResolverTest {
         val entityId = randomString()
         val url = urlParser.parse("https://test.com/$entityId")!!
         val data = "{}"
+        val rawMeta = RawMeta(metaParser.parse(entityId, data), data.toByteArray(), null)
 
         coEvery { metaUrlResolver.getUrl(entityId) } returns url.original
-        coEvery { rawMetaProvider.getMetaJson(entityId, url) } returns data
+        coEvery { rawMetaProvider.getRawMeta(entityId, url, metaParser) } returns rawMeta
 
         val result = resolver.resolve(entityId)
 
@@ -137,7 +166,7 @@ class MetaResolverTest {
         val entityId = randomString()
         val url = urlParser.parse("https://test.com/$entityId")!!
 
-        coEvery { rawMetaProvider.getMetaJson(entityId, url) } returns null
+        coEvery { rawMetaProvider.getRawMeta(entityId, url, metaParser) } returns RawMeta.EMPTY
 
         val result = resolver.resolve(entityId, url.original)
 
@@ -152,17 +181,12 @@ class MetaResolverTest {
             name = "test",
             metaUrlResolver = metaUrlResolver,
             metaUrlParser = DefaultMetaUrlParser(TestObjects.urlService),
+            metaParser = metaParser,
             rawMetaProvider = rawMetaProvider,
             metaMapper = TestMetaMapper(),
             urlCustomizers = urlCustomizer?.let { listOf(it) } ?: emptyList(),
             urlSanitizers = urlSanitizer?.let { listOf(it) } ?: emptyList()
         )
-    }
-
-    data class TestMeta(val name: String?) : Meta {
-        override fun isEmpty(): Boolean {
-            return name == null
-        }
     }
 
     class TestMetaMapper : MetaMapper<String, TestMeta> {
