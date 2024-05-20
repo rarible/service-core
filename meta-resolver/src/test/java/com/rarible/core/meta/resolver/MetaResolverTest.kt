@@ -193,5 +193,9 @@ class MetaResolverTest {
         override fun map(entityId: String, json: ObjectNode): TestMeta {
             return TestMeta(json.getText("name"))
         }
+
+        override fun isEmpty(meta: TestMeta): Boolean {
+            return meta.name == null
+        }
     }
 }

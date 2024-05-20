@@ -12,7 +12,7 @@ import com.rarible.core.meta.resolver.url.MetaUrlResolver
 import com.rarible.core.meta.resolver.url.MetaUrlSanitizer
 import com.rarible.core.meta.resource.util.MetaLogger.logMetaLoading
 
-class MetaResolver<K, M : Meta>(
+class MetaResolver<K, M>(
     val name: String,
     private val metaUrlResolver: MetaUrlResolver<K>,
     private val metaUrlParser: MetaUrlParser<K>,
@@ -122,7 +122,7 @@ class MetaResolver<K, M : Meta>(
     ): MetaResult<M>? {
         val result = metaMapper.map(entityId, json)
 
-        if (!result.isEmpty()) {
+        if (!metaMapper.isEmpty(result)) {
             return MetaResult(result, metaUrl, false)
         }
         logMetaLoading(entityId, "empty meta json received by URL: $metaUrl")
