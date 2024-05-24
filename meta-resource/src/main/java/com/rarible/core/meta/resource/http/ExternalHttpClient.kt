@@ -19,7 +19,8 @@ import java.time.Duration
 open class ExternalHttpClient(
     private val defaultClient: HttpClient,
     private val proxyClient: HttpClient,
-    private val customClients: List<HttpClient>
+    private val customClients: List<HttpClient>,
+    private val onError: (Exception) -> Unit = {},
 ) {
 
     suspend fun getEntity(url: String, bodyClass: Class<*>, useProxy: Boolean = false, id: String): ResponseEntity<*>? {
@@ -31,6 +32,7 @@ open class ExternalHttpClient(
                 ?.awaitFirstOrNull()
         } catch (e: Exception) {
             logMetaLoading(id, "failed to get properties by URI $url: ${e.message} ${getResponse(e)}", warn = true)
+            onError(e)
             null
         }
     }
@@ -45,6 +47,7 @@ open class ExternalHttpClient(
                 ?.headers
         } catch (e: Exception) {
             logMetaLoading(id, "failed to get properties by URI $url: ${e.message} ${getResponse(e)}", warn = true)
+            onError(e)
             null
         }
     }
@@ -58,6 +61,7 @@ open class ExternalHttpClient(
                 ?.awaitFirstOrNull()
         } catch (e: Exception) {
             logMetaLoading(id, "failed to get properties by URI $url: ${e.message} ${getResponse(e)}", warn = true)
+            onError(e)
             null
         }
     }
@@ -72,6 +76,7 @@ open class ExternalHttpClient(
             return entity?.headers?.contentType to entity?.body
         } catch (e: Exception) {
             logMetaLoading(id, "failed to get properties by URI $url: ${e.message} ${getResponse(e)}", warn = true)
+            onError(e)
             null to null
         }
     }
