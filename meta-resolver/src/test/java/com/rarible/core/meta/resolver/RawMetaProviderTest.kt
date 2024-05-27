@@ -16,9 +16,7 @@ import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
-import org.springframework.web.reactive.function.client.WebClientResponseException
 
 class RawMetaProviderTest {
 
@@ -158,7 +156,9 @@ class RawMetaProviderTest {
         val urlResource = urlParser.parse("https://localhost:8080/abc")!!
         val json = """{"name" : "${randomString()}"}"""
 
-        coEvery { httpClient.getBody(url = any(), id = entityId) } returns json
+        coEvery {
+            httpClient.getBodyBytes(url = any(), id = entityId, useProxy = any())
+        } returns (MediaType.APPLICATION_JSON to json.toByteArray())
         coEvery { cache.isSupported(urlResource) } returns false
 
         rawPropertiesProvider.getRawMeta(entityId, urlResource, parser)
@@ -177,7 +177,7 @@ class RawMetaProviderTest {
         // First call should be executed without proxy
         coEvery {
             httpClient.getBodyBytes(url = any(), id = entityId, useProxy = false)
-        } throws WebClientResponseException(404, "", HttpHeaders(), null, null, null)
+        } returns (null to null)
 
         // Since direct request has failed, proxy request should be executed
         coEvery {
