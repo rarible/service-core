@@ -112,26 +112,21 @@ class RawMetaProvider<K>(
         // 2. With proxy some sites block us too, but respond fine without proxy
         // 3. It is better to avoid proxy requests since they are paid
         // So even if useProxy specified we want to try fetch data without it first
-        val withoutProxy = safeFetch(internalUrl, entityId, false)
+        val withoutProxy = doFetch(internalUrl, entityId, false)
 
         // Second try with proxy, if needed
         return if (withoutProxy.second == null && useProxy) {
-            safeFetch(internalUrl, entityId, true)
+            doFetch(internalUrl, entityId, true)
         } else {
             withoutProxy
         }
     }
 
-    private suspend fun safeFetch(url: String, entityId: K, useProxy: Boolean = false): Pair<MediaType?, ByteArray?> {
-        return try {
-            externalHttpClient.getBodyBytes(
-                url = url,
-                id = entityId.toString(),
-                useProxy = useProxy
-            )
-        } catch (e: Exception) {
-            logMetaLoading(entityId, "Failed to receive property string via URL (proxy: $useProxy) $url $e")
-            null to null
-        }
+    private suspend fun doFetch(url: String, entityId: K, useProxy: Boolean = false): Pair<MediaType?, ByteArray?> {
+        return externalHttpClient.getBodyBytes(
+            url = url,
+            id = entityId.toString(),
+            useProxy = useProxy
+        )
     }
 }
