@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 class RaribleKafkaConsumerFactory(
     private val env: String,
-    private val host: String,
+    host: String,
     private val deserializer: Class<*>? = null
 ) {
 
@@ -79,6 +79,9 @@ class RaribleKafkaConsumerFactory(
         container.setupMessageListener(wrappedListener)
         container.containerProperties.groupId = "$env.${settings.group}"
         container.containerProperties.clientId = "$clientIdPrefix.${settings.group}"
+        settings.consumerRebalanceListener?.let {
+            container.containerProperties.consumerRebalanceListener = it
+        }
 
         return RaribleKafkaConsumerWorkerWrapper(container, wrappedListener)
     }

@@ -1,5 +1,6 @@
 package com.rarible.core.kafka
 
+import org.apache.kafka.clients.consumer.ConsumerRebalanceListener
 import org.apache.kafka.clients.consumer.OffsetResetStrategy
 
 data class RaribleKafkaConsumerSettings<T>(
@@ -14,5 +15,6 @@ data class RaribleKafkaConsumerSettings<T>(
     val async: Boolean = true,
     val offsetResetStrategy: OffsetResetStrategy = OffsetResetStrategy.EARLIEST,
     val valueClass: Class<T>,
-    val coroutineThreadCount: Int = 1
+    val coroutineThreadCount: Int = 1,
+    val consumerRebalanceListener: ConsumerRebalanceListener? = null,
 )
