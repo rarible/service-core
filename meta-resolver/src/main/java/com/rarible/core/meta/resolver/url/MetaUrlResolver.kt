@@ -5,5 +5,5 @@ package com.rarible.core.meta.resolver.url
  */
 interface MetaUrlResolver<K> {
 
-    fun getUrl(entityId: K): String?
+    suspend fun getUrl(entityId: K): String?
 }
