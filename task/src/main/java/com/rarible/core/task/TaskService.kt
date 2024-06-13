@@ -83,8 +83,8 @@ class TaskService(
         scope.launch {
             logger.info("TaskHandler: find tasks to run")
             val tasksStarted = Flux.concat(
-                taskRepository.findByRunningAndLastStatusOrderByPriorityDesc(false, TaskStatus.ERROR),
-                taskRepository.findByRunningAndLastStatusOrderByPriorityDesc(false, TaskStatus.NONE)
+                taskRepository.findByRunningAndLastStatusOrderByPriorityDescIdAsc(false, TaskStatus.ERROR),
+                taskRepository.findByRunningAndLastStatusOrderByPriorityDescIdAsc(false, TaskStatus.NONE)
             )
                 .asFlow()
                 .apply {
