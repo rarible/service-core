@@ -1,12 +1,15 @@
 package com.rarible.core.task
 
 import kotlinx.coroutines.reactive.awaitFirst
+import kotlinx.coroutines.reactive.awaitFirstOrNull
+import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.runBlocking
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.event.EventListener
 import org.springframework.data.domain.Sort
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate
 import org.springframework.data.mongodb.core.index.Index
+import org.springframework.data.mongodb.core.index.ReactiveIndexOperations
 import org.springframework.stereotype.Component
 
 @Component
@@ -16,9 +19,9 @@ class TaskIndexes(
 
     @EventListener(ApplicationReadyEvent::class)
     fun createIndexes() = runBlocking {
-        ALL_INDEXES.forEach { index ->
-            mongo.indexOps("task").ensureIndex(index).awaitFirst()
-        }
+        val indexOps = mongo.indexOps("task")
+        ALL_INDEXES.forEach { index -> indexOps.ensureIndex(index).awaitFirst() }
+        indexOps.dropIndexIfExists("running_1_lastStatus_1__id_1")
     }
 
     companion object {
@@ -26,6 +29,7 @@ class TaskIndexes(
         private val RUNNING_AND_STATUS: Index = Index()
             .on(Task::running.name, Sort.Direction.ASC)
             .on(Task::lastStatus.name, Sort.Direction.ASC)
+            .on(Task::priority.name, Sort.Direction.DESC)
             .on("_id", Sort.Direction.ASC)
             .background()
 
@@ -39,5 +43,11 @@ class TaskIndexes(
             RUNNING_AND_STATUS,
             TYPE_AND_PARAM_UINQUE,
         )
+    }
+}
+
+private suspend fun ReactiveIndexOperations.dropIndexIfExists(name: String) {
+    indexInfo.filter { it.name == name }.awaitFirstOrNull()?.let {
+        dropIndex(it.name).awaitSingle()
     }
 }

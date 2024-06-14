@@ -26,7 +26,8 @@ data class Task(
     @Id
     val id: ObjectId = ObjectId.get(),
     @Version
-    val version: Long? = null
+    val version: Long? = null,
+    val priority: Int? = null,
 ) {
     fun withState(newState: Any) = copy(
         state = newState,
