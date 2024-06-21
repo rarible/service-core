@@ -1,7 +1,7 @@
 package com.rarible.core.task
 
+import kotlinx.coroutines.reactive.awaitFirst
 import kotlinx.coroutines.reactive.awaitFirstOrNull
-import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingleOrNull
 import kotlinx.coroutines.runBlocking
 import org.springframework.boot.context.event.ApplicationReadyEvent
@@ -20,7 +20,7 @@ class TaskIndexes(
     @EventListener(ApplicationReadyEvent::class)
     fun createIndexes() = runBlocking {
         val indexOps = mongo.indexOps("task")
-        ALL_INDEXES.forEach { index -> indexOps.ensureIndex(index).awaitSingleOrNull() }
+        ALL_INDEXES.forEach { index -> indexOps.ensureIndex(index).awaitFirst() }
         indexOps.dropIndexIfExists("running_1_lastStatus_1__id_1")
     }
 
@@ -48,6 +48,6 @@ class TaskIndexes(
 
 private suspend fun ReactiveIndexOperations.dropIndexIfExists(name: String) {
     indexInfo.filter { it.name == name }.awaitFirstOrNull()?.let {
-        dropIndex(it.name).awaitSingle()
+        dropIndex(it.name).awaitSingleOrNull()
     }
 }
