@@ -9,10 +9,15 @@ import com.rarible.core.entity.reducer.service.service.Erc20BalanceService
 import com.rarible.core.entity.reducer.service.service.Erc20BalanceTemplateProvider
 import com.rarible.core.test.data.randomInt
 import com.rarible.core.test.data.randomLong
+import io.mockk.coEvery
+import io.mockk.mockk
 import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.fail
+import org.springframework.dao.OptimisticLockingFailureException
 
 internal class StreamFullReduceServiceTest {
     @Test
@@ -189,6 +194,69 @@ internal class StreamFullReduceServiceTest {
             updatedEntity.add(entity)
         }
         assertThat(updatedEntity).hasSize(4)
+    }
+
+    @Test
+    fun `optimistic failure`() = runBlocking<Unit> {
+        val entityService = mockk<Erc20BalanceService>()
+        val task = createStreamReduceServiceWithComparing(entityService)
+        coEvery { entityService.get(28) } returns Erc20Balance(
+            id = 28,
+            balance = 100,
+            revertableEvents = emptyList(),
+            version = 0
+        )
+        val events = listOf(
+            Erc20BalanceEvent(
+                block = 1,
+                value = 1,
+                entityId = 28
+            )
+        )
+        val exception = OptimisticLockingFailureException("")
+        coEvery { entityService.update(any()) } throws exception
+
+        try {
+            task.reduce(events.asFlow()).toList()
+            fail("exception should be thrown")
+        } catch (e: ReduceException) {
+            assertThat(e.event).isEqualTo(events[0])
+            val entity = e.entity as Erc20Balance
+            assertThat(entity).isEqualTo(
+                Erc20Balance(
+                    id = 28,
+                    balance = 1,
+                    revertableEvents = listOf(events[0]),
+                    version = 0,
+                    updatedAt = entity.updatedAt,
+                )
+            )
+            assertThat(e.cause).isEqualTo(exception)
+        }
+    }
+
+    @Test
+    fun `reduce from state`() = runBlocking<Unit> {
+        val entityService = Erc20BalanceService()
+        val task = createStreamReduceServiceWithComparing(entityService)
+        val existed1 = Erc20Balance(
+            id = 28,
+            balance = 100,
+            revertableEvents = emptyList(),
+            version = 0
+        )
+        entityService.update(existed1)
+
+        val events = listOf(existed1).map {
+            Erc20BalanceEvent(
+                block = 1,
+                value = 1,
+                entityId = it.id
+            )
+        }
+        val result = task.reduceFromState(existed1, events.asFlow()).toList()[0]
+
+        assertThat(result.balance).isEqualTo(101)
     }
 
     private fun createStreamReduceService(entityService: Erc20BalanceService): StreamFullReduceService<Long, Erc20BalanceEvent, Erc20Balance> {

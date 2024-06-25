@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory
  */
 open class EventReduceService<Id, Event, E : Identifiable<Id>>(
     private val entityService: EntityService<Id, E, Event>,
-    private val entityIdService: EntityIdService<Event, Id>,
+    private val entityIdService: EntityIdService<E, Event, Id>,
     private val templateProvider: EntityTemplateProvider<Id, E>,
     private val reducer: Reducer<Event, E>
 ) {
@@ -27,7 +27,7 @@ open class EventReduceService<Id, Event, E : Identifiable<Id>>(
      */
     suspend fun reduceAll(events: List<Event>) {
         val start = System.currentTimeMillis()
-        val grouped = events.groupBy { entityIdService.getEntityId(it) }
+        val grouped = events.groupBy { entityIdService.getEventEntityId(it) }
         val initial = entityService.getAll(grouped.keys).associateBy { it.id }
         val getSpent = System.currentTimeMillis() - start
 

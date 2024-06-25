@@ -4,6 +4,7 @@ import com.rarible.core.entity.reducer.model.Identifiable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.flow
+import org.springframework.dao.OptimisticLockingFailureException
 
 /**
  * Service used to calculate state of the entities by events from the database.
@@ -12,7 +13,7 @@ import kotlinx.coroutines.flow.flow
  */
 open class StreamFullReduceService<Id, Event, E : Identifiable<Id>>(
     private val entityService: EntityService<Id, E, Event>,
-    private val entityIdService: EntityIdService<Event, Id>,
+    private val entityIdService: EntityIdService<E, Event, Id>,
     private val templateProvider: EntityTemplateProvider<Id, E>,
     private val reducer: Reducer<Event, E>
 ) : ReduceService<Id, Event, E> {
@@ -25,16 +26,39 @@ open class StreamFullReduceService<Id, Event, E : Identifiable<Id>>(
     }
 
     override fun reduce(events: Flow<Event>): Flow<E> = flow {
-        var current: E? = null
-        var entity: E? = null
+        reduceInternal(events = events, initialEntity = null, initialCurrent = null)
+    }
+
+    override fun reduceFromState(initialState: E?, events: Flow<Event>): Flow<E> = flow {
+        val current = initialState?.let {
+            val initialId = entityIdService.getEntityId(initialState)
+            entityService.get(initialId)
+        }
+        reduceInternal(
+            events = events,
+            initialEntity = initialState?.let {
+                templateProvider.getEntityTemplateFromEntity(initialState, current?.version)
+            },
+            initialCurrent = current
+        )
+    }
+
+    private suspend fun FlowCollector<E>.reduceInternal(
+        events: Flow<Event>,
+        initialEntity: E?,
+        initialCurrent: E?
+    ) {
+        var entity = initialEntity
+        var current = initialCurrent
+        var lastEvent: Event? = null
         events.collect { event ->
-            val id = entityIdService.getEntityId(event)
+            val id = entityIdService.getEventEntityId(event)
             val prevEntity = entity
             // `prevEntity.id != id` means that we are reading next balance in the flow
             val currentEntity = if (prevEntity == null || prevEntity.id != id) {
                 if (prevEntity != null) {
                     // for full reduce we don't need to specify event triggered the update - it is not actual
-                    checkAndEmit(current, prevEntity)
+                    checkAndEmit(current, prevEntity, lastEvent)
                 }
                 current = entityService.get(id)
                 templateProvider.getEntityTemplate(id, current?.version)
@@ -42,16 +66,27 @@ open class StreamFullReduceService<Id, Event, E : Identifiable<Id>>(
                 prevEntity
             }
             entity = reducer.reduce(currentEntity, event)
+            lastEvent = event
         }
         val lastEntity = entity
-        checkAndEmit(current, lastEntity)
+        checkAndEmit(current, lastEntity, lastEvent)
     }
 
-    private suspend fun FlowCollector<E>.checkAndEmit(current: E?, result: E?) {
+    private suspend fun FlowCollector<E>.checkAndEmit(current: E?, result: E?, lastEvent: Event?) {
         if (result != null) {
             val emittedEntity = if (isChanged(current, result)) {
-                entityService.update(result)
-            } else result
+                try {
+                    entityService.update(result)
+                } catch (e: OptimisticLockingFailureException) {
+                    throw ReduceException(
+                        event = lastEvent,
+                        entity = result,
+                        cause = e,
+                    )
+                }
+            } else {
+                result
+            }
             emit(emittedEntity)
         }
     }
