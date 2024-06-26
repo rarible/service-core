@@ -13,7 +13,7 @@ import org.springframework.dao.OptimisticLockingFailureException
  */
 open class StreamFullReduceService<Id, Event, E : Identifiable<Id>>(
     private val entityService: EntityService<Id, E, Event>,
-    private val entityIdService: EntityIdService<E, Event, Id>,
+    private val entityIdService: EntityIdService<Event, Id>,
     private val templateProvider: EntityTemplateProvider<Id, E>,
     private val reducer: Reducer<Event, E>
 ) : ReduceService<Id, Event, E> {

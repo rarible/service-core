@@ -1,5 +1,5 @@
 package com.rarible.core.entity.reducer.service
 
-interface EntityIdService<E, Event, Id> {
+interface EntityIdService<Event, Id> {
     fun getEntityId(event: Event): Id
 }
