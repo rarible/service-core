@@ -31,7 +31,7 @@ open class StreamFullReduceService<Id, Event, E : Identifiable<Id>>(
 
     override fun reduceFromState(initialState: E?, events: Flow<Event>): Flow<E> = flow {
         val current = initialState?.let {
-            val initialId = entityIdService.getEntityId(initialState)
+            val initialId = initialState.id
             entityService.get(initialId)
         }
         reduceInternal(
@@ -52,7 +52,7 @@ open class StreamFullReduceService<Id, Event, E : Identifiable<Id>>(
         var current = initialCurrent
         var lastEvent: Event? = null
         events.collect { event ->
-            val id = entityIdService.getEventEntityId(event)
+            val id = entityIdService.getEntityId(event)
             val prevEntity = entity
             // `prevEntity.id != id` means that we are reading next balance in the flow
             val currentEntity = if (prevEntity == null || prevEntity.id != id) {

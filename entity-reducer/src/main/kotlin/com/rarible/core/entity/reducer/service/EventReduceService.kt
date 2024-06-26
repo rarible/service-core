@@ -27,7 +27,7 @@ open class EventReduceService<Id, Event, E : Identifiable<Id>>(
      */
     suspend fun reduceAll(events: List<Event>) {
         val start = System.currentTimeMillis()
-        val grouped = events.groupBy { entityIdService.getEventEntityId(it) }
+        val grouped = events.groupBy { entityIdService.getEntityId(it) }
         val initial = entityService.getAll(grouped.keys).associateBy { it.id }
         val getSpent = System.currentTimeMillis() - start
 
