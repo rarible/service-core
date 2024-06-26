@@ -12,4 +12,10 @@ class Erc20BalanceTemplateProvider : EntityTemplateProvider<Long, Erc20Balance> 
             version = version
         )
     }
+
+    override fun getEntityTemplateFromEntity(entity: Erc20Balance, version: Long?): Erc20Balance {
+        return entity.copy(
+            version = version,
+        )
+    }
 }
