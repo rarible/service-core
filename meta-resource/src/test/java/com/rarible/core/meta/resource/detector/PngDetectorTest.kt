@@ -31,13 +31,6 @@ class PngDetectorTest {
     }
 
     @Test
-    fun zaaptos() {
-        val pngBytes = Files.readAllBytes(Path("""C:\Users\iosan\AppData\Local\Temp\meta.bin"""))
-        val contentBytes = ContentData.EMPTY.copy(data = pngBytes)
-        println(PngDetector.detect(contentBytes, ""))
-    }
-
-    @Test
     fun `not a png image`() {
         val bytes = "This is not a png image!".toByteArray()
         val contentBytes = ContentData.EMPTY.copy(data = bytes)
