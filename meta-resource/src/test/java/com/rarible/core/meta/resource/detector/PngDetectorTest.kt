@@ -7,6 +7,8 @@ import com.rarible.core.meta.resource.test.readFile
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
+import java.nio.file.Files
+import kotlin.io.path.Path
 
 class PngDetectorTest {
     @Test
@@ -26,6 +28,13 @@ class PngDetectorTest {
         val contentBytes = ContentData.EMPTY.copy(data = pngBytes)
         val expectedApng = ContentMeta(mimeType = MimeType.PNG_IMAGE.value, width = 64, height = 64)
         assertEquals(expectedApng, PngDetector.detect(contentBytes, ""))
+    }
+
+    @Test
+    fun zaaptos() {
+        val pngBytes = Files.readAllBytes(Path("""C:\Users\iosan\AppData\Local\Temp\meta.bin"""))
+        val contentBytes = ContentData.EMPTY.copy(data = pngBytes)
+        println(PngDetector.detect(contentBytes, ""))
     }
 
     @Test

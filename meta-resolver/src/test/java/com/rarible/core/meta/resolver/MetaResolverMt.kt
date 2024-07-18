@@ -80,4 +80,14 @@ class MetaResolverMt {
         assertThat(result.isMedia).isTrue()
         assertThat(result.meta).isNull()
     }
+
+    @Test
+    fun `resolve zaaptos`() = runBlocking<Unit> {
+        val url = "https://ipfs.raribleuserdata.com/ipfs/QmZNgJ587TMhiRYPCti1yVAhimD6dQWPdbo48y1CFTtioH"
+        val result = resolver.resolve("1", url)!!
+
+        assertThat(result.metaUrl).isEqualTo(url)
+        assertThat(result.isMedia).isTrue()
+        assertThat(result.meta).isNull()
+    }
 }

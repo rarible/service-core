@@ -1,11 +1,11 @@
 package com.rarible.core.meta.resource.util
 
-import java.net.URL
+import java.net.URI
 
 fun String.isHttpUrl(): Boolean =
     try {
-        val url = URL(this)
-        (url.protocol == "http" || url.protocol == "https")
+        val url = URI(this)
+        (url.scheme == "http" || url.scheme == "https")
     } catch (e: Exception) {
         false
     }
@@ -18,4 +18,4 @@ fun String.removeLeadingSlashes(): String {
     return result
 }
 
-fun URL.extension(): String = this.toExternalForm().substringAfterLast(".")
+fun URI.extension(): String = this.toString().substringAfterLast(".")

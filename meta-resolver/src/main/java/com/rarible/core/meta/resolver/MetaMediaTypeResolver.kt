@@ -8,7 +8,7 @@ import com.rarible.core.content.meta.loader.resolver.ExifContentTypeResolver
 import com.rarible.core.content.meta.loader.resolver.PredefinedContentTypeResolver
 import com.rarible.core.meta.resource.detector.ContentDetector
 import com.rarible.core.meta.resource.model.ContentData
-import java.net.URL
+import java.net.URI
 
 class MetaMediaTypeResolver {
 
@@ -21,8 +21,8 @@ class MetaMediaTypeResolver {
     private val predefined: ContentMetaResolver = PredefinedContentTypeResolver()
 
     fun resolveContent(metaUrl: String, rawMeta: RawMeta): ContentMetaResult? {
-        val url = URL(metaUrl)
-        predefined.resolve(URL(metaUrl))?.let { return it }
+        val uri = URI(metaUrl)
+        predefined.resolve(uri)?.let { return it }
         val data = rawMeta.bytes ?: return null
 
         val contentData = ContentData(
@@ -31,6 +31,6 @@ class MetaMediaTypeResolver {
             size = data.size.toLong()
         )
 
-        return resolvers.firstNotNullOfOrNull { it.resolve(url, contentData, null) }
+        return resolvers.firstNotNullOfOrNull { it.resolve(uri, contentData, null) }
     }
 }

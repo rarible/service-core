@@ -4,7 +4,7 @@ import com.rarible.core.meta.resource.model.ContentData
 import com.rarible.core.meta.resource.model.ContentMeta
 import com.rarible.core.meta.resource.model.MimeType
 import com.rarible.core.meta.resource.util.extension
-import java.net.URL
+import java.net.URI
 
 class ByUrlExtensionContentTypeResolver : ContentMetaResolver("url-extension") {
 
@@ -23,8 +23,8 @@ class ByUrlExtensionContentTypeResolver : ContentMetaResolver("url-extension") {
         )
     }
 
-    override fun resolveContent(url: URL, data: ContentData?): ContentMeta? {
-        val mimeType = extensionMapping[url.extension()] ?: return null
+    override fun resolveContent(uri: URI, data: ContentData?): ContentMeta? {
+        val mimeType = extensionMapping[uri.extension()] ?: return null
 
         return ContentMeta(
             mimeType = mimeType.value,

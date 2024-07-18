@@ -2,7 +2,7 @@ package com.rarible.core.content.meta.loader.resolver
 
 import com.rarible.core.meta.resource.model.ContentData
 import com.rarible.core.meta.resource.model.ContentMeta
-import java.net.URL
+import java.net.URI
 
 class ByHttpContentTypeResolver : ContentMetaResolver(
     "content-type"
@@ -17,7 +17,7 @@ class ByHttpContentTypeResolver : ContentMetaResolver(
         )
     }
 
-    override fun resolveContent(url: URL, data: ContentData?): ContentMeta? {
+    override fun resolveContent(uri: URI, data: ContentData?): ContentMeta? {
         val contentType = data?.mimeType ?: return null
 
         if (!knownMediaTypePrefixes.any { contentType.startsWith(it) }) {
