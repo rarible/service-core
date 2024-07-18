@@ -24,7 +24,7 @@ import org.apache.http.protocol.HttpContext
 import org.apache.http.ssl.SSLContextBuilder
 import java.io.Closeable
 import java.io.IOException
-import java.net.URL
+import java.net.URI
 import java.nio.ByteBuffer
 import java.util.concurrent.CancellationException
 import java.util.concurrent.CompletableFuture
@@ -62,8 +62,8 @@ class ApacheHttpContentReceiver(
         client
     }
 
-    override suspend fun receiveBytes(url: URL, maxBytes: Int): ContentData {
-        val request = HttpGet(url.toURI())
+    override suspend fun receiveBytes(uri: URI, maxBytes: Int): ContentData {
+        val request = HttpGet(uri)
         val config: RequestConfig = RequestConfig.custom()
             .setSocketTimeout(timeout)
             .setConnectTimeout(timeout)

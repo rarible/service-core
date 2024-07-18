@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
-import java.net.URL
+import java.net.URI
 
 @Disabled
 class ContentMetaReceiverFt {
@@ -260,12 +260,12 @@ class ContentMetaReceiverFt {
                 insecure = true,
                 keepAlive = false,
                 timeout = 30,
-            ).receiveBytes(URL("https://chameleoncollective.io/metadata/9277.json"), 1000000).data
+            ).receiveBytes(URI("https://chameleoncollective.io/metadata/9277.json"), 1000000).data
         )
 
         assertThat(body).isEqualTo("""{"image":"https://chameleoncollective.io/metadata2/1176.png","attributes":[{"value":"Blue Veins","trait_type":"Eye"},{"value":"Red","trait_type":"Background"},{"value":"Green Moustache","trait_type":"Prop"},{"value":"Tangled White","trait_type":"Mouth"},{"value":"White Hoodie","trait_type":"Clothes"},{"value":"Basketball Green","trait_type":"Tail"},{"value":"Cowboy Brown","trait_type":"Hat"},{"value":"Green","trait_type":"Body"}]}""")
     }
 
     private fun getContentMeta(url: String, contentMetaReceiver: ContentMetaReceiver): ContentMetaResult =
-        runBlocking { contentMetaReceiver.receive(URL(url)) }
+        runBlocking { contentMetaReceiver.receive(URI(url)) }
 }

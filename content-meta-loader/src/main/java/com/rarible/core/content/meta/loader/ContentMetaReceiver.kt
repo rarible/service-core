@@ -7,7 +7,7 @@ import com.rarible.core.content.meta.loader.resolver.ExifContentTypeResolver
 import com.rarible.core.content.meta.loader.resolver.PredefinedContentTypeResolver
 import com.rarible.core.meta.resource.detector.ContentDetector
 import com.rarible.core.meta.resource.model.ContentData
-import java.net.URL
+import java.net.URI
 
 class ContentMetaReceiver(
     private val contentReceiver: ContentReceiver,
@@ -23,23 +23,23 @@ class ContentMetaReceiver(
 
     private val predefined: ContentMetaResolver = PredefinedContentTypeResolver()
 
-    suspend fun receive(url: URL): ContentMetaResult {
+    suspend fun receive(uri: URI): ContentMetaResult {
         // Predefined content like mp3/wav etc., nothing to fetch here
-        predefined.resolve(url)?.let { return it }
+        predefined.resolve(uri)?.let { return it }
 
         return try {
-            resolve(url, data = fetchBytes(url))
+            resolve(uri, data = fetchBytes(uri))
         } catch (e: Throwable) {
-            resolve(url, exception = e)
+            resolve(uri, exception = e)
         }
     }
 
     private fun resolve(
-        url: URL,
+        uri: URI,
         data: ContentData? = null,
         exception: Throwable? = null
     ): ContentMetaResult {
-        return resolvers.firstNotNullOfOrNull { it.resolve(url, data, exception) }
+        return resolvers.firstNotNullOfOrNull { it.resolve(uri, data, exception) }
             ?: ContentMetaResult(
                 meta = null,
                 approach = "stub",
@@ -48,8 +48,8 @@ class ContentMetaReceiver(
             )
     }
 
-    private suspend fun fetchBytes(url: URL): ContentData {
-        val data = contentReceiver.receiveBytes(url, maxBytes)
+    private suspend fun fetchBytes(uri: URI): ContentData {
+        val data = contentReceiver.receiveBytes(uri, maxBytes)
 
         // Sometimes there is no content-length header, but if file is small,
         // we can assume readBytes == size
