@@ -7,8 +7,6 @@ import com.rarible.core.meta.resource.test.readFile
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
-import java.nio.file.Files
-import kotlin.io.path.Path
 
 class PngDetectorTest {
     @Test
