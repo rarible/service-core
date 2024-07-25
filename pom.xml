@@ -37,7 +37,7 @@
     </distributionManagement>
 
     <properties>
-        <revision>2.7.16</revision>
+        <revision>2.7.17</revision>
         <logback.version>1.2.11</logback.version>
         <logstash-encoder.version>7.0.1</logstash-encoder.version>
         <testcontainers.version>1.16.2</testcontainers.version>
