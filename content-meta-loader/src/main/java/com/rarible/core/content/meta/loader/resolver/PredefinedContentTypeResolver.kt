@@ -15,7 +15,8 @@ class PredefinedContentTypeResolver : ContentMetaResolver("predefined") {
             "flac" to MimeType.FLAC_AUDIO,
             "mpga" to MimeType.MPEG_AUDIO,
             "gltf" to MimeType.GLTF_JSON_MODEL,
-            "glb" to MimeType.GLTF_BINARY_MODEL
+            "glb" to MimeType.GLTF_BINARY_MODEL,
+            "obj" to MimeType.OBJ_MODEL,
         )
     }
 

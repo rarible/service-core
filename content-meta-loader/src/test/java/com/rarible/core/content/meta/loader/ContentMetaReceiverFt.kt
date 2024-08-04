@@ -101,6 +101,24 @@ class ContentMetaReceiverFt {
 
     @ParameterizedTest
     @EnumSource(ContentMetaReceiversEnum::class)
+    fun obj(receiverEnum: ContentMetaReceiversEnum) {
+        val result = getContentMeta(
+            "http://localhost:8080/file.obj",
+            receiverEnum.receiver
+        )
+
+        val expectedContentMeta = ContentMeta(
+            mimeType = MimeType.OBJ_MODEL.value,
+            available = true
+        )
+
+        assertThat(result.meta).isEqualTo(expectedContentMeta)
+        assertThat(result.approach).isEqualTo("predefined")
+        assertThat(result.bytesRead).isEqualTo(0)
+    }
+
+    @ParameterizedTest
+    @EnumSource(ContentMetaReceiversEnum::class)
     fun mp4(receiverEnum: ContentMetaReceiversEnum) {
         val result = getContentMeta(
             "https://www.learningcontainer.com/download/sample-mp4-video-file-download-for-testing/?wpdmdl=2727&refresh=62810df6e03441652624886",

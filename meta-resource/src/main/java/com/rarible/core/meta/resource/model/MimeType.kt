@@ -25,5 +25,7 @@ enum class MimeType(
     MPEG_AUDIO("audio/mpeg"),
 
     GLTF_JSON_MODEL("model/gltf+json"),
-    GLTF_BINARY_MODEL("model/gltf-binary")
+    GLTF_BINARY_MODEL("model/gltf-binary"),
+
+    OBJ_MODEL("model/obj")
 }
