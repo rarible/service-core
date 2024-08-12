@@ -6,6 +6,7 @@ import com.rarible.core.logging.withTraceId
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.awaitAll
 import org.apache.kafka.clients.consumer.ConsumerRecord
+import org.slf4j.LoggerFactory
 
 object RaribleKafkaMessageListenerFactory {
 
@@ -31,8 +32,12 @@ object RaribleKafkaMessageListenerFactory {
         private val handler: RaribleKafkaEventHandler<T>
     ) : SuspendBatchMessageListener<String, T> {
 
+        private val logger = LoggerFactory.getLogger(javaClass)
+
         override suspend fun onMessage(records: List<ConsumerRecord<String, T>>) {
             withBatchId {
+                val start = System.currentTimeMillis()
+                logger.info("processing ${records.size} records in groups")
                 val recordsByKey = records.filter { it.value() != null }.groupBy { it.key() }
                 recordsByKey.values.map { group ->
                     asyncWithTraceId(context = NonCancellable) {
@@ -43,6 +48,7 @@ object RaribleKafkaMessageListenerFactory {
                         }
                     }
                 }.awaitAll()
+                logger.info("processed ${recordsByKey.size} groups in ${System.currentTimeMillis() - start} ms")
             }
         }
     }
@@ -51,8 +57,12 @@ object RaribleKafkaMessageListenerFactory {
         private val handler: RaribleKafkaEventHandler<T>
     ) : SuspendBatchMessageListener<String, T> {
 
+        private val logger = LoggerFactory.getLogger(javaClass)
+
         override suspend fun onMessage(records: List<ConsumerRecord<String, T>>) {
             withBatchId {
+                val start = System.currentTimeMillis()
+                logger.info("processing ${records.size} records sequentially")
                 records.map { record ->
                     record.value()?.let {
                         withTraceId {
@@ -60,6 +70,7 @@ object RaribleKafkaMessageListenerFactory {
                         }
                     }
                 }
+                logger.info("processed ${records.size} records in ${System.currentTimeMillis() - start} ms")
             }
         }
     }
