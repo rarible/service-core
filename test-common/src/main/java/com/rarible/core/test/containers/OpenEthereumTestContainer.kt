@@ -67,7 +67,7 @@ class OpenEthereumTestContainer {
         private val ethereum: KGenericContainer by lazy {
             KGenericContainer("rarible/openethereum:1.0.59").apply {
                 withExposedPorts(OPEN_ETHEREUM_HTTP_PORT, OPEN_ETHEREUM_WEB_SOCKET_PORT)
-                withCommand("--network-id 18 --chain /home/openethereum/.local/share/config/openethereum/chain.json --tracing on --jsonrpc-interface all --unsafe-expose")
+                withCommand("--network-id 18 --chain /home/openethereum/.local/share/config/openethereum/chain.json --tracing on --jsonrpc-interface all --unsafe-expose -l trace --log-file /home/openethereum/log.log")
                 waitingFor(Wait.defaultWaitStrategy())
                 withReuse(true)
             }
