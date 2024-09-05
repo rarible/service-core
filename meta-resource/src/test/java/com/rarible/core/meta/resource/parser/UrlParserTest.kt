@@ -23,4 +23,20 @@ class UrlParserTest {
         parsed as HttpUrl
         assertThat(parsed.original).isEqualTo(expected)
     }
+
+    @Test
+    fun `should parse url`() {
+        // given
+        val url = "https://cryptocubes.io/api/v1/ipfs/QmbKP6tTL6getrPaoP2j5XPAj3Mgy1LTnZGRfFBYP3N1My"
+        val expected = "https://cryptocubes.io/api/v1/ipfs/QmbKP6tTL6getrPaoP2j5XPAj3Mgy1LTnZGRfFBYP3N1My"
+
+        // when
+        val parsed = urlParser.parse(url)
+
+        // then
+        assertThat(parsed).isNotNull
+        assertThat(parsed).isExactlyInstanceOf(HttpUrl::class.java)
+        parsed as HttpUrl
+        assertThat(parsed.original).isEqualTo(expected)
+    }
 }

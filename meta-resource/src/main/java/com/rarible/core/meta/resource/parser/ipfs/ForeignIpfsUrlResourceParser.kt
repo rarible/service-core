@@ -8,11 +8,17 @@ import com.rarible.core.meta.resource.parser.UrlResourceParser
 import com.rarible.core.meta.resource.util.removeLeadingSlashes
 
 class ForeignIpfsUrlResourceParser(
-    private val cidValidator: CidValidator = CidV1Validator
+    private val cidValidator: CidValidator = CidV1Validator,
+    private val skipUrlPrefixes: List<String> = listOf(
+        "https://cryptocubes.io/api/v1/ipfs/"
+    )
 ) : UrlResourceParser<IpfsUrl> {
 
     // Checking if foreign IPFS url contains /ipfs/ like http://ipfs.io/ipfs/lalala
     override fun parse(url: String): IpfsUrl? {
+        if (skipUrlPrefixes.firstOrNull { url.startsWith(it) } != null) {
+            return null
+        }
         val ipfsPathIndex = getIpfsPathIndex(url) ?: return null
 
         val pathEnd = url.substring(ipfsPathIndex + IPFS_PATH_PART.length).removeLeadingSlashes()
