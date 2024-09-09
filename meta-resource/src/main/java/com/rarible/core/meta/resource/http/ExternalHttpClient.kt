@@ -1,7 +1,12 @@
 package com.rarible.core.meta.resource.http
 
+import com.rarible.core.meta.resource.model.FlowResponse
 import com.rarible.core.meta.resource.util.MetaLogger.logMetaLoading
+import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitFirstOrNull
+import kotlinx.coroutines.reactor.awaitSingleOrNull
+import org.springframework.core.io.buffer.DataBuffer
+import org.springframework.core.io.buffer.DataBufferUtils
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -9,6 +14,7 @@ import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import org.springframework.web.reactive.function.client.bodyToMono
 import org.springframework.web.reactive.function.client.toEntity
+import org.springframework.web.reactive.function.client.toEntityFlux
 import java.time.Duration
 
 /**
@@ -78,6 +84,33 @@ open class ExternalHttpClient(
             logMetaLoading(id, "failed to get properties by URI $url: ${e.message} ${getResponse(e)}", warn = true)
             onError(e)
             null to null
+        }
+    }
+
+    suspend fun getBodyFlow(url: String, useProxy: Boolean = false, id: String): FlowResponse {
+        val (responseSpec, timeout) = getResponseSpec(url, useProxy, id) ?: return FlowResponse.EMPTY
+        return try {
+            val entity = responseSpec
+                ?.toEntityFlux<DataBuffer>()
+                ?.timeout(timeout)
+                ?.awaitSingleOrNull()
+            return FlowResponse(
+                mediaType = entity?.headers?.contentType,
+                size = entity?.headers?.contentLength,
+                body = entity?.body
+                    ?.doOnDiscard(DataBuffer::class.java, DataBufferUtils::release)
+                    ?.map {
+                        val array = ByteArray(it.readableByteCount())
+                        it.read(array)
+                        DataBufferUtils.release(it)
+                        array
+                    }
+                    ?.asFlow()
+            )
+        } catch (e: Exception) {
+            logMetaLoading(id, "failed to get properties by URI $url: ${e.message} ${getResponse(e)}", warn = true)
+            onError(e)
+            FlowResponse.EMPTY
         }
     }
 
