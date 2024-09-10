@@ -3,9 +3,11 @@ package com.rarible.core.mongo.configuration;
 import com.rarible.core.mongo.converter.CustomConversionsFactory;
 import com.rarible.core.mongo.jackson.BigIntegerToStringSerializer;
 import com.rarible.core.mongo.jackson.ObjectIdCombinedSerializer;
+import com.rarible.core.mongo.metrics.RaribleMongoMetrics;
 import com.rarible.core.mongo.migrate.MongoIndicesService;
 import com.rarible.core.mongo.settings.MongoSettingsCustomizer;
 import com.rarible.core.mongo.template.RaribleReactiveMongoTemplate;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,12 +42,15 @@ public class MongoConfiguration {
     @Bean
     public RaribleReactiveMongoTemplate reactiveMongoTemplate(ReactiveMongoDatabaseFactory reactiveMongoDatabaseFactory,
                                                               MongoConverter converter,
-                                                              MongoProperties properties) {
+                                                              MongoProperties properties,
+                                                              MeterRegistry meterRegistry
+                                                              ) {
         logger.info("Mongo properties: {}", properties);
         return new RaribleReactiveMongoTemplate(
                 reactiveMongoDatabaseFactory,
                 converter,
-                properties
+                properties,
+                new RaribleMongoMetrics(meterRegistry)
         );
     }
 }
