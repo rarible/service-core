@@ -9,7 +9,7 @@ import org.springframework.test.context.ContextConfiguration
 
 @MongoTest
 @MongoCleanup
-@SpringBootTest
+@SpringBootTest(classes = [TestConfiguration::class])
 @ContextConfiguration(classes = [MockContext::class])
 abstract class AbstractIntegrationTest {
     @Autowired
