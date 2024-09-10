@@ -10,4 +10,5 @@ data class MongoProperties(
     val maxConnectionLifeTime: Duration? = null,
     val maxConnectionIdleTime: Duration? = null,
     val maxTime: Duration? = null,
+    val enableMetrics: Boolean = false,
 )
