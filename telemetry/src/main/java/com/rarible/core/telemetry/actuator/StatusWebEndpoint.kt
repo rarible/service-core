@@ -12,7 +12,7 @@ import springfox.documentation.annotations.ApiIgnore
 @WebEndpoint(id = "ping")
 internal class StatusWebEndpoint : IProbeController {
     @Volatile
-    private var ready = true
+    private var ready: Boolean = true
 
     @ReadOperation(produces = ["application/json"])
     fun ping(): Map<String, Any> {
