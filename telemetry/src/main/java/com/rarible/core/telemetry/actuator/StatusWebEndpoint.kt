@@ -4,7 +4,6 @@ import ch.sbb.esta.openshift.gracefullshutdown.IProbeController
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation
 import org.springframework.boot.actuate.endpoint.web.annotation.WebEndpoint
 import org.springframework.http.HttpStatus
-import org.springframework.web.client.HttpStatusCodeException
 import org.springframework.web.server.ResponseStatusException
 import springfox.documentation.annotations.ApiIgnore
 
