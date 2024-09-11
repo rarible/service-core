@@ -15,7 +15,7 @@ logging:
   logjson:
     enabled: true
 
-estaGracefulShutdownWaitSeconds: 40
+estaGracefulShutdownWaitSeconds: 25
 
 management:
   endpoints:
