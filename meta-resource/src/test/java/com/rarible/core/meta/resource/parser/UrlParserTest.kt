@@ -1,6 +1,7 @@
 package com.rarible.core.meta.resource.parser
 
 import com.rarible.core.meta.resource.model.HttpUrl
+import com.rarible.core.meta.resource.model.IpfsUrl
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
@@ -38,5 +39,20 @@ class UrlParserTest {
         assertThat(parsed).isExactlyInstanceOf(HttpUrl::class.java)
         parsed as HttpUrl
         assertThat(parsed.original).isEqualTo(expected)
+    }
+
+    @Test
+    fun `parse url with leading slash`() {
+        // given
+        val url = "/ipfs://QmRifoET5PjzDWBe6QXovu4RX6bzMqcURKwN24dQjxiusH"
+
+        // when
+        val parsed = urlParser.parse(url)
+
+        // then
+        assertThat(parsed).isNotNull
+        assertThat(parsed).isExactlyInstanceOf(IpfsUrl::class.java)
+        parsed as IpfsUrl
+        assertThat(parsed.toSchemaUrl()).isEqualTo("ipfs://QmRifoET5PjzDWBe6QXovu4RX6bzMqcURKwN24dQjxiusH")
     }
 }

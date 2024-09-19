@@ -18,7 +18,7 @@ class UrlParser(
     }
 
     private fun sanitize(url: String): String {
-        var result = url.trim()
+        var result = url.trim().trimStart('/')
         while (result.length > 1 && result.first() == result.last() && QUOTES.contains(result.first())) {
             result = result.substring(1, result.length - 1)
         }
