@@ -18,7 +18,10 @@ class UrlParser(
     }
 
     private fun sanitize(url: String): String {
-        var result = url.trim().trimStart('/')
+        var result = url.trim()
+        if (result.contains("ipfs:")) {
+            result = result.trimStart('/')
+        }
         while (result.length > 1 && result.first() == result.last() && QUOTES.contains(result.first())) {
             result = result.substring(1, result.length - 1)
         }

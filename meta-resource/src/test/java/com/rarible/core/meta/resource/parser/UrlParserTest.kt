@@ -4,6 +4,8 @@ import com.rarible.core.meta.resource.model.HttpUrl
 import com.rarible.core.meta.resource.model.IpfsUrl
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 
 class UrlParserTest {
 
@@ -41,10 +43,11 @@ class UrlParserTest {
         assertThat(parsed.original).isEqualTo(expected)
     }
 
-    @Test
-    fun `parse url with leading slash`() {
+    @ParameterizedTest
+    @MethodSource("ipfsParseTest")
+    fun `parse ipfs url`(testCase: IpfsParseTestCase) {
         // given
-        val url = "/ipfs://QmRifoET5PjzDWBe6QXovu4RX6bzMqcURKwN24dQjxiusH"
+        val url = testCase.ipfsUrl
 
         // when
         val parsed = urlParser.parse(url)
@@ -53,6 +56,25 @@ class UrlParserTest {
         assertThat(parsed).isNotNull
         assertThat(parsed).isExactlyInstanceOf(IpfsUrl::class.java)
         parsed as IpfsUrl
-        assertThat(parsed.toSchemaUrl()).isEqualTo("ipfs://QmRifoET5PjzDWBe6QXovu4RX6bzMqcURKwN24dQjxiusH")
+        assertThat(parsed.toSchemaUrl()).isEqualTo(testCase.expectedUrl)
     }
+
+    companion object {
+        @JvmStatic
+        fun ipfsParseTest(): List<IpfsParseTestCase> = listOf(
+            IpfsParseTestCase(
+                ipfsUrl = "/ipfs://QmRifoET5PjzDWBe6QXovu4RX6bzMqcURKwN24dQjxiusH",
+                expectedUrl = "ipfs://QmRifoET5PjzDWBe6QXovu4RX6bzMqcURKwN24dQjxiusH"
+            ),
+            IpfsParseTestCase(
+                ipfsUrl = "/ipfs/QmRifoET5PjzDWBe6QXovu4RX6bzMqcURKwN24dQjxiusH",
+                expectedUrl = "ipfs://QmRifoET5PjzDWBe6QXovu4RX6bzMqcURKwN24dQjxiusH"
+            )
+        )
+    }
+
+    data class IpfsParseTestCase(
+        val ipfsUrl: String,
+        val expectedUrl: String,
+    )
 }
