@@ -185,5 +185,5 @@ data class ExecutionTime(
     val end: Instant,
     val n: Int
 ) {
-    fun contains(t: Instant) = t in start..end
+    fun contains(t: Instant) = t in start .. end && t != end
 }
