@@ -11,4 +11,6 @@ data class MongoProperties(
     val maxConnectionIdleTime: Duration? = null,
     val maxTime: Duration? = null,
     val enableMetrics: Boolean = false,
+    val sessionStalenessSeconds: Int = 90,
+    val readReplicaEnabled: Boolean = false,
 )
