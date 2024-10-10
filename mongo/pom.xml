@@ -48,6 +48,10 @@
             <groupId>com.rarible.core</groupId>
             <artifactId>rarible-core-metrics</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlinx</groupId>
+            <artifactId>kotlinx-coroutines-reactor</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>com.rarible.core</groupId>

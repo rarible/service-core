@@ -44,13 +44,15 @@ public class MongoConfiguration {
                                                               MongoConverter converter,
                                                               MongoProperties properties,
                                                               MeterRegistry meterRegistry
-                                                              ) {
+    ) {
         logger.info("Mongo properties: {}", properties);
         return new RaribleReactiveMongoTemplate(
                 reactiveMongoDatabaseFactory,
                 converter,
                 properties,
-                new RaribleMongoMetrics(meterRegistry)
+                new RaribleMongoMetrics(meterRegistry),
+                properties.getSessionStalenessSeconds(),
+                properties::getReadReplicaEnabled
         );
     }
 }
