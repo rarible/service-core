@@ -12,6 +12,7 @@ import kotlinx.coroutines.runBlocking
 import org.apache.commons.lang3.RandomUtils
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ContextConfiguration
 import reactor.core.publisher.FluxSink
 import reactor.core.publisher.ReplayProcessor
@@ -19,6 +20,7 @@ import reactor.core.publisher.ReplayProcessor
 @FlowPreview
 @ExperimentalCoroutinesApi
 @ContextConfiguration(classes = [MockContext::class])
+@DirtiesContext
 class TaskRunnerTest : AbstractIntegrationTest() {
     private val events: ReplayProcessor<Int> = ReplayProcessor.create<Int>()
     private val sink: FluxSink<Int> = events.sink()

@@ -16,13 +16,15 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ContextConfiguration
+import org.springframework.test.context.TestPropertySource
 
 @FlowPreview
 @ExperimentalCoroutinesApi
 @ContextConfiguration(classes = [MockContext::class])
-@SpringBootTest(properties = ["rarible.core.task.concurrency=2"])
+@TestPropertySource(properties = ["rarible.core.task.concurrency=2"])
+@DirtiesContext
 class TaskServiceTest : AbstractIntegrationTest() {
     @Autowired
     private lateinit var handler: MockHandler
