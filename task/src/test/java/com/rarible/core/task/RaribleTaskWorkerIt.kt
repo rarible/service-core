@@ -12,6 +12,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.TestPropertySource
 
@@ -25,6 +26,7 @@ import org.springframework.test.context.TestPropertySource
         "rarible.core.task.pollingPeriod=PT1S"
     ]
 )
+@DirtiesContext
 class RaribleTaskWorkerIt : AbstractIntegrationTest() {
 
     @Test
