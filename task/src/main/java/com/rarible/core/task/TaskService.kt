@@ -87,9 +87,11 @@ class TaskService(
                 taskRepository.findByRunningAndLastStatusOrderByPriorityDescIdAsc(false, TaskStatus.NONE)
             )
                 .asFlow()
-                .apply {
+                .let {
                     if (concurrency > 0) {
-                        take(concurrency * 2)
+                        it.take(concurrency * 2)
+                    } else {
+                        it
                     }
                 }
                 .map {
@@ -108,7 +110,7 @@ class TaskService(
                 val count = runningTasksCount.incrementAndGet()
                 if (concurrency > 0 && concurrency < count) {
                     logger.info("do not start task type=$type param=$param. " +
-                        "Concurrency=$concurrency, running=$count")
+                        "Concurrency=$concurrency, running=${count - 1}")
                     runningTasksCount.decrementAndGet()
                     return@launch
                 }
