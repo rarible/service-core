@@ -1,17 +1,24 @@
 package com.rarible.core.common
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import org.slf4j.LoggerFactory
 import java.time.Instant
@@ -177,6 +184,39 @@ class FlowUtilsKtTest {
             }
 
         dispatcher.close()
+    }
+
+    @Test
+    fun `withTimeoutOrNull around emitting`() = runBlocking<Unit> {
+        val slowFlow = flow {
+            emit(1)
+            delay(200)
+            emit(2)
+            delay(200)
+            emit(3)
+            delay(200)
+            emit(4)
+        }
+        val timeBoundFlow = flow {
+            kotlinx.coroutines.withTimeoutOrNull(300) {
+                emitAll(slowFlow)
+            }
+        }
+        assertThat(timeBoundFlow.toList()).containsExactly(1, 2)
+    }
+
+    @Test
+    fun `join on scoped coroutine in supervisor scope does not throw if the coroutine fails`() = runBlocking<Unit> {
+        val scope = CoroutineScope(SupervisorJob())
+        assertDoesNotThrow {
+            flowOf(1).mapAsync(1) {
+                scope.launch {
+                    throw Exception("boom")
+                }.join()
+            }.launchIn(scope)
+        }
+        // Uncomment to see the exception printed
+//        delay(1000)
     }
 }
 

@@ -6,9 +6,10 @@ import com.rarible.core.test.hasProperty
 import com.rarible.core.test.wait.Wait.waitAssert
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.runBlocking
 import org.apache.commons.lang3.RandomUtils
@@ -19,13 +20,17 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.TestPropertySource
+import java.time.Duration
 
 @FlowPreview
 @ExperimentalCoroutinesApi
 @ContextConfiguration(classes = [MockContext::class])
-@TestPropertySource(properties = ["rarible.core.task.concurrency=2"])
+@TestPropertySource(properties = [
+    "rarible.core.task.concurrency=2",
+    "rarible.core.task.streaming=true"
+])
 @DirtiesContext
-class TaskServiceTest : AbstractIntegrationTest() {
+class TaskServiceStreamingIt : AbstractIntegrationTest() {
     @Autowired
     private lateinit var handler: MockHandler
 
@@ -41,21 +46,38 @@ class TaskServiceTest : AbstractIntegrationTest() {
     fun executesInParallel() = runBlocking<Unit> {
         scheduleTask("p1")
         scheduleTask("p2")
+        scheduleTask("p3")
 
-        service.runTasks()
+        val pollingDelay = Duration.ofSeconds(1)
+        val delayChannel = Channel<Duration>(Channel.RENDEZVOUS)
+        suspend fun verifyingDelayFunction(delayDuration: Duration) {
+            val expectedDelayDuration = delayChannel.receive()
+            assertThat(delayDuration).isLessThanOrEqualTo(expectedDelayDuration)
+        }
+        launch {
+            service.runStreamingTaskPoller(
+                pollingDelay = pollingDelay,
+                delayFunction = ::verifyingDelayFunction
+            )
+        }
+
+        suspend fun checkIsRunning(param: String, isRunning: Boolean, lastStatus: TaskStatus) {
+            val t = taskRepository.findByTypeAndParam(MOCK_TASK_TYPE, param).awaitSingle()
+            assertThat(t)
+                .hasFieldOrPropertyWithValue(Task::lastStatus.name, lastStatus)
+            assertThat(t)
+                .hasFieldOrPropertyWithValue(Task::running.name, isRunning)
+        }
+
+        suspend fun checkState(param: String, state: Int) {
+            val t = taskRepository.findByTypeAndParam(MOCK_TASK_TYPE, param).awaitSingle()
+            assertThat(t)
+                .hasFieldOrPropertyWithValue(Task::state.name, state)
+        }
 
         waitAssert {
-            val t1 = taskRepository.findByTypeAndParam(MOCK_TASK_TYPE, "p1").awaitSingle()
-            assertThat(t1)
-                .hasFieldOrPropertyWithValue(Task::lastStatus.name, TaskStatus.NONE)
-            assertThat(t1)
-                .hasFieldOrPropertyWithValue(Task::running.name, true)
-
-            val t2 = taskRepository.findByTypeAndParam(MOCK_TASK_TYPE, "p2").awaitSingle()
-            assertThat(t2)
-                .hasFieldOrPropertyWithValue(Task::lastStatus.name, TaskStatus.NONE)
-            assertThat(t2)
-                .hasFieldOrPropertyWithValue(Task::running.name, true)
+            checkIsRunning("p1", true, TaskStatus.NONE)
+            checkIsRunning("p2", true, TaskStatus.NONE)
         }
 
         val v1 = RandomUtils.nextInt()
@@ -64,30 +86,31 @@ class TaskServiceTest : AbstractIntegrationTest() {
         handler.sendMessage("p2", v2)
 
         waitAssert {
-            val t1 = taskRepository.findByTypeAndParam(MOCK_TASK_TYPE, "p1").awaitSingle()
-            assertThat(t1)
-                .hasFieldOrPropertyWithValue(Task::state.name, v1)
+            checkState("p1", v1)
+            checkState("p2", v2)
 
-            val t2 = taskRepository.findByTypeAndParam(MOCK_TASK_TYPE, "p2").awaitSingle()
-            assertThat(t2)
-                .hasFieldOrPropertyWithValue(Task::state.name, v2)
+            // Two tasks are already running, cannot take this
+            checkIsRunning("p3", false, TaskStatus.NONE)
         }
 
         handler.close("p1")
         handler.close("p2", IllegalStateException())
 
         waitAssert {
-            val t1 = service.findTasks(MOCK_TASK_TYPE, "p1").first()
-            assertThat(t1)
-                .hasFieldOrPropertyWithValue(Task::lastStatus.name, TaskStatus.COMPLETED)
+            checkIsRunning("p1", false, TaskStatus.COMPLETED)
+            checkIsRunning("p2", false, TaskStatus.ERROR)
+            checkIsRunning("p3", true, TaskStatus.NONE)
+        }
 
-            val t2 = service.findTasks(MOCK_TASK_TYPE, "p2").first()
-            assertThat(t2)
-                .hasFieldOrPropertyWithValue(Task::lastStatus.name, TaskStatus.ERROR)
+        val v3 = RandomUtils.nextInt()
+        handler.sendMessage("p3", v3)
+
+        waitAssert {
+            checkState("p3", v3)
         }
 
         val list = service.findTasks(MOCK_TASK_TYPE).toList()
-        assertThat(list).hasSize(2)
+        assertThat(list).hasSize(3)
     }
 
     @Test
@@ -96,7 +119,7 @@ class TaskServiceTest : AbstractIntegrationTest() {
             scheduleTask("t$id")
         }
 
-        service.runTasks()
+        service.runTaskBatch()
 
         val runningTasks = assertRunningTasksSize(concurrency)
 
@@ -116,7 +139,7 @@ class TaskServiceTest : AbstractIntegrationTest() {
 
         assertRunningTasksSize(0)
 
-        service.runTasks()
+        service.runTaskBatch()
 
         // Next batch of tasks should start.
         // Note that task service could have read from the DB more than concurrency, they should start now
@@ -129,7 +152,7 @@ class TaskServiceTest : AbstractIntegrationTest() {
         assertRunningTasksSize(0)
 
         // Next batch of tasks should be executed
-        service.runTasks()
+        service.runTaskBatch()
         assertRunningTasksSize(concurrency - 1)
             .forEach { task ->
                 handler.close(task.param)
@@ -152,17 +175,17 @@ class TaskServiceTest : AbstractIntegrationTest() {
             assertRunningTasksSize(0)
         }
 
-        service.runTasks()
+        service.runTaskBatch()
         assertBatch(listOf(2) + List(concurrency - 1) { 1 })
 
         scheduleTask("t2_2", priority = 2)
-        service.runTasks()
+        service.runTaskBatch()
         assertBatch(listOf(2) + List(concurrency - 1) { 1 })
 
-        service.runTasks()
+        service.runTaskBatch()
         assertBatch(List(concurrency) { 0 })
 
-        service.runTasks()
+        service.runTaskBatch()
         assertBatch(listOf(null))
     }
 

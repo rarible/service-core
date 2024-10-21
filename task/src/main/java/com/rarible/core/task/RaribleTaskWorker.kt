@@ -28,9 +28,10 @@ class RaribleTaskWorker(
     fun onApplicationStarted() {
         if (properties.enabled) {
             logger.info(
-                "Starting Rarible Task Worker: initDelay={}, poolingDelay={}",
+                "Starting Rarible Task Worker: initDelay={}, poolingDelay={}, streaming={}",
                 properties.initialDelay,
                 properties.pollingPeriod,
+                properties.streaming,
             )
             daemon.start()
         } else {
@@ -60,13 +61,16 @@ private class TaskWorker(
     private val hadInitDelay = AtomicBoolean(false)
 
     override suspend fun handle() {
-        if (hadInitDelay.get()) {
-            delay(pollingPeriod)
-        } else {
+        if (!hadInitDelay.get()) {
             delay(properties.initialDelay)
             hadInitDelay.set(true)
             taskService.autorun()
         }
-        taskService.runTasks()
+        if (properties.streaming) {
+            taskService.runStreamingTaskPoller(properties.pollingPeriod)
+        } else {
+            taskService.runTaskBatch()
+            delay(properties.pollingPeriod)
+        }
     }
 }

@@ -32,13 +32,13 @@ class RaribleTaskWorkerTest {
     @Test
     fun `handle init delay`() = runBlocking<Unit> {
         every { taskService.autorun() } returns Unit
-        every { taskService.runTasks() } returns Unit
+        every { taskService.runTaskBatch() } returns Unit
 
         worker.onApplicationStarted()
 
         Wait.waitAssert {
             verify(exactly = 1) { taskService.autorun() }
-            verify(atLeast = 5) { taskService.runTasks() }
+            verify(atLeast = 5) { taskService.runTaskBatch() }
         }
         worker.close()
     }

@@ -1,18 +1,28 @@
 package com.rarible.core.task
 
+import com.rarible.core.common.mapAsync
+import com.rarible.core.common.nowMillis
 import io.micrometer.core.instrument.util.NamedThreadFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.count
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitFirst
+import kotlinx.coroutines.time.delay
+import kotlinx.coroutines.withTimeoutOrNull
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.data.mongodb.core.ReactiveMongoOperations
@@ -22,8 +32,10 @@ import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.core.query.isEqualTo
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
+import java.time.Duration
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.coroutines.coroutineContext
 
 /**
  * Background service responsible for running and resuming [TaskHandler]s.
@@ -72,7 +84,37 @@ class TaskService(
         }
     }
 
-    fun runTasks() {
+    suspend fun runStreamingTaskPoller(
+        pollingDelay: Duration,
+        delayFunction: suspend (Duration) -> Unit = { delay(it) }
+    ) {
+        val pendingTasksFlow = flow {
+            while (coroutineContext.isActive) {
+                logger.info("TaskHandler: flow of next tasks to run")
+                val tasksToRun = findTasksToRun()
+                val start = nowMillis()
+                withTimeoutOrNull(pollingDelay.toMillis()) {
+                    emitAll(tasksToRun)
+                }
+                val remainingDelay = pollingDelay - Duration.between(start, nowMillis())
+                // If we have processed all tasks quickly, sleep until the next polling period.
+                // Otherwise, read the next batch immediately
+                if (remainingDelay > Duration.ZERO) {
+                    delayFunction(pollingDelay)
+                }
+            }
+        }
+        if (concurrency > 0) {
+            pendingTasksFlow.mapAsync(concurrency) { task ->
+                runTask(task).join()
+            }.launchIn(scope)
+        } else {
+            pendingTasksFlow.onEach(::runTask)
+                .launchIn(scope)
+        }
+    }
+
+    fun runTaskBatch() {
         if (concurrency > 0) {
             val currentlyRunning = runningTasksCount.get()
             if (currentlyRunning >= concurrency) {
@@ -81,12 +123,8 @@ class TaskService(
             }
         }
         scope.launch {
-            logger.info("TaskHandler: find tasks to run")
-            val tasksStarted = Flux.concat(
-                taskRepository.findByRunningAndLastStatusOrderByPriorityDescIdAsc(false, TaskStatus.ERROR),
-                taskRepository.findByRunningAndLastStatusOrderByPriorityDescIdAsc(false, TaskStatus.NONE)
-            )
-                .asFlow()
+            logger.info("TaskHandler: find next batch of tasks to run")
+            val tasksStarted = findTasksToRun()
                 .let {
                     if (concurrency > 0) {
                         it.take(concurrency * 2)
@@ -94,23 +132,33 @@ class TaskService(
                         it
                     }
                 }
-                .map {
-                    runTask(it.type, it.param, it.sample)
-                    logger.info("TaskHandler: started task $it")
-                }
+                .map(::runTask)
                 .count()
-            logger.info("TaskHandler: started $tasksStarted tasks")
+            logger.info("TaskHandler: started a batch of $tasksStarted tasks")
         }
     }
 
-    fun runTask(type: String, param: String, sample: Long? = Task.DEFAULT_SAMPLE) {
-        scope.launch {
+    private fun findTasksToRun() = Flux.concat(
+        taskRepository.findByRunningAndLastStatusOrderByPriorityDescIdAsc(false, TaskStatus.ERROR),
+        taskRepository.findByRunningAndLastStatusOrderByPriorityDescIdAsc(false, TaskStatus.NONE)
+    ).asFlow()
+
+    private fun runTask(task: Task): Job {
+        return runTask(task.type, task.param, task.sample).also {
+            logger.info("TaskHandler: started task $task")
+        }
+    }
+
+    private fun runTask(type: String, param: String, sample: Long? = Task.DEFAULT_SAMPLE): Job {
+        return scope.launch {
             val handler = handlersMap[type]
             if (handler != null) {
                 val count = runningTasksCount.incrementAndGet()
-                if (concurrency > 0 && concurrency < count) {
-                    logger.info("do not start task type=$type param=$param. " +
-                        "Concurrency=$concurrency, running=${count - 1}")
+                if (concurrency > 0 && count > concurrency) {
+                    logger.info(
+                        "do not start task type=$type param=$param. " +
+                            "Concurrency=$concurrency, running=${count - 1}"
+                    )
                     runningTasksCount.decrementAndGet()
                     return@launch
                 }
