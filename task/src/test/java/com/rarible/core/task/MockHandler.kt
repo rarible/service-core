@@ -3,6 +3,7 @@ package com.rarible.core.task
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.consumeAsFlow
+import kotlinx.coroutines.flow.onCompletion
 import org.assertj.core.api.Assertions.assertThat
 import java.util.concurrent.ConcurrentHashMap
 
@@ -13,9 +14,10 @@ class MockHandler(
 
     override fun runLongTask(from: Int?, param: String): Flow<Int> {
         val messages = Channel<Int>(Channel.RENDEZVOUS)
-        val oldMessages = messageChannelsByParam.putIfAbsent(param, messages)
+        val oldMessages = messageChannelsByParam.put(param, messages)
         oldMessages?.close(IllegalStateException("previous flow should have been closed for $param"))
         return messages.consumeAsFlow()
+            .onCompletion { messageChannelsByParam.remove(param, messages) }
     }
 
     suspend fun sendMessage(param: String, message: Int) {

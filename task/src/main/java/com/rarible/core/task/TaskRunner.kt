@@ -1,7 +1,6 @@
 package com.rarible.core.task
 
 import com.rarible.core.common.optimisticLock
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.sample
 import kotlinx.coroutines.reactive.awaitFirst
@@ -22,8 +21,6 @@ class TaskRunner(
     private val taskRepository: TaskRepository,
     private val properties: RaribleTaskProperties,
 ) {
-    @ExperimentalCoroutinesApi
-    @Suppress("UNCHECKED_CAST")
     suspend fun <T : Any> runLongTask(param: String, handler: TaskHandler<T>, sample: Long? = Task.DEFAULT_SAMPLE) {
         val canRun = handler.isAbleToRun(param)
         val task = findAndMarkRunning(canRun, handler.type, param, sample)
@@ -52,7 +49,7 @@ class TaskRunner(
             } else {
                 taskRepository.save(current.markCompleted()).awaitFirst()
             }
-        } catch (e: Throwable) {
+        } catch (e: Exception) {
             logger.info("error caught executing ${handler.type} with param=${task.param}", e)
             taskRepository.save(current.markError(e)).awaitFirst()
         }
