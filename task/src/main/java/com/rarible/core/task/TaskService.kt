@@ -1,15 +1,22 @@
 package com.rarible.core.task
 
+import com.rarible.core.common.mapAsync
+import com.rarible.core.common.nowMillis
+import com.rarible.core.common.takeUntilTimeout
 import io.micrometer.core.instrument.util.NamedThreadFactory
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.count
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitFirst
@@ -22,14 +29,15 @@ import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.core.query.isEqualTo
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
+import java.time.Duration
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.coroutines.coroutineContext
 
 /**
  * Background service responsible for running and resuming [TaskHandler]s.
  */
 @FlowPreview
-@ExperimentalCoroutinesApi
 @Service
 class TaskService(
     private val taskRepository: TaskRepository,
@@ -38,17 +46,16 @@ class TaskService(
     handlers: List<TaskHandler<*>>,
     raribleTaskProperties: RaribleTaskProperties,
 ) {
-    private val scope = CoroutineScope(
-        SupervisorJob() + Executors.newFixedThreadPool(
-            Runtime.getRuntime().availableProcessors() * 2,
-            NamedThreadFactory("task-")
-        )
-            .asCoroutineDispatcher()
-    )
+    // todo use ForkJoinPool(concurrency) for better behavior on multiple small tasks
+    private val taskDispatcher = Executors.newFixedThreadPool(
+        Runtime.getRuntime().availableProcessors() * 2,
+        NamedThreadFactory("task-")
+    ).asCoroutineDispatcher()
+    private val scope = CoroutineScope(SupervisorJob() + taskDispatcher)
 
-    val handlersMap = handlers.associateBy { it.type }
-    val runningTasksCount = AtomicInteger(0)
-    val concurrency = raribleTaskProperties.concurrency
+    private val handlersMap = handlers.associateBy { it.type }
+    private val runningTasksCount = AtomicInteger(0)
+    private val concurrency = raribleTaskProperties.concurrency
 
     init {
         scope.launch {
@@ -72,7 +79,46 @@ class TaskService(
         }
     }
 
-    fun runTasks() {
+    suspend fun runStreamingTaskPoller(
+        pollingDelay: Duration,
+        sleep: suspend (Duration) -> Unit = { delay(it.toMillis()) },
+        dbTimeout: suspend (Duration) -> Unit = { delay(it.toMillis()) },
+    ) {
+        val pendingTasksFlow = flow {
+            while (coroutineContext.isActive) {
+                logger.info("TaskHandler: retrieving the next flow of tasks")
+                val tasksToRun = findTasksToRun().takeUntilTimeout(pollingDelay, dbTimeout)
+
+                val start = nowMillis()
+                var retrievedTasks = 0
+                tasksToRun.collect { task ->
+                    emit(task)
+                    retrievedTasks += 1
+                }
+                val timeToProcess = Duration.between(start, nowMillis())
+                logger.info("TaskHandler: retrieved {} tasks and processed some of them in {}", retrievedTasks, timeToProcess)
+                val remainingDelay = pollingDelay - timeToProcess
+                // If we have processed all tasks quickly, sleep until the next polling period.
+                // Otherwise, re-read from DB immediately
+                if (remainingDelay > Duration.ZERO) {
+                    sleep(remainingDelay)
+                }
+            }
+        }
+        if (concurrency > 0) {
+            pendingTasksFlow.mapAsync(concurrency) { task ->
+                runTask(task).join()
+                // Make sure that the dispatcher allows for parallelism so that we can join() in parallel
+            }.flowOn(taskDispatcher)
+                .collect {}
+        } else {
+            scope.launch {
+                pendingTasksFlow.map(::runTask).collect {}
+            }.join()
+        }
+    }
+
+    suspend fun runTaskBatch() {
         if (concurrency > 0) {
             val currentlyRunning = runningTasksCount.get()
             if (currentlyRunning >= concurrency) {
@@ -81,12 +127,8 @@ class TaskService(
             }
         }
         scope.launch {
-            logger.info("TaskHandler: find tasks to run")
-            val tasksStarted = Flux.concat(
-                taskRepository.findByRunningAndLastStatusOrderByPriorityDescIdAsc(false, TaskStatus.ERROR),
-                taskRepository.findByRunningAndLastStatusOrderByPriorityDescIdAsc(false, TaskStatus.NONE)
-            )
-                .asFlow()
+            logger.info("TaskHandler: find next batch of tasks to run")
+            val tasksStarted = findTasksToRun()
                 .let {
                     if (concurrency > 0) {
                         it.take(concurrency * 2)
@@ -94,23 +136,32 @@ class TaskService(
                         it
                     }
                 }
-                .map {
-                    runTask(it.type, it.param, it.sample)
-                    logger.info("TaskHandler: started task $it")
-                }
+                .map(::runTask)
                 .count()
-            logger.info("TaskHandler: started $tasksStarted tasks")
-        }
+            logger.info("TaskHandler: started a batch of $tasksStarted tasks")
+        }.join()
     }
 
-    fun runTask(type: String, param: String, sample: Long? = Task.DEFAULT_SAMPLE) {
-        scope.launch {
+    private fun findTasksToRun() = Flux.concat(
+        taskRepository.findByRunningAndLastStatusOrderByPriorityDescIdAsc(false, TaskStatus.ERROR),
+        taskRepository.findByRunningAndLastStatusOrderByPriorityDescIdAsc(false, TaskStatus.NONE)
+    ).asFlow()
+
+    private fun runTask(task: Task): Job {
+        logger.info("TaskHandler: selected task $task")
+        return runTask(task.type, task.param, task.sample)
+    }
+
+    private fun runTask(type: String, param: String, sample: Long? = Task.DEFAULT_SAMPLE): Job {
+        return scope.launch {
             val handler = handlersMap[type]
             if (handler != null) {
                 val count = runningTasksCount.incrementAndGet()
-                if (concurrency > 0 && concurrency < count) {
-                    logger.info("do not start task type=$type param=$param. " +
-                        "Concurrency=$concurrency, running=${count - 1}")
+                if (concurrency > 0 && count > concurrency) {
+                    logger.info(
+                        "do not start task type=$type param=$param. " +
+                            "Concurrency=$concurrency, running=${count - 1}"
+                    )
                     runningTasksCount.decrementAndGet()
                     return@launch
                 }
@@ -135,6 +186,14 @@ class TaskService(
             )
         } ?: typeCriteria
         return mongo.find<Task>(Query(c)).asFlow()
+    }
+
+    // Visible for testing
+    internal fun stopAllTasks() {
+        scope.coroutineContext[Job]!!.children.forEach {
+            logger.info("Stopping $it")
+            it.cancel()
+        }
     }
 
     companion object {

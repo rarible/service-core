@@ -6,7 +6,8 @@ import java.time.Duration
 object Wait {
 
     private val defaultInterval = Duration.ofMillis(100)
-    private val defaultDuration = Duration.ofSeconds(5)
+    private val isDebugging = System.getProperty("debug") == "true"
+    private val defaultDuration = if (isDebugging) Duration.ofDays(30) else Duration.ofSeconds(5)
 
     suspend fun <V> waitFor(
         timeout: Duration = defaultDuration,

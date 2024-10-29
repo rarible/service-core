@@ -23,9 +23,13 @@ import org.springframework.test.context.TestPropertySource
 @FlowPreview
 @ExperimentalCoroutinesApi
 @ContextConfiguration(classes = [MockContext::class])
-@TestPropertySource(properties = ["rarible.core.task.concurrency=2"])
+@TestPropertySource(properties = [
+    "rarible.core.task.concurrency=2",
+    // Do not want RaribleTaskWorker - we want to run tasks on our own
+    "rarible.core.task.enabled=false",
+])
 @DirtiesContext
-class TaskServiceTest : AbstractIntegrationTest() {
+class TaskServiceBatchedIt : AbstractIntegrationTest() {
     @Autowired
     private lateinit var handler: MockHandler
 
@@ -42,7 +46,7 @@ class TaskServiceTest : AbstractIntegrationTest() {
         scheduleTask("p1")
         scheduleTask("p2")
 
-        service.runTasks()
+        service.runTaskBatch()
 
         waitAssert {
             val t1 = taskRepository.findByTypeAndParam(MOCK_TASK_TYPE, "p1").awaitSingle()
@@ -96,7 +100,7 @@ class TaskServiceTest : AbstractIntegrationTest() {
             scheduleTask("t$id")
         }
 
-        service.runTasks()
+        service.runTaskBatch()
 
         val runningTasks = assertRunningTasksSize(concurrency)
 
@@ -116,7 +120,7 @@ class TaskServiceTest : AbstractIntegrationTest() {
 
         assertRunningTasksSize(0)
 
-        service.runTasks()
+        service.runTaskBatch()
 
         // Next batch of tasks should start.
         // Note that task service could have read from the DB more than concurrency, they should start now
@@ -129,7 +133,7 @@ class TaskServiceTest : AbstractIntegrationTest() {
         assertRunningTasksSize(0)
 
         // Next batch of tasks should be executed
-        service.runTasks()
+        service.runTaskBatch()
         assertRunningTasksSize(concurrency - 1)
             .forEach { task ->
                 handler.close(task.param)
@@ -152,17 +156,17 @@ class TaskServiceTest : AbstractIntegrationTest() {
             assertRunningTasksSize(0)
         }
 
-        service.runTasks()
+        service.runTaskBatch()
         assertBatch(listOf(2) + List(concurrency - 1) { 1 })
 
         scheduleTask("t2_2", priority = 2)
-        service.runTasks()
+        service.runTaskBatch()
         assertBatch(listOf(2) + List(concurrency - 1) { 1 })
 
-        service.runTasks()
+        service.runTaskBatch()
         assertBatch(List(concurrency) { 0 })
 
-        service.runTasks()
+        service.runTaskBatch()
         assertBatch(listOf(null))
     }
 

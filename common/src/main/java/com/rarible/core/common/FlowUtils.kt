@@ -1,6 +1,7 @@
 package com.rarible.core.common
 
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.flow
@@ -10,6 +11,7 @@ import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
+import java.time.Duration
 import java.util.TreeMap
 
 fun <T : Any, K : Any> Flow<T>.groupConsecutiveBy(keySelector: (T) -> K): Flow<List<T>> {
@@ -139,5 +141,24 @@ fun <T, R> Flow<T>.mapAsyncUnordered(concurrencyLimit: Int, f: suspend (T) -> R)
                 }
             }
         }
+    }
+}
+
+fun <T> Flow<T>.takeUntilTimeout(
+    timeout: Duration,
+    delayFunction: suspend (Duration) -> Unit = { delay(it.toMillis()) }
+): Flow<T> {
+    require(timeout > Duration.ZERO)
+    return channelFlow {
+        val collectJob = launch {
+            this@takeUntilTimeout.collect {
+                this@channelFlow.send(it)
+            }
+            // If the outer flow (this@takeUntilTimeout) completes before timeout,
+            // without close() we will wait until the timeout below
+            this@channelFlow.close()
+        }
+        delayFunction(timeout)
+        collectJob.cancel()
     }
 }

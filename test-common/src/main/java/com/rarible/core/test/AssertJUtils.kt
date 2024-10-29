@@ -33,6 +33,9 @@ inline fun <T, reified P, A : AbstractAssert<A, T>, PA : AbstractAssert<PA, P>> 
 inline fun <T, reified P, A : AbstractAssert<A, T>> A.hasProperty(property: KProperty1<T, P>, crossinline valueAssert: ObjectAssert<P>.() -> ObjectAssert<P>) =
     hasPropertyAssert(property, createAssert = { assertThat(it) }, valueAssert = valueAssert)
 
+inline fun <T, reified P, A : AbstractAssert<A, T>> A.hasProperty(property: KProperty1<T, P>, value: P) =
+    hasPropertyAssert(property, createAssert = { assertThat(it) }, valueAssert = { eq(value) })
+
 inline fun <T, reified P : List<PE>, PE, A : AbstractAssert<A, T>> A.hasListProperty(property: KProperty1<T, P>, crossinline valueAssert: ListAssert<PE>.() -> ListAssert<PE>) =
     hasPropertyAssert(property, createAssert = { assertThat(it) }, valueAssert = valueAssert)
 
