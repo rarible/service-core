@@ -13,4 +13,5 @@ data class MongoProperties(
     val enableMetrics: Boolean = false,
     val sessionStalenessSeconds: Int = 90,
     val readReplicaEnabled: Boolean = false,
+    val poolSize: Int? = null,
 )
