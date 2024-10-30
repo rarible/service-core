@@ -47,7 +47,8 @@ class TaskServiceStreamingIt : AbstractIntegrationTest() {
     private val concurrency: Int by lazy { concurrencyString.toInt() }
 
     private val sleepChannel = Channel<ExpectedDelayBoundaries>(Channel.RENDEZVOUS)
-    private val pollingDelay = Duration.ofMinutes(1)
+
+    private val pollingDelay: Duration = RaribleTaskProperties().pollingPeriod
 
     @AfterEach
     fun tearDown() {
@@ -61,10 +62,7 @@ class TaskServiceStreamingIt : AbstractIntegrationTest() {
         scheduleTask("p3")
 
         val pollerJob = launch {
-            service.runStreamingTaskPoller(
-                pollingDelay = pollingDelay,
-                sleep = ::verifyingSleepFunction
-            )
+            service.runStreamingTaskPoller(sleep = ::verifyingSleepFunction)
         }
 
         waitAssert {
@@ -138,10 +136,7 @@ class TaskServiceStreamingIt : AbstractIntegrationTest() {
         }
 
         val pollerJob = launch {
-            service.runStreamingTaskPoller(
-                pollingDelay = pollingDelay,
-                sleep = ::verifyingSleepFunction
-            )
+            service.runStreamingTaskPoller(sleep = ::verifyingSleepFunction)
         }
 
         val runningTasks1 = assertRunningTasksSize(concurrency)
@@ -195,10 +190,7 @@ class TaskServiceStreamingIt : AbstractIntegrationTest() {
         val start = nowMillis()
 
         val pollerJob = launch {
-            service.runStreamingTaskPoller(
-                pollingDelay = pollingDelay,
-                sleep = ::verifyingSleepFunction
-            )
+            service.runStreamingTaskPoller(sleep = ::verifyingSleepFunction)
         }
 
         waitAssert {

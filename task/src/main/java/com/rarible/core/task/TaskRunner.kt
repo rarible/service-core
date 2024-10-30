@@ -21,7 +21,10 @@ class TaskRunner(
     private val taskRepository: TaskRepository,
     private val properties: RaribleTaskProperties,
 ) {
-    suspend fun <T : Any> runLongTask(param: String, handler: TaskHandler<T>, sample: Long? = Task.DEFAULT_SAMPLE) {
+    /**
+     * @return execution status: true - task finished normally, false - task failed, null - task wasn't executed
+     * */
+    suspend fun <T : Any> runLongTask(param: String, handler: TaskHandler<T>, sample: Long? = Task.DEFAULT_SAMPLE): Boolean? {
         val canRun = handler.isAbleToRun(param)
         val task = findAndMarkRunning(canRun, handler.type, param, sample)
         if (task != null) {
@@ -30,10 +33,11 @@ class TaskRunner(
         } else if (!canRun) {
             logger.info("task is not ready to run ${handler.type} with param=$param")
         }
+        return null
     }
 
     @Suppress("UNCHECKED_CAST")
-    private suspend fun <T : Any> runAndSaveTask(task: Task, handler: TaskHandler<T>) {
+    private suspend fun <T : Any> runAndSaveTask(task: Task, handler: TaskHandler<T>): Boolean {
         logger.info("starting task $task")
         var current = task
         try {
@@ -49,9 +53,11 @@ class TaskRunner(
             } else {
                 taskRepository.save(current.markCompleted()).awaitFirst()
             }
+            return true
         } catch (e: Exception) {
             logger.info("error caught executing ${handler.type} with param=${task.param}", e)
             taskRepository.save(current.markError(e)).awaitFirst()
+            return false
         }
     }
 
