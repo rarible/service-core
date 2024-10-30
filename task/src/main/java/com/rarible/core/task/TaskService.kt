@@ -152,7 +152,7 @@ class TaskService(
         return runTask(task.type, task.param, task.sample)
     }
 
-    private fun runTask(type: String, param: String, sample: Long? = Task.DEFAULT_SAMPLE): Job {
+    fun runTask(type: String, param: String, sample: Long? = Task.DEFAULT_SAMPLE): Job {
         return scope.launch {
             val handler = handlersMap[type]
             if (handler != null) {
