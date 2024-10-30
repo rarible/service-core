@@ -21,23 +21,21 @@ class TaskRunner(
     private val taskRepository: TaskRepository,
     private val properties: RaribleTaskProperties,
 ) {
-    /**
-     * @return execution status: true - task finished normally, false - task failed, null - task wasn't executed
-     * */
-    suspend fun <T : Any> runLongTask(param: String, handler: TaskHandler<T>, sample: Long? = Task.DEFAULT_SAMPLE): Boolean? {
+    suspend fun <T : Any> runLongTask(param: String, handler: TaskHandler<T>, sample: Long? = Task.DEFAULT_SAMPLE): TaskRunStatus {
         val canRun = handler.isAbleToRun(param)
         val task = findAndMarkRunning(canRun, handler.type, param, sample)
         if (task != null) {
             logger.info("running ${handler.type} with param=$param")
-            runAndSaveTask(task, handler)
+            return runAndSaveTask(task, handler)
         } else if (!canRun) {
             logger.info("task is not ready to run ${handler.type} with param=$param")
+            return TaskRunStatus.CANNOT_RUN
         }
-        return null
+        return TaskRunStatus.NOT_EXECUTED
     }
 
     @Suppress("UNCHECKED_CAST")
-    private suspend fun <T : Any> runAndSaveTask(task: Task, handler: TaskHandler<T>): Boolean {
+    private suspend fun <T : Any> runAndSaveTask(task: Task, handler: TaskHandler<T>): TaskRunStatus {
         logger.info("starting task $task")
         var current = task
         try {
@@ -53,11 +51,11 @@ class TaskRunner(
             } else {
                 taskRepository.save(current.markCompleted()).awaitFirst()
             }
-            return true
+            return TaskRunStatus.SUCCESS
         } catch (e: Exception) {
             logger.info("error caught executing ${handler.type} with param=${task.param}", e)
             taskRepository.save(current.markError(e)).awaitFirst()
-            return false
+            return TaskRunStatus.FAILURE
         }
     }
 
@@ -86,4 +84,11 @@ class TaskRunner(
     companion object {
         val logger: Logger = LoggerFactory.getLogger(TaskRunner::class.java)
     }
+}
+
+enum class TaskRunStatus {
+    SUCCESS,
+    FAILURE,
+    CANNOT_RUN,
+    NOT_EXECUTED,
 }

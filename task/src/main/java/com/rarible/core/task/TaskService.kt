@@ -190,12 +190,12 @@ class TaskService(
                 metrics.onTaskCount(count)
                 logger.info("runTask type=$type param=$param")
                 metrics.onTaskStarted(runReason)
-                var taskExecutionStatus: Boolean? = null
+                var taskExecutionStatus = TaskRunStatus.NOT_EXECUTED
                 try {
                     taskExecutionStatus = runner.runLongTask(param, handler, sample)
                 } finally {
                     val countAfterRun = runningTasksCount.decrementAndGet()
-                    metrics.onTaskFinished(runReason, taskExecutionStatus.toExecutionStatusEnum())
+                    metrics.onTaskFinished(runReason, taskExecutionStatus.toMetricsEnum())
                     metrics.onTaskCount(countAfterRun)
                 }
             } else {
@@ -204,10 +204,11 @@ class TaskService(
         }
     }
 
-    private fun Boolean?.toExecutionStatusEnum() = when (this) {
-        true -> TaskServiceMetrics.ExecutionStatus.SUCCESS
-        false -> TaskServiceMetrics.ExecutionStatus.FAILURE
-        null -> TaskServiceMetrics.ExecutionStatus.NOT_EXECUTED
+    private fun TaskRunStatus.toMetricsEnum() = when (this) {
+        TaskRunStatus.SUCCESS -> TaskServiceMetrics.ExecutionStatus.SUCCESS
+        TaskRunStatus.FAILURE -> TaskServiceMetrics.ExecutionStatus.FAILURE
+        TaskRunStatus.CANNOT_RUN -> TaskServiceMetrics.ExecutionStatus.CANNOT_RUN
+        TaskRunStatus.NOT_EXECUTED -> TaskServiceMetrics.ExecutionStatus.NOT_EXECUTED
     }
 
     fun findTasks(type: String, param: String? = null): Flow<Task> {
@@ -291,6 +292,7 @@ private class TaskServiceMetrics(
     enum class ExecutionStatus {
         SUCCESS,
         FAILURE,
+        CANNOT_RUN,
         NOT_EXECUTED,
     }
 

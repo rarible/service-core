@@ -83,7 +83,7 @@ class TaskServiceStreamingTest {
         } coAnswers {
             taskChannel2_1.send("ready")
             taskChannel2_1.receiveCatching()
-            true
+            TaskRunStatus.SUCCESS
         }
 
         val taskChannel1 = Channel<String>()
@@ -91,7 +91,7 @@ class TaskServiceStreamingTest {
             runner.runLongTask<String>(match { it.startsWith("t1_") }, any(), 0)
         } coAnswers {
             taskChannel1.receiveCatching()
-            true
+            TaskRunStatus.SUCCESS
         }
 
         val taskChannel2_2 = Channel<String>()
@@ -100,7 +100,7 @@ class TaskServiceStreamingTest {
         } coAnswers {
             taskChannel2_2.send("ready")
             taskChannel2_2.receiveCatching()
-            true
+            TaskRunStatus.SUCCESS
         }
 
         val taskChannel0 = Channel<String>()
@@ -109,7 +109,7 @@ class TaskServiceStreamingTest {
         } coAnswers {
             taskChannel0.send("ready")
             taskChannel0.receiveCatching()
-            true
+            TaskRunStatus.SUCCESS
         }
 
         val pollerJob = launch {
