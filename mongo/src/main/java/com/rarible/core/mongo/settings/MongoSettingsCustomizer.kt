@@ -18,6 +18,9 @@ class MongoSettingsCustomizer(
             if (mongoProperties.maxConnectionIdleTime != null) {
                 it.maxConnectionIdleTime(mongoProperties.maxConnectionIdleTime.toMillis(), TimeUnit.MILLISECONDS)
             }
+            if (mongoProperties.poolSize != null) {
+                it.maxSize(mongoProperties.poolSize)
+            }
         }
     }
 }
