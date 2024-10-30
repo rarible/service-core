@@ -66,11 +66,7 @@ private class TaskWorker(
             hadInitDelay.set(true)
             taskService.autorun()
         }
-        if (properties.streaming) {
-            taskService.runStreamingTaskPoller(properties.pollingPeriod)
-        } else {
-            taskService.runTaskBatch()
-            delay(properties.pollingPeriod)
-        }
+        taskService.executeTasks()
+        delay(properties.pollingPeriod)
     }
 }

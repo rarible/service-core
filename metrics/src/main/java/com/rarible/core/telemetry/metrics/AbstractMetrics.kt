@@ -62,17 +62,17 @@ abstract class AbstractMetrics(
         gauges.getOrCreate(name, tags.toList()).set(value.toDouble())
     }
 
-    private fun createGauge(name: String, tags: List<Tag>): AtomicReference<Double> {
+    protected fun createGauge(name: String, tags: List<Tag>): AtomicReference<Double> {
         val gauge: AtomicReference<Double> = AtomicReference(0.0)
         meterRegistry.gauge(name, tags, gauge) { it.get() }
         return gauge
     }
 
-    private fun createTimer(name: String, tags: List<Tag>): Timer {
+    protected fun createTimer(name: String, tags: List<Tag>): Timer {
         return meterRegistry.timer(name, tags)
     }
 
-    private fun createCounter(name: String, tags: List<Tag>): Counter {
+    protected fun createCounter(name: String, tags: List<Tag>): Counter {
         return meterRegistry.counter(name, tags)
     }
 

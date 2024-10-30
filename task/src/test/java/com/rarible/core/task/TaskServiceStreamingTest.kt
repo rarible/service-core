@@ -1,5 +1,6 @@
 package com.rarible.core.task
 
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
@@ -17,7 +18,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.data.mongodb.core.ReactiveMongoOperations
 import reactor.core.publisher.Flux
-import java.time.Duration
 
 @ExtendWith(MockKExtension::class)
 @OptIn(FlowPreview::class)
@@ -43,6 +43,9 @@ class TaskServiceStreamingTest {
 
     @Suppress("unused")
     private val raribleTaskProperties = RaribleTaskProperties(streaming = true, concurrency = 2)
+
+    @Suppress("unused")
+    private val meterRegistry = SimpleMeterRegistry()
 
     @Test
     fun `guarantees that a task with high priority will eventually be executed`() = runBlocking<Unit> {
@@ -80,6 +83,7 @@ class TaskServiceStreamingTest {
         } coAnswers {
             taskChannel2_1.send("ready")
             taskChannel2_1.receiveCatching()
+            TaskRunStatus.SUCCESS
         }
 
         val taskChannel1 = Channel<String>()
@@ -87,6 +91,7 @@ class TaskServiceStreamingTest {
             runner.runLongTask<String>(match { it.startsWith("t1_") }, any(), 0)
         } coAnswers {
             taskChannel1.receiveCatching()
+            TaskRunStatus.SUCCESS
         }
 
         val taskChannel2_2 = Channel<String>()
@@ -95,6 +100,7 @@ class TaskServiceStreamingTest {
         } coAnswers {
             taskChannel2_2.send("ready")
             taskChannel2_2.receiveCatching()
+            TaskRunStatus.SUCCESS
         }
 
         val taskChannel0 = Channel<String>()
@@ -103,11 +109,11 @@ class TaskServiceStreamingTest {
         } coAnswers {
             taskChannel0.send("ready")
             taskChannel0.receiveCatching()
+            TaskRunStatus.SUCCESS
         }
 
         val pollerJob = launch {
             taskService.runStreamingTaskPoller(
-                pollingDelay = Duration.ofSeconds(1),
                 sleep = { },
                 dbTimeout = { dbTimeout.receive() },
             )
