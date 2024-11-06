@@ -18,6 +18,8 @@ data class ApplicationProperties(
     @Pattern(regexp = "dev|e2e|staging|prod")
     val environment: String,
 
+    val kubernetesNamespace: String? = "$environment-protocol",
+
     /**
      * Name of the service the application represents. Defaults to `spring.application.name`.
      */

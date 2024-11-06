@@ -26,7 +26,8 @@ internal class EnvironmentAutoConfiguration(
         }
         return ApplicationEnvironmentInfo(
             name = properties.environment,
-            host = host
+            host = host,
+            kubernetesNamespace = properties.kubernetesNamespace,
         )
     }
 
