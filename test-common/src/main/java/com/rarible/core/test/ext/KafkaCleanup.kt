@@ -26,7 +26,7 @@ class KafkaCleanupExtension : BeforeAllCallback {
             val result: ListTopicsResult = adminClient.listTopics()
             val topicNames = result.names().get()
             topicNames.remove("_schemas")
-            adminClient.deleteTopics(TopicCollection.ofTopicNames(topicNames))
+            adminClient.deleteTopics(TopicCollection.ofTopicNames(topicNames)).all().get()
 
             // Delete all consumer groups
             val consumerGroups: List<String> = adminClient
@@ -34,7 +34,7 @@ class KafkaCleanupExtension : BeforeAllCallback {
                 .stream()
                 .map { obj: ConsumerGroupListing -> obj.groupId() }
                 .collect(Collectors.toList())
-            adminClient.deleteConsumerGroups(consumerGroups)
+            adminClient.deleteConsumerGroups(consumerGroups).all().get()
         }
     }
 }
