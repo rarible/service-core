@@ -5,6 +5,7 @@ import com.rarible.core.kafka.json.JsonSerializer
 import com.rarible.core.test.containers.KafkaTestContainer
 import com.rarible.core.test.data.randomInt
 import com.rarible.core.test.data.randomString
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -37,7 +38,8 @@ internal class RaribleKafkaConsumerTest {
             valueSerializerClass = JsonSerializer::class.java,
             valueClass = TestEvent::class.java,
             defaultTopic = "test-topic",
-            bootstrapServers = kafkaContainer.kafkaBoostrapServers()
+            bootstrapServers = kafkaContainer.kafkaBoostrapServers(),
+            meterRegistry = SimpleMeterRegistry(),
         )
         val consumer = RaribleKafkaConsumer(
             clientId = "test-consumer",
@@ -79,7 +81,8 @@ internal class RaribleKafkaConsumerTest {
             valueSerializerClass = JsonSerializer::class.java,
             valueClass = TestEvent::class.java,
             defaultTopic = topicName,
-            bootstrapServers = kafkaContainer.kafkaBoostrapServers()
+            bootstrapServers = kafkaContainer.kafkaBoostrapServers(),
+            meterRegistry = SimpleMeterRegistry(),
         )
         val testObjects = (0 until countMessages).map { TestEvent(name = randomString(), age = randomInt()) }
         producer.send(testObjects.map { KafkaMessage(it.name, it) }, topicName).collect()
@@ -111,7 +114,8 @@ internal class RaribleKafkaConsumerTest {
             valueSerializerClass = JsonSerializer::class.java,
             valueClass = TestEvent::class.java,
             defaultTopic = topicName,
-            bootstrapServers = kafkaContainer.kafkaBoostrapServers()
+            bootstrapServers = kafkaContainer.kafkaBoostrapServers(),
+            meterRegistry = SimpleMeterRegistry(),
         )
         val testObjects = (0 until countMessages).map {
             TestEvent(name = randomString(), age = randomInt())
@@ -184,7 +188,8 @@ internal class RaribleKafkaConsumerTest {
             valueSerializerClass = JsonSerializer::class.java,
             valueClass = TestEvent::class.java,
             defaultTopic = topicName,
-            bootstrapServers = kafkaContainer.kafkaBoostrapServers()
+            bootstrapServers = kafkaContainer.kafkaBoostrapServers(),
+            meterRegistry = SimpleMeterRegistry(),
         )
         val testObjects = (0 until countMessages).map { TestEvent(name = randomString(), age = randomInt()) }
         producer.send(testObjects.map { KafkaMessage(it.name, it) }, topicName).collect()

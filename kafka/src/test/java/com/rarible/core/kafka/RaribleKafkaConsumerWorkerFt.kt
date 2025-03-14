@@ -4,6 +4,7 @@ import com.rarible.core.kafka.json.JsonSerializer
 import com.rarible.core.test.containers.KafkaTestContainer
 import com.rarible.core.test.data.randomString
 import com.rarible.core.test.wait.Wait.waitAssertWithCheckInterval
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.runBlocking
 import org.apache.kafka.clients.consumer.OffsetResetStrategy
@@ -159,7 +160,8 @@ class RaribleKafkaConsumerWorkerFt {
             valueSerializerClass = JsonSerializer::class.java,
             valueClass = TestEvent::class.java,
             defaultTopic = topic,
-            bootstrapServers = kafkaContainer.kafkaBoostrapServers()
+            bootstrapServers = kafkaContainer.kafkaBoostrapServers(),
+            meterRegistry = SimpleMeterRegistry(),
         )
     }
 

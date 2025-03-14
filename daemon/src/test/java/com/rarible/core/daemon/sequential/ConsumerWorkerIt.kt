@@ -10,6 +10,7 @@ import com.rarible.core.kafka.json.JsonSerializer
 import com.rarible.core.test.containers.KafkaTestContainer
 import com.rarible.core.test.data.randomString
 import com.rarible.core.test.wait.BlockingWait
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import io.mockk.Answer
 import io.mockk.ManyAnswersAnswer
 import io.mockk.ThrowingAnswer
@@ -44,7 +45,8 @@ class ConsumerWorkerIt {
         valueSerializerClass = JsonSerializer::class.java,
         valueClass = TestObject::class.java,
         defaultTopic = topic,
-        bootstrapServers = kafkaContainer.kafkaBoostrapServers()
+        bootstrapServers = kafkaContainer.kafkaBoostrapServers(),
+        meterRegistry = SimpleMeterRegistry(),
     )
     private val consumer = RaribleKafkaConsumer(
         clientId = "test-consumer",
