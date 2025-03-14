@@ -1,9 +1,13 @@
 package com.rarible.core.kafka
 
 import com.rarible.core.kafka.json.RARIBLE_KAFKA_CLASS_PARAM
+import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.Tag
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactor.asFlux
@@ -18,6 +22,7 @@ import reactor.kafka.sender.SenderOptions
 import reactor.kafka.sender.SenderRecord
 import java.nio.charset.StandardCharsets
 import java.time.Duration
+import java.util.concurrent.atomic.AtomicLong
 
 /**
  * Thread-safe
@@ -41,7 +46,8 @@ class RaribleKafkaProducer<V>(
     deliveryTimeout: Duration = Duration.ofMinutes(2),
     valueClass: Class<V>? = null,
     compression: Compression = Compression.NONE,
-    properties: Map<String, String> = emptyMap()
+    properties: Map<String, String> = emptyMap(),
+    private val meterRegistry: MeterRegistry,
 ) : AutoCloseable, KafkaProducer<V> {
 
     private val sender: KafkaSender<String, V>
@@ -65,6 +71,7 @@ class RaribleKafkaProducer<V>(
     }
 
     override fun send(messages: Flow<KafkaMessage<V>>, topic: String): Flow<KafkaSendResult> {
+        val start = AtomicLong(0)
         return sender.send(messages.map {
             val record = it.toProducerRecord(topic)
             val correlationId = it.id
@@ -78,6 +85,17 @@ class RaribleKafkaProducer<V>(
                 exception
             )
         }.asFlow()
+            .onStart {
+                start.set(System.currentTimeMillis())
+            }
+            .onCompletion {
+                meterRegistry.timer(
+                    "kafka_producer_latency",
+                    listOf(
+                        Tag.of("topic", topic)
+                    )
+                ).record(Duration.ofMillis(System.currentTimeMillis() - start.get()))
+            }
     }
 
     override fun send(messages: Collection<KafkaMessage<V>>, topic: String): Flow<KafkaSendResult> {
