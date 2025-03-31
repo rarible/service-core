@@ -9,6 +9,7 @@ import com.rarible.core.meta.resource.http.ExternalHttpClient
 import com.rarible.core.meta.resource.http.ProxyHttpClient
 import com.rarible.core.meta.resource.http.builder.DefaultWebClientBuilder
 import com.rarible.core.meta.resource.http.builder.ProxyWebClientBuilder
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
@@ -40,7 +41,9 @@ class MetaResolverMt {
     private val externalHttpClient = ExternalHttpClient(
         defaultClient = defaultHttpClient,
         proxyClient = proxyHttpClient,
-        customClients = emptyList()
+        customClients = emptyList(),
+        monitoredUrls = emptyList(),
+        meterRegistry = SimpleMeterRegistry(),
     )
 
     private val rawMetaProvider: RawMetaProvider<String> = RawMetaProvider(

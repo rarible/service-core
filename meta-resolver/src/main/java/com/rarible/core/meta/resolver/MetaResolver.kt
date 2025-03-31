@@ -32,19 +32,19 @@ class MetaResolver<K, M>(
         "html/"
     )
 
-    suspend fun resolve(entityId: K): MetaResult<M>? {
+    suspend fun resolve(blockchain: String, entityId: K): MetaResult<M>? {
         val metaUrl = metaUrlResolver.getUrl(entityId)?.trim()
         if (metaUrl.isNullOrBlank()) {
             logMetaLoading(entityId, "empty metadata URL", warn = true)
             return null
         }
         logMetaLoading(entityId, "got meta URL: $metaUrl")
-        return resolve(entityId, metaUrl)
+        return resolve(blockchain = blockchain, entityId = entityId, metaUrl = metaUrl)
     }
 
-    suspend fun resolve(entityId: K, metaUrl: String): MetaResult<M>? {
+    suspend fun resolve(blockchain: String, entityId: K, metaUrl: String): MetaResult<M>? {
         // Some of the URLs might be customized like with {id} substitution - so check such cases first
-        val byCustomUrl = resolveByCustomizedUrl(entityId, metaUrl)
+        val byCustomUrl = resolveByCustomizedUrl(blockchain = blockchain, entityId = entityId, metaUrl = metaUrl)
         if (byCustomUrl != null) {
             return byCustomUrl
         }
@@ -56,20 +56,20 @@ class MetaResolver<K, M>(
         }
 
         // If meta fetched by unmodified URL - ok, return it
-        val fetched = fetch(entityId, metaUrl)
+        val fetched = fetch(blockchain = blockchain, entityId = entityId, metaUrl = metaUrl)
         if (fetched != null) {
             return fetched
         }
 
         // TODO in ethereum there is also post-processing for empty names
         // The last hope is to try to sanitize URL
-        return resolveBySanitizedUrl(entityId, metaUrl)
+        return resolveBySanitizedUrl(blockchain = blockchain, entityId = entityId, metaUrl = metaUrl)
     }
 
-    private suspend fun resolveByCustomizedUrl(entityId: K, metaUrl: String): MetaResult<M>? {
+    private suspend fun resolveByCustomizedUrl(blockchain: String, entityId: K, metaUrl: String): MetaResult<M>? {
         urlCustomizers.forEach { customizer ->
             val customizedUrl = customizer.customize(entityId, metaUrl)
-            val meta = customizedUrl?.let { fetch(entityId, it) }
+            val meta = customizedUrl?.let { fetch(blockchain = blockchain, entityId = entityId, metaUrl = it) }
             if (meta != null) {
                 logMetaLoading(entityId, "Custom meta URL worked for $entityId: $customizedUrl (original=$metaUrl)")
                 return meta.copy(metaUrl = metaUrl)
@@ -78,10 +78,10 @@ class MetaResolver<K, M>(
         return null
     }
 
-    private suspend fun resolveBySanitizedUrl(entityId: K, metaUrl: String): MetaResult<M>? {
+    private suspend fun resolveBySanitizedUrl(blockchain: String, entityId: K, metaUrl: String): MetaResult<M>? {
         urlSanitizers.forEach { sanitizer ->
             val sanitizedUrl = sanitizer.sanitize(entityId, metaUrl)
-            val meta = sanitizedUrl?.let { fetch(entityId, it) }
+            val meta = sanitizedUrl?.let { fetch(blockchain = blockchain, entityId = entityId, metaUrl = it) }
             if (meta != null) {
                 logMetaLoading(entityId, "Sanitized meta URL worked for $entityId: $sanitizedUrl (original=$metaUrl)")
                 return meta.copy(metaUrl = metaUrl)
@@ -90,10 +90,15 @@ class MetaResolver<K, M>(
         return null
     }
 
-    private suspend fun fetch(entityId: K, metaUrl: String): MetaResult<M>? {
+    private suspend fun fetch(blockchain: String, entityId: K, metaUrl: String): MetaResult<M>? {
         metaUrl.ifNotBlank() ?: return null
         val resource = metaUrlParser.parse(entityId, metaUrl)
-        val rawMeta = rawMetaProvider.getRawMeta(entityId, resource, metaParser)
+        val rawMeta = rawMetaProvider.getRawMeta(
+            blockchain = blockchain,
+            entityId = entityId,
+            resource = resource,
+            parser = metaParser
+        )
 
         // JSON is valid, so we need just map it to the model
         if (rawMeta.parsed != null) {

@@ -23,12 +23,12 @@ class ContentMetaReceiver(
 
     private val predefined: ContentMetaResolver = PredefinedContentTypeResolver()
 
-    suspend fun receive(uri: URI): ContentMetaResult {
+    suspend fun receive(blockchain: String, uri: URI): ContentMetaResult {
         // Predefined content like mp3/wav etc., nothing to fetch here
         predefined.resolve(uri)?.let { return it }
 
         return try {
-            resolve(uri, data = fetchBytes(uri))
+            resolve(uri, data = fetchBytes(blockchain, uri))
         } catch (e: Throwable) {
             resolve(uri, exception = e)
         }
@@ -48,8 +48,8 @@ class ContentMetaReceiver(
             )
     }
 
-    private suspend fun fetchBytes(uri: URI): ContentData {
-        val data = contentReceiver.receiveBytes(uri, maxBytes)
+    private suspend fun fetchBytes(blockchain: String, uri: URI): ContentData {
+        val data = contentReceiver.receiveBytes(blockchain, uri, maxBytes)
 
         // Sometimes there is no content-length header, but if file is small,
         // we can assume readBytes == size

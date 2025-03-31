@@ -1,6 +1,8 @@
 package com.rarible.core.content.meta.loader
 
+import com.rarible.core.meta.resource.metrics.ResponseSizeRecorder
 import com.rarible.core.meta.resource.model.ContentData
+import io.micrometer.core.instrument.MeterRegistry
 import kotlinx.coroutines.future.await
 import org.apache.http.HttpResponse
 import org.apache.http.HttpVersion
@@ -32,10 +34,13 @@ import java.util.concurrent.atomic.AtomicReference
 
 class ApacheHttpContentReceiver(
     private val timeout: Int,
+    meterRegistry: MeterRegistry,
+    monitoredUrls: List<String>,
     connectionsPerRoute: Int,
     keepAlive: Boolean,
     insecure: Boolean,
 ) : ContentReceiver, Closeable {
+    private val responseSizeRecorder = ResponseSizeRecorder(monitoredUrls, meterRegistry)
 
     private val client = run {
         val reactor: ConnectingIOReactor = DefaultConnectingIOReactor()
@@ -62,7 +67,7 @@ class ApacheHttpContentReceiver(
         client
     }
 
-    override suspend fun receiveBytes(uri: URI, maxBytes: Int): ContentData {
+    override suspend fun receiveBytes(blockchain: String, uri: URI, maxBytes: Int): ContentData {
         val request = HttpGet(uri)
         val config: RequestConfig = RequestConfig.custom()
             .setSocketTimeout(timeout)
@@ -81,7 +86,13 @@ class ApacheHttpContentReceiver(
         val callback = HttpResponseFutureCallback(promise, request)
         val consumerCallback = HttpAsyncResponseConsumerCallback(promise, request, maxBytes)
         client.execute(HttpAsyncMethods.create(request), consumerCallback, callback)
-        return promise.await()
+        val result = promise.await()
+        responseSizeRecorder.recordResponseSize(
+            blockchain = blockchain,
+            url = uri.toString(),
+            responseSize = result.getReadBytesSize()
+        )
+        return result
     }
 
     override fun close() {

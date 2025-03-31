@@ -20,6 +20,7 @@ class RawMetaProvider<K>(
 ) {
 
     suspend fun getRawMeta(
+        blockchain: String,
         entityId: K,
         resource: UrlResource,
         parser: MetaParser<K>
@@ -33,7 +34,7 @@ class RawMetaProvider<K>(
         // because we use our own IPFS nodes
         val useProxy = (resource is HttpUrl) && proxyEnabled
 
-        val fetched = fetch(resource, entityId, useProxy)
+        val fetched = fetch(blockchain = blockchain, resource = resource, entityId = entityId, useProxy = useProxy)
         val bytes = fetched.second ?: return RawMeta.EMPTY
         val mimeType = fetched.first?.toString()
 
@@ -87,6 +88,7 @@ class RawMetaProvider<K>(
 
     private suspend fun fetch(
         resource: UrlResource,
+        blockchain: String,
         entityId: K,
         useProxy: Boolean = false
     ): Pair<MediaType?, ByteArray?> {
@@ -112,18 +114,24 @@ class RawMetaProvider<K>(
         // 2. With proxy some sites block us too, but respond fine without proxy
         // 3. It is better to avoid proxy requests since they are paid
         // So even if useProxy specified we want to try fetch data without it first
-        val withoutProxy = doFetch(internalUrl, entityId, false)
+        val withoutProxy = doFetch(blockchain = blockchain, url = internalUrl, entityId = entityId, useProxy = false)
 
         // Second try with proxy, if needed
         return if (withoutProxy.second == null && useProxy) {
-            doFetch(internalUrl, entityId, true)
+            doFetch(blockchain = blockchain, url = internalUrl, entityId = entityId, useProxy = true)
         } else {
             withoutProxy
         }
     }
 
-    private suspend fun doFetch(url: String, entityId: K, useProxy: Boolean = false): Pair<MediaType?, ByteArray?> {
+    private suspend fun doFetch(
+        blockchain: String,
+        url: String,
+        entityId: K,
+        useProxy: Boolean = false
+    ): Pair<MediaType?, ByteArray?> {
         return externalHttpClient.getBodyBytes(
+            blockchain = blockchain,
             url = url,
             id = entityId.toString(),
             useProxy = useProxy

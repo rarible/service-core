@@ -6,5 +6,5 @@ import java.net.URI
 
 interface ContentReceiver : Closeable {
 
-    suspend fun receiveBytes(uri: URI, maxBytes: Int): ContentData
+    suspend fun receiveBytes(blockchain: String, uri: URI, maxBytes: Int): ContentData
 }
