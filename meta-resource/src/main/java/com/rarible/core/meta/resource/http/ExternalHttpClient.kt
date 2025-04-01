@@ -1,7 +1,9 @@
 package com.rarible.core.meta.resource.http
 
+import com.rarible.core.meta.resource.metrics.ResponseSizeRecorder
 import com.rarible.core.meta.resource.model.FlowResponse
 import com.rarible.core.meta.resource.util.MetaLogger.logMetaLoading
+import io.micrometer.core.instrument.MeterRegistry
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactor.awaitSingleOrNull
@@ -9,7 +11,6 @@ import org.springframework.core.io.buffer.DataBuffer
 import org.springframework.core.io.buffer.DataBufferUtils
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
-import org.springframework.http.ResponseEntity
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import org.springframework.web.reactive.function.client.bodyToMono
@@ -27,21 +28,11 @@ open class ExternalHttpClient(
     private val proxyClient: HttpClient,
     private val customClients: List<HttpClient>,
     private val onError: (Exception) -> Unit = {},
+    monitoredUrls: List<String>,
+    meterRegistry: MeterRegistry,
 ) {
 
-    suspend fun getEntity(url: String, bodyClass: Class<*>, useProxy: Boolean = false, id: String): ResponseEntity<*>? {
-        val (responseSpec, timeout) = getResponseSpec(url, useProxy, id) ?: return null
-        return try {
-            responseSpec
-                ?.toEntity(bodyClass)
-                ?.timeout(timeout)
-                ?.awaitFirstOrNull()
-        } catch (e: Exception) {
-            logMetaLoading(id, "failed to get properties by URI $url: ${e.message} ${getResponse(e)}", warn = true)
-            onError(e)
-            null
-        }
-    }
+    private val responseSizeRecorder = ResponseSizeRecorder(monitoredUrls, meterRegistry)
 
     suspend fun getHeaders(url: String, useProxy: Boolean = false, id: String): HttpHeaders? {
         val (responseSpec, timeout) = getResponseSpec(url, useProxy, id) ?: return null
@@ -58,13 +49,17 @@ open class ExternalHttpClient(
         }
     }
 
-    suspend fun getBody(url: String, useProxy: Boolean = false, id: String): String? {
+    suspend fun getBody(blockchain: String, url: String, useProxy: Boolean = false, id: String): String? {
         val (responseSpec, timeout) = getResponseSpec(url, useProxy, id) ?: return null
         return try {
-            responseSpec
+            val result = responseSpec
                 ?.bodyToMono<String>()
                 ?.timeout(timeout)
                 ?.awaitFirstOrNull()
+            result?.let {
+                responseSizeRecorder.recordResponseSize(blockchain = blockchain, url = url, responseSize = it.length)
+            }
+            result
         } catch (e: Exception) {
             logMetaLoading(id, "failed to get properties by URI $url: ${e.message} ${getResponse(e)}", warn = true)
             onError(e)
@@ -72,13 +67,21 @@ open class ExternalHttpClient(
         }
     }
 
-    suspend fun getBodyBytes(url: String, useProxy: Boolean = false, id: String): Pair<MediaType?, ByteArray?> {
+    suspend fun getBodyBytes(
+        blockchain: String,
+        url: String,
+        useProxy: Boolean = false,
+        id: String
+    ): Pair<MediaType?, ByteArray?> {
         val (responseSpec, timeout) = getResponseSpec(url, useProxy, id) ?: return null to null
         return try {
             val entity = responseSpec
                 ?.toEntity<ByteArray>()
                 ?.timeout(timeout)
                 ?.awaitFirstOrNull()
+            entity?.body?.let {
+                responseSizeRecorder.recordResponseSize(blockchain = blockchain, url = url, responseSize = it.size)
+            }
             return entity?.headers?.contentType to entity?.body
         } catch (e: Exception) {
             logMetaLoading(id, "failed to get properties by URI $url: ${e.message} ${getResponse(e)}", warn = true)
@@ -87,7 +90,7 @@ open class ExternalHttpClient(
         }
     }
 
-    suspend fun getBodyFlow(url: String, useProxy: Boolean = false, id: String): FlowResponse {
+    suspend fun getBodyFlow(blockchain: String, url: String, useProxy: Boolean = false, id: String): FlowResponse {
         val (responseSpec, timeout) = getResponseSpec(url, useProxy, id) ?: return FlowResponse.EMPTY
         return try {
             val entity = responseSpec
@@ -103,6 +106,11 @@ open class ExternalHttpClient(
                         val array = ByteArray(it.readableByteCount())
                         it.read(array)
                         DataBufferUtils.release(it)
+                        responseSizeRecorder.recordResponseSize(
+                            blockchain = blockchain,
+                            url = url,
+                            responseSize = array.size
+                        )
                         array
                     }
                     ?.asFlow()

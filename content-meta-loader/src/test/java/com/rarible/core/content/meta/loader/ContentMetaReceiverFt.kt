@@ -3,6 +3,7 @@ package com.rarible.core.content.meta.loader
 import com.rarible.core.meta.resource.detector.ContentDetector
 import com.rarible.core.meta.resource.model.ContentMeta
 import com.rarible.core.meta.resource.model.MimeType
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertNull
@@ -24,6 +25,8 @@ class ContentMetaReceiverFt {
             connectionsPerRoute = 200,
             keepAlive = true,
             insecure = false,
+            meterRegistry = SimpleMeterRegistry(),
+            monitoredUrls = emptyList(),
         )
 
         private val contentDetector = ContentDetector()
@@ -278,12 +281,14 @@ class ContentMetaReceiverFt {
                 insecure = true,
                 keepAlive = false,
                 timeout = 30,
-            ).receiveBytes(URI("https://chameleoncollective.io/metadata/9277.json"), 1000000).data
+                meterRegistry = SimpleMeterRegistry(),
+                monitoredUrls = emptyList(),
+            ).receiveBytes("ethereum", URI("https://chameleoncollective.io/metadata/9277.json"), 1000000).data
         )
 
         assertThat(body).isEqualTo("""{"image":"https://chameleoncollective.io/metadata2/1176.png","attributes":[{"value":"Blue Veins","trait_type":"Eye"},{"value":"Red","trait_type":"Background"},{"value":"Green Moustache","trait_type":"Prop"},{"value":"Tangled White","trait_type":"Mouth"},{"value":"White Hoodie","trait_type":"Clothes"},{"value":"Basketball Green","trait_type":"Tail"},{"value":"Cowboy Brown","trait_type":"Hat"},{"value":"Green","trait_type":"Body"}]}""")
     }
 
     private fun getContentMeta(url: String, contentMetaReceiver: ContentMetaReceiver): ContentMetaResult =
-        runBlocking { contentMetaReceiver.receive(URI(url)) }
+        runBlocking { contentMetaReceiver.receive("ethereum", URI(url)) }
 }

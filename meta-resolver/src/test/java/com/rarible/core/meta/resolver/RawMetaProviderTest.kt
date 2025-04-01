@@ -45,13 +45,13 @@ class RawMetaProviderTest {
         val json = """{"name" : "${randomString()}"}"""
 
         coEvery {
-            httpClient.getBodyBytes(url = any(), id = entityId, useProxy = false)
+            httpClient.getBodyBytes(blockchain = "ethereum", url = any(), id = entityId, useProxy = false)
         } returns (MediaType.APPLICATION_JSON to json.toByteArray())
 
         coEvery { cache.isSupported(urlResource) } returns true
         coEvery { cache.save(urlResource, json) } returns mockk()
 
-        val result = rawPropertiesProvider.getRawMeta(entityId, urlResource, parser)
+        val result = rawPropertiesProvider.getRawMeta("ethereum", entityId, urlResource, parser)
 
         // Content returned and cached
         coVerify(exactly = 1) { cache.save(urlResource, json) }
@@ -66,18 +66,25 @@ class RawMetaProviderTest {
         val json = """{"name" : "${randomString()}"}"""
 
         coEvery {
-            httpClient.getBodyBytes(url = any(), id = entityId, useProxy = false)
+            httpClient.getBodyBytes(blockchain = "ethereum", url = any(), id = entityId, useProxy = false)
         } returns (MediaType.APPLICATION_JSON to json.toByteArray())
 
         coEvery { cache.isSupported(urlResource) } returns true
         coEvery { cache.save(urlResource, json) } returns mockk()
 
-        val result = rawPropertiesProvider.getRawMeta(entityId, urlResource, parser)
+        val result = rawPropertiesProvider.getRawMeta(blockchain = "ethereum", entityId, urlResource, parser)
 
         // Content returned and cached
         assertThat(result.parsed).isEqualTo(parser.parse(entityId, json))
         // Proxy not used since we fetched data from IPFS
-        coVerify(exactly = 1) { httpClient.getBodyBytes(url = any(), id = entityId, useProxy = false) }
+        coVerify(exactly = 1) {
+            httpClient.getBodyBytes(
+                blockchain = "ethereum",
+                url = any(),
+                id = entityId,
+                useProxy = false
+            )
+        }
     }
 
     @Test
@@ -88,10 +95,10 @@ class RawMetaProviderTest {
         val json = """{"name" : "${randomString()}"}"""
 
         coEvery {
-            httpClient.getBodyBytes(url = any(), id = entityId)
+            httpClient.getBodyBytes(blockchain = "ethereum", url = any(), id = entityId)
         } returns (MediaType.APPLICATION_JSON to json.toByteArray())
 
-        val result = rawPropertiesProvider.getRawMeta(entityId, urlResource, parser)
+        val result = rawPropertiesProvider.getRawMeta(blockchain = "ethereum", entityId, urlResource, parser)
 
         // Should not be cached since cache is disabled
         coVerify(exactly = 0) { cache.save(any(), any()) }
@@ -105,12 +112,12 @@ class RawMetaProviderTest {
         val json = "not a json"
 
         coEvery {
-            httpClient.getBodyBytes(url = any(), id = entityId)
+            httpClient.getBodyBytes(blockchain = "ethereum", url = any(), id = entityId)
         } returns (MediaType.APPLICATION_JSON to json.toByteArray())
 
         coEvery { cache.isSupported(urlResource) } returns true
 
-        val result = rawPropertiesProvider.getRawMeta(entityId, urlResource, parser)
+        val result = rawPropertiesProvider.getRawMeta(blockchain = "ethereum", entityId, urlResource, parser)
 
         coVerify(exactly = 0) { cache.save(any(), any()) }
         assertThat(result.bytes).isEqualTo(json.toByteArray())
@@ -122,10 +129,10 @@ class RawMetaProviderTest {
         val urlResource = urlParser.parse("ipfs://$path")!!
 
         // Content not resolved
-        coEvery { httpClient.getBodyBytes(url = any(), id = entityId) } returns (null to null)
+        coEvery { httpClient.getBodyBytes(blockchain = "ethereum", url = any(), id = entityId) } returns (null to null)
         coEvery { cache.isSupported(urlResource) } returns true
 
-        rawPropertiesProvider.getRawMeta(entityId, urlResource, parser)
+        rawPropertiesProvider.getRawMeta(blockchain = "ethereum", entityId, urlResource, parser)
 
         coVerify(exactly = 0) { cache.save(any(), any()) }
     }
@@ -145,7 +152,7 @@ class RawMetaProviderTest {
         coEvery { cache.isSupported(urlResource) } returns true
         coEvery { cache.get(urlResource) } returns entry
 
-        val result = rawPropertiesProvider.getRawMeta(entityId, urlResource, parser)
+        val result = rawPropertiesProvider.getRawMeta(blockchain = "ethereum", entityId, urlResource, parser)
 
         // Content returned and cached
         assertThat(result.parsed).isEqualTo(parser.parse(entityId, json))
@@ -157,11 +164,11 @@ class RawMetaProviderTest {
         val json = """{"name" : "${randomString()}"}"""
 
         coEvery {
-            httpClient.getBodyBytes(url = any(), id = entityId, useProxy = any())
+            httpClient.getBodyBytes(blockchain = "ethereum", url = any(), id = entityId, useProxy = any())
         } returns (MediaType.APPLICATION_JSON to json.toByteArray())
         coEvery { cache.isSupported(urlResource) } returns false
 
-        rawPropertiesProvider.getRawMeta(entityId, urlResource, parser)
+        rawPropertiesProvider.getRawMeta(blockchain = "ethereum", entityId, urlResource, parser)
 
         // Not cached
         coVerify(exactly = 0) { cache.save(any(), any()) }
@@ -176,22 +183,36 @@ class RawMetaProviderTest {
 
         // First call should be executed without proxy
         coEvery {
-            httpClient.getBodyBytes(url = any(), id = entityId, useProxy = false)
+            httpClient.getBodyBytes(blockchain = "ethereum", url = any(), id = entityId, useProxy = false)
         } returns (null to null)
 
         // Since direct request has failed, proxy request should be executed
         coEvery {
-            httpClient.getBodyBytes(url = any(), id = entityId, useProxy = true)
+            httpClient.getBodyBytes(blockchain = "ethereum", url = any(), id = entityId, useProxy = true)
         } returns (MediaType.APPLICATION_JSON to json.toByteArray())
 
         coEvery { cache.isSupported(urlResource) } returns true
         coEvery { cache.save(urlResource, json) } returns mockk()
 
-        rawPropertiesProvider.getRawMeta(entityId, urlResource, parser)
+        rawPropertiesProvider.getRawMeta(blockchain = "ethereum", entityId, urlResource, parser)
 
         // Content is not cached since it is not an IPFS URL
-        coVerify(exactly = 1) { httpClient.getBodyBytes(url = any(), id = entityId, useProxy = false) }
-        coVerify(exactly = 1) { httpClient.getBodyBytes(url = any(), id = entityId, useProxy = true) }
+        coVerify(exactly = 1) {
+            httpClient.getBodyBytes(
+                blockchain = "ethereum",
+                url = any(),
+                id = entityId,
+                useProxy = false
+            )
+        }
+        coVerify(exactly = 1) {
+            httpClient.getBodyBytes(
+                blockchain = "ethereum",
+                url = any(),
+                id = entityId,
+                useProxy = true
+            )
+        }
     }
 
     @Test
@@ -203,17 +224,31 @@ class RawMetaProviderTest {
 
         // First call should be executed without proxy - and it returns data
         coEvery {
-            httpClient.getBodyBytes(url = any(), id = entityId, useProxy = false)
+            httpClient.getBodyBytes(blockchain = "ethereum", url = any(), id = entityId, useProxy = false)
         } returns (MediaType.APPLICATION_JSON to json.toByteArray())
 
         coEvery { cache.isSupported(urlResource) } returns true
         coEvery { cache.save(urlResource, json) } returns mockk()
 
-        rawPropertiesProvider.getRawMeta(entityId, urlResource, parser)
+        rawPropertiesProvider.getRawMeta(blockchain = "ethereum", entityId, urlResource, parser)
 
         // Even if useProxy == true, proxy should not be used since we got data via direct request
-        coVerify(exactly = 1) { httpClient.getBodyBytes(url = any(), id = entityId, useProxy = false) }
-        coVerify(exactly = 0) { httpClient.getBodyBytes(url = any(), id = entityId, useProxy = true) }
+        coVerify(exactly = 1) {
+            httpClient.getBodyBytes(
+                blockchain = "ethereum",
+                url = any(),
+                id = entityId,
+                useProxy = false
+            )
+        }
+        coVerify(exactly = 0) {
+            httpClient.getBodyBytes(
+                blockchain = "ethereum",
+                url = any(),
+                id = entityId,
+                useProxy = true
+            )
+        }
     }
 
     private fun createProvider(enableCache: Boolean = false, enableProxy: Boolean = false): RawMetaProvider<String> {

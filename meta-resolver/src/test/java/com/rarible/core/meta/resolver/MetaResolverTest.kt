@@ -33,9 +33,9 @@ class MetaResolverTest {
         val rawMeta = RawMeta(metaParser.parse(entityId, data), data.toByteArray(), null)
 
         coEvery { metaUrlResolver.getUrl(entityId) } returns url.original
-        coEvery { rawMetaProvider.getRawMeta(entityId, url, metaParser) } returns rawMeta
+        coEvery { rawMetaProvider.getRawMeta("ethereum", entityId, url, metaParser) } returns rawMeta
 
-        val result = resolver.resolve(entityId)!!
+        val result = resolver.resolve("ethereum", entityId)!!
 
         assertThat(result.metaUrl).isEqualTo(url.original)
         assertThat(result.meta?.name).isEqualTo("Alice")
@@ -51,9 +51,9 @@ class MetaResolverTest {
         val rawMeta = RawMeta(null, data.toByteArray(), "image/png")
 
         coEvery { metaUrlResolver.getUrl(entityId) } returns url.original
-        coEvery { rawMetaProvider.getRawMeta(entityId, url, metaParser) } returns rawMeta
+        coEvery { rawMetaProvider.getRawMeta("ethereum", entityId, url, metaParser) } returns rawMeta
 
-        val result = resolver.resolve(entityId)!!
+        val result = resolver.resolve("ethereum", entityId)!!
 
         assertThat(result.metaUrl).isEqualTo(url.original)
         assertThat(result.meta).isNull()
@@ -76,9 +76,9 @@ class MetaResolverTest {
             }
         )
 
-        coEvery { rawMetaProvider.getRawMeta(entityId, customUrl, metaParser) } returns rawMeta
+        coEvery { rawMetaProvider.getRawMeta("ethereum", entityId, customUrl, metaParser) } returns rawMeta
 
-        val result = resolver.resolve(entityId, url)!!
+        val result = resolver.resolve("ethereum", entityId, url)!!
 
         assertThat(result.metaUrl).isEqualTo(url)
         assertThat(result.meta?.name).isEqualTo("Bob")
@@ -95,10 +95,10 @@ class MetaResolverTest {
 
         val resolver = createResolver(urlSanitizer = MetaUrlExtensionSanitizer())
 
-        coEvery { rawMetaProvider.getRawMeta(entityId, url, metaParser) } returns RawMeta.EMPTY
-        coEvery { rawMetaProvider.getRawMeta(entityId, sanitizedUrl, metaParser) } returns rawMeta
+        coEvery { rawMetaProvider.getRawMeta("ethereum", entityId, url, metaParser) } returns RawMeta.EMPTY
+        coEvery { rawMetaProvider.getRawMeta("ethereum", entityId, sanitizedUrl, metaParser) } returns rawMeta
 
-        val result = resolver.resolve(entityId, url.original)!!
+        val result = resolver.resolve("ethereum", entityId, url.original)!!
 
         assertThat(result.metaUrl).isEqualTo(url.original)
         assertThat(result.meta?.name).isEqualTo("Nancy")
@@ -112,7 +112,7 @@ class MetaResolverTest {
 
         val resolver = createResolver()
 
-        val result = resolver.resolve(entityId, url)!!
+        val result = resolver.resolve("ethereum", entityId, url)!!
 
         assertThat(result.metaUrl).isEqualTo(url)
         assertThat(result.meta?.name).isEqualTo("Cat")
@@ -125,7 +125,7 @@ class MetaResolverTest {
 
         coEvery { metaUrlResolver.getUrl(entityId) } returns ""
 
-        val result = resolver.resolve(entityId)
+        val result = resolver.resolve("ethereum", entityId)
         assertThat(result).isNull()
     }
 
@@ -138,9 +138,9 @@ class MetaResolverTest {
         val rawMeta = RawMeta(null, data.toByteArray(), null)
 
         coEvery { metaUrlResolver.getUrl(entityId) } returns url.original
-        coEvery { rawMetaProvider.getRawMeta(entityId, url, metaParser) } returns rawMeta
+        coEvery { rawMetaProvider.getRawMeta("ethereum", entityId, url, metaParser) } returns rawMeta
 
-        val result = resolver.resolve(entityId)
+        val result = resolver.resolve("ethereum", entityId)
         assertThat(result).isNull()
     }
 
@@ -153,9 +153,9 @@ class MetaResolverTest {
         val rawMeta = RawMeta(metaParser.parse(entityId, data), data.toByteArray(), null)
 
         coEvery { metaUrlResolver.getUrl(entityId) } returns url.original
-        coEvery { rawMetaProvider.getRawMeta(entityId, url, metaParser) } returns rawMeta
+        coEvery { rawMetaProvider.getRawMeta("ethereum", entityId, url, metaParser) } returns rawMeta
 
-        val result = resolver.resolve(entityId)
+        val result = resolver.resolve("ethereum", entityId)
 
         assertThat(result).isNull()
     }
@@ -166,9 +166,9 @@ class MetaResolverTest {
         val entityId = randomString()
         val url = urlParser.parse("https://test.com/$entityId")!!
 
-        coEvery { rawMetaProvider.getRawMeta(entityId, url, metaParser) } returns RawMeta.EMPTY
+        coEvery { rawMetaProvider.getRawMeta("ethereum", entityId, url, metaParser) } returns RawMeta.EMPTY
 
-        val result = resolver.resolve(entityId, url.original)
+        val result = resolver.resolve("ethereum", entityId, url.original)
 
         assertThat(result).isNull()
     }
