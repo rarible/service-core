@@ -11,7 +11,7 @@ class ResponseSizeRecorder(
         val monitoredUrl = monitoredUrls.firstOrNull { url.startsWith(it) } ?: return
         meterRegistry.counter(
             METRIC_NAME,
-            listOf(Tag.of("url", monitoredUrl), Tag.of("blockchain", blockchain))
+            listOf(Tag.of("url", monitoredUrl), Tag.of("blockchain", blockchain.lowercase()))
         ).increment(responseSize.toDouble())
     }
 
